@@ -67,6 +67,11 @@
     .badge-pulse {
       animation: pulse-ring 1.8s cubic-bezier(0.24, 0, 0.38, 1) infinite;
     }
+    /* แผนที่: ห้ามมีแอนิเมชันใดๆ (ไม่มีการวูบ/ละอองกระจาย) */
+    #thailandVectorMap, #thailandVectorMap * {
+      animation: none !important;
+      transition: none !important;
+    }
     @keyframes pulse-ring {
       0% { transform: scale(0.95); opacity: 0.8; }
       50% { transform: scale(1.05); opacity: 1; }
@@ -1945,16 +1950,12 @@ function isInvalidBranchName(name) {
             p.isNeedGm = p.needsGmHelp !== '-';
           }
           // ดึงข้อมูลเนื้อหาปัญหา และการแก้ไขปัญหาจาก Google Sheets / API (ตรงตามหัวคอลัมน์ "เนื้อหา" และ "การแก้ไขปัญหา")
-          p.problemDetail = p['เนื้อหา'] || p.content || p.problemDetail || p['รายละเอียดปัญหา'] || p.detail || p.colH || p.issueDetail || p.description || '';
-          p.initialFix = p['การแก้ไขปัญหา'] || p['การแก้ไขเบื้องต้น'] || p.initialFix || p.initialAction || p.solution || p.colI || p.action || p.fix || '';
-
-          // ข้อมูลเนื้อหาและการแก้ไขปัญหา ใช้เฉพาะที่มาจาก Google Sheet จริงเท่านั้น หากไม่มีระบุให้แสดง '-'
-          if (!p.problemDetail || p.problemDetail === '-') {
-            p.problemDetail = p.subject || '-';
-          }
-          if (!p.initialFix) {
-            p.initialFix = '-';
-          }
+          // ใช้เฉพาะฟิลด์ที่ Google Sheet ส่งมาจริงเท่านั้น (คอลัมน์ H = เนื้อหา, คอลัมน์ I = การแก้ไขปัญหา)
+          // ไม่อ่าน p.problemDetail / p.initialFix เดิม เพื่อไม่ให้ข้อมูลเก่าในแคชย้อนกลับมาแสดง
+          const realDetail = p['เนื้อหา'] || p.content || '';
+          const realFix = p['การแก้ไขปัญหา'] || p.solution || '';
+          p.problemDetail = String(realDetail).trim() || '-';
+          p.initialFix = String(realFix).trim() || '-';
         });
 
         // สรุปยอดปัญหาตามระดับความเร่งด่วนจริง
@@ -1982,8 +1983,13 @@ function isInvalidBranchName(name) {
       if (refreshIcon) refreshIcon.classList.add('animate-spin');
 
       // Clear old caches with legacy mock data
-      ['gm_dash_cache_local_p0', 'gm_dash_cache_local_p1', 'gm_dash_cache_local_p2', 'gm_dash_cache_v3_p0', 'gm_dash_cache_v3_p1'].forEach(k => localStorage.removeItem(k));
-      const cacheKey = 'gm_dash_cache_v5_live_p' + dashboardState.currentPeriodIndex;
+      const CACHE_PREFIX = 'gm_dash_cache_v6_real_p';
+      try {
+        Object.keys(localStorage)
+          .filter(k => k.startsWith('gm_dash_cache') && !k.startsWith(CACHE_PREFIX))
+          .forEach(k => localStorage.removeItem(k));
+      } catch (e) { /* ignore */ }
+      const cacheKey = CACHE_PREFIX + dashboardState.currentPeriodIndex;
       let hasLocalCache = false;
 
       // ⚡ ขั้นตอนที่ 1: ตรวจสอบแคชในเบราว์เซอร์ ถ้ามี แสดงผลทันทีใน 0.01 วินาที! ไม่ต้องรอ!
