@@ -353,7 +353,7 @@
       </div>
 
       <!-- 2. Interactive Thailand Map with Pointer Arrows & Live Callouts -->
-      <div class="bg-slate-900 rounded-3xl border border-slate-800 shadow-2xl p-4 sm:p-6 overflow-hidden relative">
+      <div class="bg-slate-900 rounded-3xl border border-slate-800 shadow-2xl p-4 sm:p-6 relative">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4 border-b border-slate-800 pb-4">
           <div>
             <div class="flex items-center space-x-2">
@@ -457,45 +457,47 @@
               <g id="mapBranchPinsContainer"></g>
               <g id="mapCalloutsContainer"></g>
             </svg>
+          </div>
+        </div>
 
-            <!-- Floating Active Branch Info Card on Map (Interactive Tooltip / Bottom Banner) -->
-            <div id="mapFloatingCard" class="absolute bottom-3 inset-x-3 sm:inset-x-6 bg-slate-900/95 backdrop-blur-md rounded-2xl p-3.5 sm:p-4 border border-slate-700/80 shadow-2xl transition-all duration-300">
-              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div class="flex items-center space-x-3">
-                  <div class="w-10 h-10 rounded-xl bg-blue-600/30 text-blue-400 border border-blue-500/30 flex items-center justify-center font-black text-sm" id="mapFloatInitial">
-                    ร
-                  </div>
-                  <div>
-                    <div class="flex items-center space-x-2">
-                      <h4 class="font-bold text-white text-sm sm:text-base" id="mapFloatTitle">สาขารัตนาธิเบศร์</h4>
-                      <span class="text-xxs px-2 py-0.5 rounded-full font-bold bg-blue-500/20 text-blue-300 border border-blue-400/30" id="mapFloatRegion">กทม. & ปริมณฑล</span>
-                      <span class="text-xxs px-2 py-0.5 rounded-full font-bold bg-rose-500/20 text-rose-300 border border-rose-400/30" id="mapFloatProblemBadge">🔴 2 ปัญหา</span>
-                    </div>
-                    <div class="flex items-center space-x-3 text-xs text-slate-300 mt-1">
-                      <span>ผู้จัดการเขต: <span id="mapFloatManager" class="text-white font-semibold">กาญจน์</span></span>
-                      <span class="text-slate-600">|</span>
-                      <span id="mapFloatIssuesSnippet" class="text-rose-300 font-medium">ปัญหา: 0 รายการ</span>
-                    </div>
-                  </div>
+        <!-- 3. Active Selected Branch Detailed Console (ไม่ตกขอบ 100% สวยงาม ชัดเจน ทุกอุปกรณ์) -->
+        <div id="mapFloatingCard" class="mt-4 bg-slate-950/80 backdrop-blur-md rounded-2xl p-4 sm:p-5 border border-slate-700/80 shadow-2xl transition-all duration-300">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="flex items-center space-x-3.5">
+              <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-600/40 to-indigo-600/40 text-blue-400 border border-blue-500/40 flex items-center justify-center font-black text-base shadow-inner flex-shrink-0" id="mapFloatInitial">
+                ร
+              </div>
+              <div>
+                <div class="flex flex-wrap items-center gap-2">
+                  <h4 class="font-bold text-white text-base sm:text-lg" id="mapFloatTitle">สาขารัตนาธิเบศร์</h4>
+                  <span class="text-xxs px-2.5 py-0.5 rounded-full font-bold bg-blue-500/20 text-blue-300 border border-blue-400/30" id="mapFloatRegion">กทม. & ปริมณฑล</span>
+                  <span class="text-xxs px-2.5 py-0.5 rounded-full font-bold bg-rose-500/20 text-rose-300 border border-rose-400/30" id="mapFloatProblemBadge">⚠️ มีปัญหา 2 เคส</span>
                 </div>
-
-                <!-- 3 Quick Number Badges -->
-                <div class="flex items-center space-x-2 sm:space-x-4">
-                  <div class="bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-700/60 text-center">
-                    <span class="text-xxs text-slate-400 block">ยอดขาย</span>
-                    <span class="text-xs sm:text-sm font-bold text-emerald-400" id="mapFloatSales">฿1,580,000</span>
-                  </div>
-                  <div class="bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-700/60 text-center">
-                    <span class="text-xxs text-slate-400 block">ยอดเบิก</span>
-                    <span class="text-xs sm:text-sm font-bold text-teal-300" id="mapFloatWithdraw">฿24,500</span>
-                  </div>
-                  <button onclick="jumpToBranchCard(selectedMapBranchId)" class="px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition shadow flex items-center space-x-1">
-                    <span>ดูสรุป ⬇️</span>
-                  </button>
+                <div class="flex flex-wrap items-center gap-2 sm:gap-3 text-xs text-slate-300 mt-1">
+                  <span>ผู้จัดการเขต: <span id="mapFloatManager" class="text-white font-semibold">ผจก. กาญจน์</span></span>
+                  <span class="text-slate-600 hidden sm:inline">|</span>
+                  <span id="mapFloatIssuesSnippet" class="text-rose-400 font-bold">พบปัญหา: 2 เคส</span>
+                  <span class="text-slate-600 hidden sm:inline">|</span>
+                  <span class="text-slate-400 text-xxs hidden md:inline">แตะที่จุดสาขาบนแผนที่เพื่อดูข้อมูลสาขาอื่น</span>
                 </div>
               </div>
             </div>
 
+            <!-- 3 Quick Number Badges & Navigation Action -->
+            <div class="flex items-center gap-2 sm:gap-3 self-end md:self-center">
+              <div class="bg-slate-900/90 px-3.5 py-2 rounded-xl border border-slate-800 text-center min-w-[90px]">
+                <span class="text-xxs text-slate-400 block font-medium">ยอดขายจริง</span>
+                <span class="text-xs sm:text-sm font-bold text-emerald-400" id="mapFloatSales">฿1,580,000</span>
+              </div>
+              <div class="bg-slate-900/90 px-3.5 py-2 rounded-xl border border-slate-800 text-center min-w-[80px]">
+                <span class="text-xxs text-slate-400 block font-medium">ยอดเบิกรวม</span>
+                <span class="text-xs sm:text-sm font-bold text-teal-300" id="mapFloatWithdraw">฿24,500</span>
+              </div>
+              <button onclick="jumpToBranchCard(selectedMapBranchId)" class="px-3.5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition shadow-lg flex items-center space-x-1.5 whitespace-nowrap">
+                <span>ดูการ์ดสรุป</span>
+                <i data-lucide="arrow-down" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -1971,7 +1973,7 @@
       // สาขามิสทีน (ตรงตาม Google Sheet ของผู้ใช้งาน 100%)
       'สาขามิสทีน_อาคารสถานที่': {
         detail: 'งดจ่ายกระแสไฟวันที่ 6/9/69 ตั้งแต่เวลา 8.00- 15.30',
-        fix: 'ส่งเรื่องดำเนินการให้คุณตั้วจัดหาน้ำมันปั่นไฟเข้ามาค่ะ'
+        fix: 'ส่งเรื่องดำเนินการให้คุณจิ๋วจัดหาบริษัทปั่นไฟเข้ามาค่ะ'
       },
       'สาขามิสทีน_คืนคอร์ส': {
         detail: 'UN 8154 คุณลัดดาวัลย์ ขอคืนคอร์ส เนื่องจากอาการปวดไม่ค่อยดีแล้วทำการรักษาไป 1 ครั้งเป็นเคสการรักษา ปัญหาเพิ่มเติมคนไข้กังวลเรื่องหมุนเงินไม่ทัน',
