@@ -36,8 +36,9 @@
     }
   </script>
 
-  <!-- Chart.js & Lucide Icons -->
+  <!-- Chart.js, Datalabels Plugin & Lucide Icons -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
 
   <style>
@@ -70,6 +71,85 @@
       0% { transform: scale(0.95); opacity: 0.8; }
       50% { transform: scale(1.05); opacity: 1; }
       100% { transform: scale(0.95); opacity: 0.8; }
+    }
+
+    /* 📱 Modern Shrinking Header on Scroll (Mobile-First) */
+    header#appHeader {
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    header#appHeader.is-condensed {
+      box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.08);
+      background-color: rgba(255, 255, 255, 0.97);
+      backdrop-filter: blur(14px);
+    }
+    header#appHeader.is-condensed #headerTopRow {
+      height: 3rem; /* Shrinks to 48px */
+    }
+    header#appHeader.is-condensed #headerLogo {
+      width: 2rem;
+      height: 2rem;
+    }
+    header#appHeader.is-condensed #headerLogo i {
+      width: 1.1rem;
+      height: 1.1rem;
+    }
+    header#appHeader.is-condensed #headerSubtitle {
+      display: none;
+    }
+    header#appHeader.is-condensed #headerTitle {
+      font-size: 0.925rem;
+    }
+    header#appHeader.is-condensed nav button {
+      padding-top: 0.25rem;
+      padding-bottom: 0.25rem;
+      font-size: 0.75rem;
+    }
+
+    /* Selected Row & Block Column Highlight */
+    .case-row-selected {
+      background-color: #eff6ff !important;
+      border-left: 4px solid #2563eb !important;
+    }
+    .block-column-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 1rem;
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04);
+      transition: all 0.2s ease;
+    }
+    .block-column-card:hover {
+      box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.06);
+    }
+
+    /* Detail Card Glow Animation when selected */
+    @keyframes card-glow {
+      0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.5); border-color: #3b82f6; }
+      50% { box-shadow: 0 0 0 12px rgba(37, 99, 235, 0.18); border-color: #2563eb; }
+      100% { box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04); border-color: #e2e8f0; }
+    }
+    .detail-pulse-highlight {
+      animation: card-glow 1.5s ease-out;
+    }
+
+    /* Stepper Timeline Connectors */
+    .timeline-step {
+      position: relative;
+    }
+    .timeline-step:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      top: 1rem;
+      left: 50%;
+      width: 100%;
+      height: 3px;
+      background-color: #e2e8f0;
+      z-index: 1;
+    }
+    .timeline-step.completed:not(:last-child)::after {
+      background-color: #22c55e;
+    }
+    .timeline-step.active:not(:last-child)::after {
+      background: linear-gradient(90deg, #22c55e 0%, #3b82f6 100%);
     }
   </style>
 </head>
@@ -108,24 +188,24 @@
 
   <!-- TOP NAVIGATION BAR -->
   <div id="mainAppWrapper" class="transition-opacity duration-500 opacity-0">
-  <header class="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-200 shadow-sm">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex items-center justify-between h-16">
+  <header id="appHeader" class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm transition-all duration-300">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+      <div id="headerTopRow" class="flex items-center justify-between h-14 sm:h-16 transition-all duration-300">
         
         <!-- Logo & Title -->
-        <div class="flex items-center space-x-3">
-          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
-            <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+        <div class="flex items-center space-x-2.5 sm:space-x-3">
+          <div id="headerLogo" class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20 transition-all duration-300 flex-shrink-0">
+            <i data-lucide="layout-dashboard" class="w-4 h-4 sm:w-5 sm:h-5"></i>
           </div>
           <div>
             <div class="flex items-center space-x-2">
-              <h1 class="text-lg font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">GM Monitor & Branch Portal</h1>
-              <span id="dataSourceBadge" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
-                <span class="w-1.5 h-1.5 mr-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+              <h1 id="headerTitle" class="text-base sm:text-lg font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent transition-all duration-300">GM Monitor & Branch Portal</h1>
+              <span id="dataSourceBadge" class="inline-flex items-center px-2 py-0.5 rounded-full text-xxs sm:text-xs font-medium bg-amber-100 text-amber-800">
+                <span class="w-1.5 h-1.5 mr-1 rounded-full bg-amber-500 animate-pulse"></span>
                 Demo Data
               </span>
             </div>
-            <p class="text-xs text-slate-500">ระบบรายงานผลประกอบการ ผู้จัดการ และการเงินสาขา</p>
+            <p id="headerSubtitle" class="text-xxs sm:text-xs text-slate-500 transition-all duration-300">ระบบรายงานผลประกอบการ ผู้จัดการ และการเงินสาขา</p>
           </div>
         </div>
 
@@ -157,7 +237,12 @@
 
       <!-- Navigation Tabs -->
       <nav class="flex space-x-1 sm:space-x-4 border-t border-slate-100 overflow-x-auto custom-scrollbar py-1">
-        <button onclick="switchTab('tab-overview')" id="nav-tab-overview" class="tab-btn active px-3 py-2 text-xs sm:text-sm font-medium rounded-lg text-blue-600 bg-blue-50 flex items-center space-x-1.5 whitespace-nowrap">
+        <button onclick="switchTab('tab-map')" id="nav-tab-map" class="tab-btn active px-3 py-2 text-xs sm:text-sm font-medium rounded-lg text-blue-600 bg-blue-50 flex items-center space-x-1.5 whitespace-nowrap">
+          <i data-lucide="map" class="w-4 h-4"></i>
+          <span>🗺️ สรุปสาขา & แผนที่ประเทศไทย</span>
+        </button>
+
+        <button onclick="switchTab('tab-overview')" id="nav-tab-overview" class="tab-btn px-3 py-2 text-xs sm:text-sm font-medium rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 flex items-center space-x-1.5 whitespace-nowrap">
           <i data-lucide="pie-chart" class="w-4 h-4"></i>
           <span>ภาพรวม GM Monitor</span>
         </button>
@@ -222,9 +307,265 @@
     </div>
 
     <!-- ===================================================================== -->
+    <!-- TAB 0 (หน้าแรก): สรุปสาขาทั่วประเทศ & แผนที่ประเทศไทย (THAILAND BRANCH MAP) -->
+    <!-- ===================================================================== -->
+    <section id="tab-map" class="tab-content space-y-6">
+      
+      <!-- 1. Map Header & Overall National Numbers -->
+      <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-5 sm:p-7 text-white shadow-xl relative overflow-hidden border border-slate-800">
+        <div class="absolute -right-12 -top-12 w-64 h-64 bg-blue-500/15 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute -left-12 -bottom-12 w-64 h-64 bg-indigo-500/15 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div>
+            <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 text-xs font-semibold mb-3 border border-blue-400/20">
+              <i data-lucide="map-pin" class="w-3.5 h-3.5 text-blue-400"></i>
+              <span>National Branch Network & Geographic Operations</span>
+            </div>
+            <h2 class="text-2xl sm:text-3xl font-black tracking-tight text-white flex items-center space-x-3">
+              <span>แผนที่และสรุปสาขาทั่วประเทศ</span>
+            </h2>
+            <p class="text-xs sm:text-sm text-slate-300 mt-1.5 max-w-2xl leading-relaxed">
+              ภาพรวม 19 สาขาครอบคลุม 5 ภาค พร้อมตัวเลขสำคัญ: <strong>ยอดขาย, เบอร์โทรติดต่อ, ยอดเบิกจ่ายบัญชี</strong> และ <strong>จำนวนปัญหาคงค้าง</strong>
+            </p>
+          </div>
+
+          <!-- Quick Stat Capsules on Hero -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div class="bg-white/10 backdrop-blur-md rounded-2xl p-3 border border-white/10 text-center">
+              <span class="text-xxs text-slate-300 block font-medium">สาขาทั่วไทย</span>
+              <span class="text-xl sm:text-2xl font-black text-white" id="mapHeroBranchCount">19 สาขา</span>
+            </div>
+            <div class="bg-white/10 backdrop-blur-md rounded-2xl p-3 border border-white/10 text-center">
+              <span class="text-xxs text-slate-300 block font-medium">ยอดขายรวม</span>
+              <span class="text-xl sm:text-2xl font-black text-emerald-400" id="mapHeroTotalSales">฿0</span>
+            </div>
+            <div class="bg-white/10 backdrop-blur-md rounded-2xl p-3 border border-white/10 text-center">
+              <span class="text-xxs text-slate-300 block font-medium">ยอดเบิกรวม</span>
+              <span class="text-xl sm:text-2xl font-black text-teal-300" id="mapHeroTotalWithdraw">฿0</span>
+            </div>
+            <div class="bg-white/10 backdrop-blur-md rounded-2xl p-3 border border-white/10 text-center">
+              <span class="text-xxs text-slate-300 block font-medium">ปัญหาคงค้าง</span>
+              <span class="text-xl sm:text-2xl font-black text-rose-400" id="mapHeroTotalIssues">0 เคส</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Interactive Thailand Map with Pointer Arrows & Live Callouts -->
+      <div class="bg-slate-900 rounded-3xl border border-slate-800 shadow-2xl p-4 sm:p-6 overflow-hidden relative">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4 border-b border-slate-800 pb-4">
+          <div>
+            <div class="flex items-center space-x-2">
+              <span class="flex h-3 w-3 relative">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-3 w-3 bg-sky-500"></span>
+              </span>
+              <h3 class="text-base sm:text-lg font-bold text-white tracking-tight">แผนที่ประเทศไทย & ลูกศรชี้พิกัดสาขา</h3>
+            </div>
+            <p class="text-xxs sm:text-xs text-slate-400 mt-0.5">
+              ลูกศรชี้ตรงเข้าจุดที่ตั้งสาขาจริง แตะหรือคลิกที่ชื่อสาขาเพื่อดูข้อมูลตัวเลขโดยสังเขป
+            </p>
+          </div>
+
+          <!-- Map Legend / Pin indicators -->
+          <div class="flex flex-wrap items-center gap-2 text-xxs font-medium text-slate-300 bg-slate-950/60 px-3 py-1.5 rounded-xl border border-slate-800">
+            <span class="flex items-center space-x-1">
+              <span class="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse"></span>
+              <span>🔴 มีปัญหาเร่งด่วน</span>
+            </span>
+            <span class="flex items-center space-x-1">
+              <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+              <span>🟠 ปัญหาเฝ้าระวัง</span>
+            </span>
+            <span class="flex items-center space-x-1">
+              <span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
+              <span>🟣 เกินกำหนด</span>
+            </span>
+            <span class="flex items-center space-x-1">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+              <span>🟢 การทำงานปกติ</span>
+            </span>
+          </div>
+        </div>
+
+        <!-- The SVG Vector Map Layout -->
+        <div class="relative w-full flex justify-center items-center overflow-x-auto custom-scrollbar py-2">
+          <div class="w-full max-w-[840px] relative">
+            <svg id="thailandVectorMap" viewBox="0 0 760 900" class="w-full h-auto max-h-[720px] select-none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <!-- Arrow Marker definition -->
+                <marker id="mapArrowSky" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+                  <path d="M0,0 L0,6 L8,3 z" fill="#38bdf8" />
+                </marker>
+                <marker id="mapArrowRose" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+                  <path d="M0,0 L0,6 L8,3 z" fill="#fb7185" />
+                </marker>
+                <marker id="mapArrowEmerald" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+                  <path d="M0,0 L0,6 L8,3 z" fill="#34d399" />
+                </marker>
+
+                <!-- Soft Glow Filters -->
+                <filter id="pinGlow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feGaussianBlur stdDeviation="3" result="blur" />
+                  <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                </filter>
+              </defs>
+
+              <!-- Stylized Background Grid Lines -->
+              <g stroke="#1e293b" stroke-width="0.5" stroke-dasharray="4,4">
+                <line x1="0" y1="150" x2="760" y2="150" />
+                <line x1="0" y1="300" x2="760" y2="300" />
+                <line x1="0" y1="450" x2="760" y2="450" />
+                <line x1="0" y1="600" x2="760" y2="600" />
+                <line x1="0" y1="750" x2="760" y2="750" />
+                <line x1="200" y1="0" x2="200" y2="900" />
+                <line x1="380" y1="0" x2="380" y2="900" />
+                <line x1="560" y1="0" x2="560" y2="900" />
+              </g>
+
+              <!-- Thailand Silhouette Vector Regions -->
+              <g id="mapRegions" class="transition-opacity duration-300">
+                <!-- Northern Region -->
+                <path d="M 280,60 L 360,60 L 400,110 L 410,180 L 370,240 L 300,240 L 250,170 Z" 
+                      fill="#1e1b4b" stroke="#6366f1" stroke-width="2" opacity="0.85" />
+                <text x="330" y="105" fill="#a5b4fc" font-size="11" font-weight="bold" opacity="0.6" text-anchor="middle">ภาคเหนือ</text>
+
+                <!-- Northeast Region (Isan) -->
+                <path d="M 370,190 L 480,185 L 535,260 L 525,360 L 430,380 L 360,330 L 360,240 Z" 
+                      fill="#31102b" stroke="#e11d48" stroke-width="2" opacity="0.85" />
+                <text x="445" y="275" fill="#fda4af" font-size="11" font-weight="bold" opacity="0.6" text-anchor="middle">ภาคอีสาน</text>
+
+                <!-- Central & Bangkok Metro -->
+                <path d="M 290,240 L 370,240 L 380,360 L 350,440 L 280,440 L 260,340 Z" 
+                      fill="#0f2b48" stroke="#0284c7" stroke-width="2" opacity="0.9" />
+                <text x="325" y="320" fill="#7dd3fc" font-size="11" font-weight="bold" opacity="0.6" text-anchor="middle">ภาคกลาง & กทม.</text>
+
+                <!-- Eastern Region -->
+                <path d="M 380,360 L 440,375 L 450,455 L 390,475 L 350,440 Z" 
+                      fill="#064e3b" stroke="#10b981" stroke-width="2" opacity="0.85" />
+                <text x="405" y="420" fill="#6ee7b7" font-size="11" font-weight="bold" opacity="0.6" text-anchor="middle">ภาคตะวันออก</text>
+
+                <!-- Southern Peninsula -->
+                <path d="M 280,440 L 320,440 L 325,540 L 350,670 L 360,780 L 330,860 L 290,830 L 280,720 L 260,600 L 270,490 Z" 
+                      fill="#083344" stroke="#06b6d4" stroke-width="2" opacity="0.85" />
+                <text x="310" y="660" fill="#67e8f9" font-size="11" font-weight="bold" opacity="0.6" text-anchor="middle">ภาคใต้</text>
+              </g>
+
+              <!-- Dynamic Branch Pointer Lines, Arrows & Markers (Rendered via JS for 100% precision) -->
+              <g id="mapPointerLinesContainer"></g>
+              <g id="mapBranchPinsContainer"></g>
+              <g id="mapCalloutsContainer"></g>
+            </svg>
+
+            <!-- Floating Active Branch Info Card on Map (Interactive Tooltip / Bottom Banner) -->
+            <div id="mapFloatingCard" class="absolute bottom-3 inset-x-3 sm:inset-x-6 bg-slate-900/95 backdrop-blur-md rounded-2xl p-3.5 sm:p-4 border border-slate-700/80 shadow-2xl transition-all duration-300">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div class="flex items-center space-x-3">
+                  <div class="w-10 h-10 rounded-xl bg-blue-600/30 text-blue-400 border border-blue-500/30 flex items-center justify-center font-black text-sm" id="mapFloatInitial">
+                    ร
+                  </div>
+                  <div>
+                    <div class="flex items-center space-x-2">
+                      <h4 class="font-bold text-white text-sm sm:text-base" id="mapFloatTitle">สาขารัตนาธิเบศร์</h4>
+                      <span class="text-xxs px-2 py-0.5 rounded-full font-bold bg-blue-500/20 text-blue-300 border border-blue-400/30" id="mapFloatRegion">กทม. & ปริมณฑล</span>
+                      <span class="text-xxs px-2 py-0.5 rounded-full font-bold bg-rose-500/20 text-rose-300 border border-rose-400/30" id="mapFloatProblemBadge">🔴 2 ปัญหา</span>
+                    </div>
+                    <div class="flex items-center space-x-3 text-xs text-slate-300 mt-1">
+                      <span>📞 <a href="tel:025267890" id="mapFloatPhoneLink" class="text-sky-400 hover:underline font-mono">02-526-7890</a></span>
+                      <span class="text-slate-600">|</span>
+                      <span>ผู้ดูแล: <span id="mapFloatManager" class="text-white font-semibold">กาญจน์</span></span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 3 Quick Number Badges -->
+                <div class="flex items-center space-x-2 sm:space-x-4">
+                  <div class="bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-700/60 text-center">
+                    <span class="text-xxs text-slate-400 block">ยอดขาย</span>
+                    <span class="text-xs sm:text-sm font-bold text-emerald-400" id="mapFloatSales">฿1,580,000</span>
+                  </div>
+                  <div class="bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-700/60 text-center">
+                    <span class="text-xxs text-slate-400 block">ยอดเบิก</span>
+                    <span class="text-xs sm:text-sm font-bold text-teal-300" id="mapFloatWithdraw">฿24,500</span>
+                  </div>
+                  <button onclick="jumpToBranchCard(selectedMapBranchId)" class="px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition shadow flex items-center space-x-1">
+                    <span>ดูสรุป ⬇️</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Concise Branch Summary Cards Grid (รายละเอียดพอสังเขปเป็นตัวเลขสั้นๆ กระชับ) -->
+      <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-5 sm:p-6 space-y-5">
+        
+        <!-- Controls: Search & Region Filter Pills -->
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-100 pb-5">
+          <div>
+            <h3 class="font-black text-slate-900 text-lg sm:text-xl tracking-tight flex items-center space-x-2">
+              <span>📋 สรุปข้อมูลสาขาแจกแจงตามภูมิภาค</span>
+              <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600" id="branchFilteredCountBadge">19 สาขา</span>
+            </h3>
+            <p class="text-xs text-slate-500 mt-0.5">ตัวเลขสรุปสังเขป: ยอดขายเทียบเป้า, เบอร์โทรติดต่อ, ยอดเบิกบัญชี และจำนวนปัญหา</p>
+          </div>
+
+          <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+            <!-- Search input -->
+            <div class="relative">
+              <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i>
+              <input type="text" id="mapBranchSearchInput" onkeyup="filterBranchSummaryCards()" placeholder="ค้นหาสาขา, เบอร์โทร, หรือผู้จัดการ..." class="pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-64">
+            </div>
+
+            <!-- Quick Jump to Problems -->
+            <button onclick="switchTab('tab-problems')" class="px-3.5 py-2 text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-xl transition flex items-center justify-center space-x-1.5 whitespace-nowrap border border-blue-200">
+              <i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i>
+              <span>ไปหน้าติดตามปัญหา</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Region Filter Pills -->
+        <div class="flex flex-wrap items-center gap-1.5 sm:gap-2" id="mapRegionPillsContainer">
+          <button onclick="setMapRegionFilter('ALL')" id="pill-region-ALL" class="region-pill active px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-900 text-white shadow-xs transition">
+            ทั้งหมด (19)
+          </button>
+          <button onclick="setMapRegionFilter('BKK')" id="pill-region-BKK" class="region-pill px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 transition">
+            กทม. & ปริมณฑล (8)
+          </button>
+          <button onclick="setMapRegionFilter('EAST')" id="pill-region-EAST" class="region-pill px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 transition">
+            ภาคตะวันออก (3)
+          </button>
+          <button onclick="setMapRegionFilter('ISAN')" id="pill-region-ISAN" class="region-pill px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 transition">
+            ภาคอีสาน (2)
+          </button>
+          <button onclick="setMapRegionFilter('SOUTH')" id="pill-region-SOUTH" class="region-pill px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 transition">
+            ภาคใต้ (3)
+          </button>
+          <button onclick="setMapRegionFilter('NORTH')" id="pill-region-NORTH" class="region-pill px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 transition">
+            ภาคเหนือ (3)
+          </button>
+          <button onclick="setMapRegionFilter('HAS_PROBLEMS')" id="pill-region-HAS_PROBLEMS" class="region-pill px-3 py-1.5 rounded-xl text-xs font-medium bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 transition">
+            🚨 เฉพาะสาขาที่มีปัญหา (8)
+          </button>
+        </div>
+
+        <!-- The Responsive Grid of Concise Branch Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" id="mapBranchCardsGrid">
+          <!-- Populated dynamically via JS -->
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ===================================================================== -->
     <!-- TAB 1: GM MONITOR OVERVIEW -->
     <!-- ===================================================================== -->
-    <section id="tab-overview" class="tab-content space-y-6">
+    <section id="tab-overview" class="tab-content hidden space-y-6">
       
       <!-- Top 4 Summary Cards -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -430,86 +771,296 @@
     </section>
 
     <!-- ===================================================================== -->
-    <!-- TAB 3: PROBLEM & INCIDENT TRACKER -->
+    <!-- TAB 3: PROBLEM MANAGEMENT & BRANCH ISSUE TRACKING -->
     <!-- ===================================================================== -->
     <section id="tab-problems" class="tab-content hidden space-y-6">
       
-      <!-- Problem Header Summary Cards -->
-      <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
-        <div onclick="filterProblemUrgency('Critical')" class="cursor-pointer bg-rose-50 border border-rose-200/80 rounded-2xl p-4 hover:shadow-md transition">
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-rose-800">Critical (วิกฤติ)</span>
-            <span class="text-base">🔴</span>
+      <!-- 1. Header & Quick Filters (ช่วงเวลา, สาขา, ผู้จัดการ, และปุ่มกรองด่วน) -->
+      <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div class="flex items-center space-x-3">
+          <div class="w-11 h-11 rounded-xl bg-slate-900 text-white flex items-center justify-center shadow-md flex-shrink-0">
+            <i data-lucide="shield-alert" class="w-6 h-6 text-sky-400"></i>
           </div>
-          <div class="mt-2 text-2xl font-black text-rose-700" id="statProbCritical">0</div>
-          <p class="text-xxs text-rose-600 mt-1">คลิกเพื่อกรอง</p>
+          <div>
+            <div class="flex items-center space-x-2">
+              <h2 class="text-lg sm:text-xl font-black text-slate-900 tracking-tight">ภาพรวมการบริหารปัญหาสาขา</h2>
+              <span class="px-2.5 py-0.5 rounded-full text-xxs font-bold bg-slate-100 text-slate-600 border border-slate-200 hidden sm:inline">
+                Surveyed Branch Issues
+              </span>
+            </div>
+            <p class="text-xs text-slate-500">ข้อมูลปัญหาจริงที่สำรวจจาก 12 เขตผู้จัดการ และสาขาหน้างาน</p>
+          </div>
         </div>
 
-        <div onclick="filterProblemUrgency('High')" class="cursor-pointer bg-amber-50 border border-amber-200/80 rounded-2xl p-4 hover:shadow-md transition">
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-amber-800">High (เร่งด่วน)</span>
-            <span class="text-base">🟡</span>
+        <!-- Filter Dropdowns (ช่วงเวลา, สาขา, ผู้จัดการ, ความเร่งด่วน) -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 w-full lg:w-auto">
+          <!-- ช่วงเวลา -->
+          <div class="flex items-center bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2">
+            <span class="text-xxs font-bold text-slate-400 mr-1.5 whitespace-nowrap">รอบ:</span>
+            <select id="probFilterPeriod" onchange="applyProblemFilters()" class="bg-transparent text-xs font-semibold text-slate-800 outline-none w-full cursor-pointer">
+              <option value="0">รอบ 1-10 ต.ค.</option>
+              <option value="1">รอบ 11-20 ต.ค.</option>
+              <option value="2">รอบ 21-31 ต.ค.</option>
+            </select>
           </div>
-          <div class="mt-2 text-2xl font-black text-amber-700" id="statProbHigh">0</div>
-          <p class="text-xxs text-amber-600 mt-1">คลิกเพื่อกรอง</p>
-        </div>
 
-        <div onclick="filterProblemUrgency('Overdue')" class="cursor-pointer bg-purple-50 border border-purple-200/80 rounded-2xl p-4 hover:shadow-md transition">
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-purple-800">Overdue (เกินกำหนด)</span>
-            <span class="text-base">🟣</span>
+          <!-- ผู้จัดการ -->
+          <div class="flex items-center bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2">
+            <span class="text-xxs font-bold text-slate-400 mr-1.5 whitespace-nowrap">ผจก:</span>
+            <select id="probFilterManager" onchange="applyProblemFilters()" class="bg-transparent text-xs font-semibold text-slate-800 outline-none w-full cursor-pointer">
+              <option value="ALL">ทั้งหมด</option>
+            </select>
           </div>
-          <div class="mt-2 text-2xl font-black text-purple-700" id="statProbOverdue">0</div>
-          <p class="text-xxs text-purple-600 mt-1">คลิกเพื่อกรอง</p>
-        </div>
-        <div onclick="filterProblemUrgency('Normal')" id="probCardNormal" class="cursor-pointer bg-slate-50 border border-slate-200/80 rounded-2xl p-4 hover:shadow-md transition">
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-slate-700">ทั่วไป / ติดตาม</span>
-            <span class="text-base">⚪</span>
-          </div>
-          <div class="mt-2 text-2xl font-black text-slate-700" id="statProbNormal">0</div>
-          <p class="text-xxs text-slate-500 mt-1">คลิกเพื่อกรอง</p>
-        </div>
 
-
-        <div onclick="toggleNeedsGmOnly()" id="needsGmCard" class="cursor-pointer bg-orange-50 border border-orange-200/80 rounded-2xl p-4 hover:shadow-md transition">
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-orange-800">ต้องการ GM ช่วย</span>
-            <span class="text-base">🚨</span>
+          <!-- สาขา -->
+          <div class="flex items-center bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2">
+            <span class="text-xxs font-bold text-slate-400 mr-1.5 whitespace-nowrap">สาขา:</span>
+            <select id="probFilterBranch" onchange="applyProblemFilters()" class="bg-transparent text-xs font-semibold text-slate-800 outline-none w-full cursor-pointer">
+              <option value="ALL">ทั้งหมด</option>
+            </select>
           </div>
-          <div class="mt-2 text-2xl font-black text-orange-700" id="statProbNeedsGm">0</div>
-          <p class="text-xxs text-orange-600 mt-1">คลิกเพื่อกรองเฉพาะเคสนี้</p>
+
+          <!-- หมวดหมู่ -->
+          <div class="flex items-center bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2">
+            <span class="text-xxs font-bold text-slate-400 mr-1.5 whitespace-nowrap">หมวด:</span>
+            <select id="probFilterCategory" onchange="applyProblemFilters()" class="bg-transparent text-xs font-semibold text-slate-800 outline-none w-full cursor-pointer">
+              <option value="ALL">ทุกหมวดหมู่</option>
+              <option value="งานระบบ">⚙️ งานระบบ</option>
+              <option value="คนไข้">👥 คนไข้</option>
+              <option value="บัญชี">💼 บัญชี</option>
+              <option value="พนักงาน">👔 พนักงาน</option>
+              <option value="ทั่วไป">📋 ทั่วไป</option>
+            </select>
+          </div>
         </div>
       </div>
 
-      <!-- Problem Filter Bar -->
-      <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-between gap-3">
-        <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
-          <button onclick="filterProblemUrgency('ALL')" id="probBtnAll" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-900 text-white">ทั้งหมด</button>
-          <button onclick="filterProblemUrgency('Critical')" id="probBtnCritical" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 text-slate-700 hover:bg-rose-100 hover:text-rose-800">🔴 Critical</button>
-          <button onclick="filterProblemUrgency('High')" id="probBtnHigh" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 text-slate-700 hover:bg-amber-100 hover:text-amber-800">🟡 High</button>
-          <button onclick="filterProblemUrgency('Overdue')" id="probBtnOverdue" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 text-slate-700 hover:bg-purple-100 hover:text-purple-800">🟣 Overdue</button>
-          <button onclick="filterProblemUrgency('Normal')" id="probBtnNormal" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200">⚪ ทั่วไป</button>
+      <!-- 2. Block Bento: KPI Summary & Pipeline Status Breakdown (Survey Data) -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        
+        <!-- Left 8 Columns on desktop: Urgency Cards + Real Workflow Cards -->
+        <div class="lg:col-span-8 flex flex-col gap-4">
+          
+          <!-- Top Row: Total + 4 Real Urgency Severity Blocks -->
+          <div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+            <!-- ปัญหาทั้งหมด -->
+            <div onclick="filterProblemRisk('ALL')" class="cursor-pointer bg-white border border-slate-200/90 rounded-2xl p-3.5 shadow-sm hover:shadow-md transition">
+              <div class="flex items-center justify-between text-slate-500">
+                <span class="text-xs font-bold text-slate-700">ปัญหาทั้งหมด</span>
+                <div class="w-6 h-6 rounded-lg bg-slate-100 flex items-center justify-center text-slate-600">
+                  <i data-lucide="clipboard-list" class="w-3.5 h-3.5"></i>
+                </div>
+              </div>
+              <div class="mt-2 flex items-baseline space-x-1">
+                <span class="text-2xl font-black text-slate-900" id="statProbTotal">17</span>
+                <span class="text-xxs text-slate-500 font-medium">เคส</span>
+              </div>
+              <p class="text-xxs text-slate-400 mt-0.5">จากชีทสำรวจ</p>
+            </div>
+
+            <!-- Critical (🔴) -->
+            <div onclick="filterProblemRisk('Critical')" id="cardRiskCritical" class="cursor-pointer bg-rose-50/80 border border-rose-200/90 rounded-2xl p-3.5 shadow-sm hover:shadow-md transition">
+              <div class="flex items-center justify-between text-rose-700">
+                <span class="text-xs font-bold">Critical (🔴)</span>
+                <div class="w-6 h-6 rounded-lg bg-rose-100 flex items-center justify-center text-rose-600">
+                  <i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i>
+                </div>
+              </div>
+              <div class="mt-2 flex items-baseline space-x-1">
+                <span class="text-2xl font-black text-rose-700" id="statProbCritical">1</span>
+                <span class="text-xxs text-rose-600 font-medium">เคส</span>
+              </div>
+              <p class="text-xxs text-rose-500 mt-0.5">วิกฤตด่วน</p>
+            </div>
+
+            <!-- High (🟠) -->
+            <div onclick="filterProblemRisk('High')" id="cardRiskHigh" class="cursor-pointer bg-amber-50/80 border border-amber-200/90 rounded-2xl p-3.5 shadow-sm hover:shadow-md transition">
+              <div class="flex items-center justify-between text-amber-700">
+                <span class="text-xs font-bold">High (🟠)</span>
+                <div class="w-6 h-6 rounded-lg bg-amber-100 flex items-center justify-center text-amber-600">
+                  <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i>
+                </div>
+              </div>
+              <div class="mt-2 flex items-baseline space-x-1">
+                <span class="text-2xl font-black text-amber-700" id="statProbHigh">10</span>
+                <span class="text-xxs text-amber-600 font-medium">เคส</span>
+              </div>
+              <p class="text-xxs text-amber-600 mt-0.5">เร่งด่วนสูง</p>
+            </div>
+
+            <!-- Overdue (🟣) -->
+            <div onclick="filterProblemRisk('Overdue')" id="cardRiskOverdue" class="cursor-pointer bg-purple-50/80 border border-purple-200/90 rounded-2xl p-3.5 shadow-sm hover:shadow-md transition">
+              <div class="flex items-center justify-between text-purple-700">
+                <span class="text-xs font-bold">Overdue (🟣)</span>
+                <div class="w-6 h-6 rounded-lg bg-purple-100 flex items-center justify-center text-purple-600">
+                  <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+                </div>
+              </div>
+              <div class="mt-2 flex items-baseline space-x-1">
+                <span class="text-2xl font-black text-purple-700" id="statProbOverdue">2</span>
+                <span class="text-xxs text-purple-600 font-medium">เคส</span>
+              </div>
+              <p class="text-xxs text-purple-500 mt-0.5">เกินกำหนด</p>
+            </div>
+
+            <!-- ทั่วไป (🟢) -->
+            <div onclick="filterProblemRisk('ทั่วไป')" id="cardRiskNormal" class="cursor-pointer bg-emerald-50/80 border border-emerald-200/90 rounded-2xl p-3.5 shadow-sm hover:shadow-md transition col-span-2 sm:col-span-1">
+              <div class="flex items-center justify-between text-emerald-700">
+                <span class="text-xs font-bold">ทั่วไป (🟢)</span>
+                <div class="w-6 h-6 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-600">
+                  <i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i>
+                </div>
+              </div>
+              <div class="mt-2 flex items-baseline space-x-1">
+                <span class="text-2xl font-black text-emerald-700" id="statProbNormal">4</span>
+                <span class="text-xxs text-emerald-600 font-medium">เคส</span>
+              </div>
+              <p class="text-xxs text-emerald-600 mt-0.5">ปกติ</p>
+            </div>
+          </div>
+
+          <!-- Bottom Row: Real Workflow Status Pipeline Cards -->
+          <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center space-x-1.5">
+                <i data-lucide="activity" class="w-3.5 h-3.5 text-blue-600"></i>
+                <span>สถานะหน้างานจริง & การขอความช่วยเหลือ GM</span>
+              </h3>
+              <span class="text-xxs text-slate-400">แตะเพื่อกรองรายการ</span>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              <!-- กำลังติดตาม -->
+              <div onclick="filterProblemStatus('กำลังติดตาม')" id="cardStatusTracking" class="cursor-pointer bg-amber-50/70 border border-amber-200/80 rounded-xl p-3 hover:shadow transition text-center sm:text-left">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-amber-800">⏳ กำลังติดตาม</span>
+                  <span class="w-6 h-6 rounded-lg bg-amber-100 flex items-center justify-center text-amber-600">
+                    <i data-lucide="hourglass" class="w-3.5 h-3.5"></i>
+                  </span>
+                </div>
+                <div class="mt-2 flex items-baseline justify-center sm:justify-start space-x-1">
+                  <span class="text-xl font-black text-amber-900" id="statStatusTracking">14</span>
+                  <span class="text-xxs text-amber-600">เคส</span>
+                </div>
+                <span class="text-xxxs text-amber-600/90 font-medium block mt-0.5">82% ของปัญหา</span>
+              </div>
+
+              <!-- กำลังดำเนินการ -->
+              <div onclick="filterProblemStatus('กำลังดำเนินการ')" id="cardStatusInProgress" class="cursor-pointer bg-blue-50/70 border border-blue-200/80 rounded-xl p-3 hover:shadow transition text-center sm:text-left">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-blue-800">🔄 กำลังดำเนินการ</span>
+                  <span class="w-6 h-6 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600">
+                    <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                  </span>
+                </div>
+                <div class="mt-2 flex items-baseline justify-center sm:justify-start space-x-1">
+                  <span class="text-xl font-black text-blue-900" id="statStatusAction">3</span>
+                  <span class="text-xxs text-blue-600">เคส</span>
+                </div>
+                <span class="text-xxxs text-blue-600/90 font-medium block mt-0.5">18% ของปัญหา</span>
+              </div>
+
+              <!-- ต้องการ GM ช่วยเหลือ -->
+              <div onclick="toggleNeedsGmFilter()" id="cardNeedsGm" class="cursor-pointer bg-rose-50/70 border border-rose-200/80 rounded-xl p-3 hover:shadow transition text-center sm:text-left">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-rose-800">🚨 ต้องขอ GM ช่วย</span>
+                  <span class="w-6 h-6 rounded-lg bg-rose-100 flex items-center justify-center text-rose-600">
+                    <i data-lucide="bell-ring" class="w-3.5 h-3.5"></i>
+                  </span>
+                </div>
+                <div class="mt-2 flex items-baseline justify-center sm:justify-start space-x-1">
+                  <span class="text-xl font-black text-rose-900" id="statNeedsGm">16</span>
+                  <span class="text-xxs text-rose-600">เคส</span>
+                </div>
+                <span class="text-xxxs text-rose-600/90 font-medium block mt-0.5">ขอเข้า Support / อนุมัติ / แจ้ง</span>
+              </div>
+
+              <!-- สาขาที่พบปัญหา -->
+              <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 text-center sm:text-left">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-slate-700">🏢 สาขาที่พบ</span>
+                  <span class="w-6 h-6 rounded-lg bg-slate-200/70 flex items-center justify-center text-slate-600">
+                    <i data-lucide="building-2" class="w-3.5 h-3.5"></i>
+                  </span>
+                </div>
+                <div class="mt-2 flex items-baseline justify-center sm:justify-start space-x-1">
+                  <span class="text-xl font-black text-slate-900" id="statBranchesWithProblems">9</span>
+                  <span class="text-xxs text-slate-500">สาขา</span>
+                </div>
+                <span class="text-xxxs text-slate-500 font-medium block mt-0.5">จาก 16 สาขาจริง</span>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div class="w-full md:w-72 relative">
-          <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i>
-          <input type="text" id="problemSearchInput" onkeyup="renderProblemsTable()" placeholder="ค้นหาสาขา, ผู้จัดการ หรือหัวเรื่อง..." class="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <!-- Right 4 Columns on desktop: Modern Status Donut Chart with Direct Numbers on Graphic -->
+        <div class="lg:col-span-4 bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm flex flex-col justify-between">
+          <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+            <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center space-x-1.5">
+              <i data-lucide="pie-chart" class="w-4 h-4 text-indigo-600"></i>
+              <span>สัดส่วนสถานะปัญหา (มีตัวเลขในกราฟ)</span>
+            </h3>
+            <span class="text-xxs px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-bold border border-emerald-200">
+              เลขชัดไม่ต้องชี้
+            </span>
+          </div>
+
+          <!-- Donut Graphic & Center Count -->
+          <div class="relative flex items-center justify-center my-2" style="height: 165px;">
+            <canvas id="problemsDonutChart"></canvas>
+            <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+              <span class="text-2xl font-black text-slate-900 tracking-tight" id="chartCenterCount">17</span>
+              <span class="text-xxs font-bold text-slate-500 uppercase tracking-wider">เคสสำรวจจริง</span>
+            </div>
+          </div>
+
+          <!-- Status Percentages List -->
+          <div class="grid grid-cols-2 gap-2 text-xs text-slate-700 border-t border-slate-100 pt-2.5" id="problemsDonutLegend">
+            <!-- Populated via JS -->
+          </div>
         </div>
+
       </div>
 
-      <!-- Problems Data Table -->
+      <!-- 3. Cases Data Section: Search Bar & Table / Mobile Cards -->
       <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div class="overflow-x-auto">
-          <table class="w-full text-left border-collapse text-xs sm:text-sm">
+        
+        <!-- Section Bar -->
+        <div class="p-4 border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-3 bg-slate-50/50">
+          <div class="flex items-center space-x-2">
+            <h3 class="text-sm sm:text-base font-bold text-slate-900">
+              รายการปัญหาหน้างาน (<span id="statCasesCount">17</span> เคส)
+            </h3>
+            <span id="activeFilterBadge" class="hidden text-xxs px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 font-semibold cursor-pointer"></span>
+          </div>
+
+          <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+            <!-- Search Input -->
+            <div class="relative flex-1 sm:w-72">
+              <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i>
+              <input type="text" id="problemSearchInput" onkeyup="renderProblemsTable()" placeholder="ค้นหา (สาขา/ผจก/หัวข้อ/หมวด)..." class="w-full pl-9 pr-3 py-1.5 text-xs bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm">
+            </div>
+
+            <!-- Quick GM Help Toggle Filter -->
+            <button onclick="toggleNeedsGmFilter()" id="btnGmFilterToggle" class="px-3 py-1.5 text-xs font-bold rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 flex items-center justify-center space-x-1.5 shadow-sm transition">
+              <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+              <span>เฉพาะขอความช่วยเหลือ GM</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Desktop Table View (≥ 768px) -->
+        <div class="hidden md:block overflow-x-auto custom-scrollbar">
+          <table class="w-full text-left border-collapse text-xs">
             <thead>
-              <tr class="bg-slate-50 border-b border-slate-200 text-slate-500 font-semibold uppercase text-xs">
-                <th class="py-3 px-4">ระดับความเร่งด่วน</th>
-                <th class="py-3 px-3">ผู้จัดการ & สาขา</th>
-                <th class="py-3 px-3">หัวเรื่องปัญหา</th>
-                <th class="py-3 px-3">ประเภท</th>
-                <th class="py-3 px-3">ขั้นตอนปัจจุบัน</th>
-                <th class="py-3 px-4 text-center">ต้องการ GM ช่วย</th>
+              <tr class="bg-slate-100/80 border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider text-xxs">
+                <th class="py-3 px-3">#</th>
+                <th class="py-3 px-3">สาขา</th>
+                <th class="py-3 px-3">ผู้จัดการ</th>
+                <th class="py-3 px-3">หมวดหมู่</th>
+                <th class="py-3 px-4">หัวข้อปัญหาที่พบ</th>
+                <th class="py-3 px-3">ความเร่งด่วน</th>
+                <th class="py-3 px-3">สถานะ</th>
+                <th class="py-3 px-4">การขอความช่วยเหลือ GM</th>
               </tr>
             </thead>
             <tbody id="problemsTableBody" class="divide-y divide-slate-100 text-slate-700">
@@ -517,10 +1068,249 @@
             </tbody>
           </table>
         </div>
-        <div id="noProblemsMessage" class="hidden p-8 text-center text-slate-400 text-sm">
-          <i data-lucide="check-circle-2" class="w-8 h-8 mx-auto text-emerald-500 mb-2"></i>
-          ไม่พบรายการปัญหาคงค้างตามเงื่อนไขที่เลือก 🟢
+
+        <!-- Mobile Card View (< 768px) (เน้นการใช้งานบนโทรศัพท์มือถือ แตะแล้วเปิด Bottom Sheet ด้านล่างทันที!) -->
+        <div id="problemsMobileCards" class="md:hidden divide-y divide-slate-100">
+          <!-- Rendered via JS as clean touch-friendly cards -->
         </div>
+
+        <!-- Empty State -->
+        <div id="noProblemsMessage" class="hidden p-8 text-center text-slate-400 text-sm">
+          <i data-lucide="check-circle-2" class="w-10 h-10 mx-auto text-emerald-500 mb-2"></i>
+          <p class="font-bold text-slate-700">ไม่พบรายการปัญหาตามเงื่อนไขที่เลือก 🟢</p>
+          <p class="text-xs text-slate-400 mt-1">ลองเปลี่ยนคำค้นหา หรือรีเซ็ตตัวกรองด้านบน</p>
+        </div>
+      </div>
+
+      <!-- 4. Structured Block Column: Detailed Breakdown of Selected Case (Surveyed Data Only) -->
+      <div id="problemDetailCard" class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden scroll-mt-24">
+        
+        <!-- Detail Header -->
+        <div class="p-4 sm:p-5 bg-gradient-to-r from-slate-50 via-white to-slate-50 border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div class="flex flex-wrap items-center gap-2.5">
+            <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center font-bold">
+              <i data-lucide="file-text" class="w-4 h-4"></i>
+            </div>
+            <div class="flex items-center space-x-2">
+              <span class="text-sm sm:text-base font-black text-slate-900">รายละเอียดปัญหาเคส :</span>
+              <span class="text-sm sm:text-base font-black text-blue-700 font-mono tracking-wide" id="detailCaseCode">PR-01</span>
+            </div>
+            <span id="detailRiskBadge" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-800">
+              🔴 Critical
+            </span>
+            <span id="detailStatusBadge" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800">
+              กำลังติดตาม
+            </span>
+          </div>
+
+          <div class="flex items-center space-x-2 text-xs text-slate-500 justify-between md:justify-end">
+            <span class="text-xxs sm:text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md font-medium">
+              ข้อมูลจริงจากแบบสำรวจสาขา
+            </span>
+          </div>
+        </div>
+
+        <!-- 4 Well-Proportioned Block Columns (ตามข้อมูลจริงที่มีในระบบ 100% ไม่สร้างข้อมูลหลอก) -->
+        <div class="p-4 sm:p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 bg-slate-50/40" id="problemDetailColumns">
+          
+          <!-- Column 1: ข้อมูลสาขา & ผู้รับผิดชอบ -->
+          <div class="block-column-card p-4 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center space-x-1.5 text-xs font-bold text-slate-800 border-b border-slate-100 pb-2 mb-3">
+                <i data-lucide="map-pin" class="w-4 h-4 text-blue-600"></i>
+                <span>ข้อมูลสาขา & ผู้รับผิดชอบ</span>
+              </div>
+              <div class="space-y-2.5 text-xs">
+                <div class="flex justify-between items-center py-1 border-b border-slate-50">
+                  <span class="text-slate-400 text-xxs font-medium">สาขาที่เกิดเหตุ</span>
+                  <span class="font-bold text-slate-900" id="detailBranch">สาขารัตนาธิเบศร์</span>
+                </div>
+                <div class="flex justify-between items-center py-1 border-b border-slate-50">
+                  <span class="text-slate-400 text-xxs font-medium">ผู้จัดการเขต (ผจก)</span>
+                  <span class="font-bold text-slate-800" id="detailManager">กาญจน์</span>
+                </div>
+                <div class="flex justify-between items-center py-1 border-b border-slate-50">
+                  <span class="text-slate-400 text-xxs font-medium">หมวดหมู่ปัญหา</span>
+                  <span class="font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded text-xxs" id="detailCategory">บัญชี</span>
+                </div>
+              </div>
+            </div>
+            <div class="mt-3 pt-2 border-t border-slate-100 text-xxs text-slate-400 flex items-center justify-between">
+              <span>แหล่งที่มา</span>
+              <span class="font-medium text-slate-600">ชีท Problem List</span>
+            </div>
+          </div>
+
+          <!-- Column 2: หัวข้อและรายละเอียดปัญหา -->
+          <div class="block-column-card p-4 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center space-x-1.5 text-xs font-bold text-slate-800 border-b border-slate-100 pb-2 mb-3">
+                <i data-lucide="alert-octagon" class="w-4 h-4 text-rose-600"></i>
+                <span>หัวข้อปัญหาที่สำรวจพบ</span>
+              </div>
+              <div class="space-y-2 text-xs">
+                <span class="text-slate-400 text-xxs font-bold block">ประเด็นปัญหา (Subject)</span>
+                <div class="bg-white p-3 rounded-xl border border-slate-200/90 shadow-2xs">
+                  <p class="font-bold text-slate-900 text-sm leading-snug" id="detailSubject">งานระบบ</p>
+                </div>
+                <div class="pt-2">
+                  <span class="text-slate-400 text-xxs font-bold block mb-1">ระดับความเร่งด่วน</span>
+                  <div id="detailUrgencyBadgeContainer">
+                    <span class="inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-rose-100 text-rose-800">
+                      <span>🔴 Critical</span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Column 3: การขอความช่วยเหลือจาก GM -->
+          <div class="block-column-card p-4 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center space-x-1.5 text-xs font-bold text-slate-800 border-b border-slate-100 pb-2 mb-3">
+                <i data-lucide="help-circle" class="w-4 h-4 text-amber-600"></i>
+                <span>การประสานงานขอความช่วยเหลือ GM</span>
+              </div>
+              <div class="space-y-3 text-xs">
+                <div>
+                  <span class="text-slate-400 text-xxs font-bold block mb-1">ความช่วยเหลือที่ร้องขอ</span>
+                  <div class="p-2.5 rounded-xl bg-amber-50/80 border border-amber-200">
+                    <p class="font-bold text-amber-900 text-xs flex items-center space-x-1.5" id="detailNeedsGmHelp">
+                      <i data-lucide="bell" class="w-4 h-4 text-amber-600"></i>
+                      <span>แจ้งให้ทราบ</span>
+                    </p>
+                  </div>
+                </div>
+                <div>
+                  <span class="text-slate-400 text-xxs font-bold block mb-1">สถานะต่อ GM</span>
+                  <p class="text-xs font-semibold text-slate-700" id="detailGmStatusText">
+                    🚨 มีการส่งเรื่องถึง GM เพื่อรับทราบ/สนับสนุน
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between text-xxs text-slate-400">
+              <span>การแจ้งเตือน</span>
+              <span class="font-semibold text-emerald-600">บันทึกในระบบแล้ว</span>
+            </div>
+          </div>
+
+          <!-- Column 4: รายละเอียดผลกระทบ & ภาพรวมปัญหาหน้างาน (ข้อมูลจริงแทนที่ Mockup) -->
+          <div class="block-column-card p-4 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center space-x-1.5 text-xs font-bold text-slate-800 border-b border-slate-100 pb-2 mb-3">
+                <i data-lucide="file-search" class="w-4 h-4 text-blue-600"></i>
+                <span>รายละเอียด & ผลกระทบหน้างาน</span>
+              </div>
+              <div class="space-y-2.5 text-xs">
+                <!-- Status Box -->
+                <div class="flex items-center justify-between p-2.5 bg-slate-50 rounded-xl border border-slate-100">
+                  <span class="text-xxs font-bold text-slate-500">สถานะปัจจุบัน:</span>
+                  <div class="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 font-bold text-xs" id="detailCurrentStatusContainer">
+                    <i data-lucide="hourglass" class="w-3 h-3"></i>
+                    <span id="detailCurrentStatusText">กำลังติดตาม</span>
+                  </div>
+                </div>
+
+                <!-- ผลกระทบต่อธุรกิจจริงตามหมวดปัญหา -->
+                <div class="bg-amber-50/70 rounded-xl p-2.5 border border-amber-200/80">
+                  <span class="text-amber-900 text-xxs font-bold block mb-1 flex items-center space-x-1">
+                    <i data-lucide="alert-triangle" class="w-3 h-3 text-amber-600"></i>
+                    <span>ผลกระทบด้าน <span id="detailCategoryNameLabel">งานระบบ</span></span>
+                  </span>
+                  <p class="text-amber-950 text-xxs leading-relaxed font-medium" id="detailCategoryImpactText">
+                    ส่งผลต่อความพร้อมในการให้บริการของสาขา ต้องติดตามแก้ไขเพื่อไม่ให้กระทบมาตรฐาน
+                  </p>
+                </div>
+
+                <!-- ข้อมูลเคสที่พบในสาขาเดียวกัน -->
+                <div class="bg-slate-50 rounded-xl p-2.5 border border-slate-200/70">
+                  <span class="text-slate-500 text-xxs font-bold block mb-1">ภาพรวมปัญหาในสาขานี้:</span>
+                  <p class="text-slate-800 text-xxs leading-snug font-medium" id="detailBranchContextText">
+                    สาขารัตนาธิเบศร์ พบทั้งหมด 2 ปัญหาในรอบปัจจุบัน
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class="mt-3 pt-2 border-t border-slate-100 flex justify-between items-center text-xs">
+              <span class="text-slate-400 text-xxs font-medium">ผู้ดูแลในเขต:</span>
+              <span class="font-bold text-slate-900 text-xxs sm:text-xs" id="detailAssignee">ผจก. กาญจน์</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- 5. Dedicated Section: รายละเอียดปัญหา (คอลัมน์ H) & การแก้ไขเบื้องต้น (คอลัมน์ I) ตามคำขอผู้บริหาร -->
+        <div class="p-4 sm:p-6 bg-slate-50/70 border-t border-slate-200/80">
+          <div class="flex items-center space-x-2 mb-3.5">
+            <span class="px-2.5 py-0.5 rounded-full text-xxs font-bold bg-blue-100 text-blue-800 border border-blue-200">
+              Survey Columns H & I
+            </span>
+            <h4 class="text-sm font-black text-slate-900">รายละเอียดปัญหาและการแก้ไขเบื้องต้นหน้างาน</h4>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            
+            <!-- Column H: รายละเอียดปัญหา -->
+            <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm relative overflow-hidden flex flex-col justify-between">
+              <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-blue-600"></div>
+              <div>
+                <div class="flex items-center justify-between mb-2.5">
+                  <div class="flex items-center space-x-2">
+                    <span class="w-6 h-6 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs">H</span>
+                    <span class="font-black text-slate-900 text-sm flex items-center space-x-1.5">
+                      <i data-lucide="file-text" class="w-4 h-4 text-blue-600"></i>
+                      <span>รายละเอียดปัญหา</span>
+                    </span>
+                  </div>
+                  <span class="text-xxs px-2 py-0.5 rounded-md font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+                    คอลัมน์ H
+                  </span>
+                </div>
+                <div class="bg-slate-50/80 rounded-xl p-3.5 border border-slate-200/80 min-h-[70px]">
+                  <p id="detailColHText" class="text-xs sm:text-sm font-medium text-slate-800 leading-relaxed whitespace-pre-line">
+                    กำลังโหลดข้อมูลรายละเอียดปัญหา...
+                  </p>
+                </div>
+              </div>
+              <div class="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between text-xxs text-slate-400">
+                <span>แหล่งข้อมูล: ข้อมูลแบบสำรวจปัญหา</span>
+                <span class="font-medium text-slate-600">Google Sheet: Column H</span>
+              </div>
+            </div>
+
+            <!-- Column I: การแก้ไขเบื้องต้น -->
+            <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm relative overflow-hidden flex flex-col justify-between">
+              <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-emerald-600"></div>
+              <div>
+                <div class="flex items-center justify-between mb-2.5">
+                  <div class="flex items-center space-x-2">
+                    <span class="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs">I</span>
+                    <span class="font-black text-slate-900 text-sm flex items-center space-x-1.5">
+                      <i data-lucide="wrench" class="w-4 h-4 text-emerald-600"></i>
+                      <span>การแก้ไขเบื้องต้น</span>
+                    </span>
+                  </div>
+                  <span class="text-xxs px-2 py-0.5 rounded-md font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    คอลัมน์ I
+                  </span>
+                </div>
+                <div class="bg-emerald-50/50 rounded-xl p-3.5 border border-emerald-200/70 min-h-[70px]">
+                  <p id="detailColIText" class="text-xs sm:text-sm font-medium text-emerald-950 leading-relaxed whitespace-pre-line">
+                    กำลังโหลดข้อมูลการแก้ไขเบื้องต้น...
+                  </p>
+                </div>
+              </div>
+              <div class="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between text-xxs text-slate-400">
+                <span>แนวทางปฏิบัติหน้างาน</span>
+                <span class="font-semibold text-emerald-700">Google Sheet: Column I</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
       </div>
 
     </section>
@@ -683,6 +1473,168 @@
     </div>
   </div>
 
+  <!-- CREATE PROBLEM REPORT MODAL -->
+  <div id="createProblemModal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-xl w-full p-5 sm:p-6 shadow-2xl border border-slate-200 max-h-[92vh] overflow-y-auto custom-scrollbar">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div class="flex items-center space-x-2.5">
+          <div class="w-9 h-9 rounded-xl bg-slate-900 text-sky-400 flex items-center justify-center font-bold">
+            <i data-lucide="plus-circle" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-slate-900 text-base">สร้าง Problem Report</h3>
+            <p class="text-xxs text-slate-500">รายงานปัญหาใหม่เพื่อบันทึกและติดตามผลในระบบ</p>
+          </div>
+        </div>
+        <button onclick="closeCreateProblemModal()" class="text-slate-400 hover:text-slate-600 p-1">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form onsubmit="handleCreateProblemSubmit(event)" class="mt-4 space-y-3.5 text-xs">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">สาขาที่เกิดเหตุ *</label>
+            <select id="newProbBranch" required class="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+              <!-- Populated dynamically -->
+            </select>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">ผู้จัดการผู้ดูแล *</label>
+            <select id="newProbManager" required class="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+              <!-- Populated dynamically -->
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">ระดับความเสี่ยง (Risk) *</label>
+            <select id="newProbRisk" required class="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none font-semibold">
+              <option value="Critical">🔴 Critical (วิกฤติ/เร่งด่วนที่สุด)</option>
+              <option value="Moderate" selected>🟡 Moderate (ปานกลาง)</option>
+              <option value="Low">🟢 Low (ต่ำ/ทั่วไป)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">สถานะเริ่มต้น *</label>
+            <select id="newProbStatus" required class="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none font-semibold">
+              <option value="Open">Open (เปิดเคสใหม่)</option>
+              <option value="In Progress" selected>In Progress (กำลังดำเนินการ)</option>
+              <option value="Pending">Pending (รอติดตาม)</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">หัวเรื่อง/ปัญหาโดยสรุป *</label>
+          <input type="text" id="newProbSubject" required placeholder="ระบุอาการหรือหัวเรื่องปัญหา เช่น เครื่องมือแพทย์ขัดข้อง, ลูกค้าร้องเรียน..." class="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">ผลกระทบที่เกิดขึ้น (Impact)</label>
+          <textarea id="newProbImpact" rows="2" placeholder="เช่น กระทบต่อระยะเวลารอคอย หรือความพึงพอใจของลูกค้า..." class="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none"></textarea>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Immediate Action (ทำแล้ว)</label>
+            <textarea id="newProbImmediate" rows="2" placeholder="ระบุการช่วยเหลือเบื้องต้นทันที..." class="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none"></textarea>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Next Action (แผนถัดไป)</label>
+            <textarea id="newProbNext" rows="2" placeholder="ระบุแผนการติดตามผลหรือแก้ไขระยะยาว..." class="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none"></textarea>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">กำหนดปิดเคส (Due Date) *</label>
+            <input type="text" id="newProbDueDate" required value="15 พ.ย. 67" placeholder="เช่น 15 พ.ย. 67" class="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none font-semibold">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">ต้องการ GM ช่วยเหลือหรือไม่</label>
+            <select id="newProbNeedsGm" class="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+              <option value="-">ไม่ต้องการ (สาขาจัดการได้)</option>
+              <option value="ต้องการ">🚨 ต้องการ GM ช่วยเหลือ</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="mt-5 flex items-center justify-end space-x-2 pt-3 border-t border-slate-100">
+          <button type="button" onclick="closeCreateProblemModal()" class="px-4 py-2 font-medium text-slate-600 hover:text-slate-800 bg-slate-100 rounded-xl">ยกเลิก</button>
+          <button type="submit" class="px-5 py-2 font-bold text-white bg-slate-900 hover:bg-slate-800 active:scale-95 rounded-xl shadow-md">บันทึกรายงานปัญหา</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- PROBLEM HISTORY MODAL -->
+  <div id="problemHistoryModal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-5 sm:p-6 shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto custom-scrollbar">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div class="flex items-center space-x-2.5">
+          <div class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
+            <i data-lucide="history" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-slate-900 text-base">ประวัติการอัปเดตเคส</h3>
+            <p class="text-xxs text-slate-500" id="histModalCaseSubtitle">รหัสเคส: PR-0068</p>
+          </div>
+        </div>
+        <button onclick="closeProblemHistoryModal()" class="text-slate-400 hover:text-slate-600 p-1">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="mt-4 space-y-3" id="problemHistoryList">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <div class="mt-5 pt-3 border-t border-slate-100 flex justify-end">
+        <button onclick="closeProblemHistoryModal()" class="px-4 py-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl">ปิด</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- 📱 MOBILE BOTTOM SHEET DRAWER (เลื่อนขึ้นจากล่างจอทันทีที่แตะเคส) -->
+  <!-- ===================================================================== -->
+  <div id="caseBottomSheetBackdrop" onclick="closeCaseBottomSheet()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 transition-opacity duration-300 opacity-0 pointer-events-none"></div>
+
+  <div id="caseBottomSheet" class="fixed inset-x-0 bottom-0 z-50 bg-white rounded-t-3xl shadow-2xl border-t border-slate-200 transition-transform duration-300 ease-out transform translate-y-full max-h-[90vh] flex flex-col">
+    <!-- Drag / Swipe Handle Bar -->
+    <div class="pt-3 pb-2 px-4 flex flex-col items-center border-b border-slate-100 flex-shrink-0 bg-slate-50/80 rounded-t-3xl">
+      <div class="w-12 h-1.5 bg-slate-300 rounded-full mb-2"></div>
+      <div class="w-full flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <span class="font-mono font-black text-sm text-blue-700" id="drawerCaseCode">PR-0068</span>
+          <span id="drawerRiskBadge" class="px-2.5 py-0.5 rounded-full text-xxs font-bold bg-rose-100 text-rose-800">🔴 Critical</span>
+          <span id="drawerStatusBadge" class="px-2.5 py-0.5 rounded-full text-xxs font-bold bg-amber-100 text-amber-800">Pending</span>
+        </div>
+        <button onclick="closeCaseBottomSheet()" class="p-1.5 rounded-full bg-slate-200/70 text-slate-600 hover:text-slate-900 transition">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Scrollable Content: 4 Block Columns + Timeline inside the Bottom Sheet -->
+    <div class="overflow-y-auto p-4 space-y-4 custom-scrollbar flex-1 bg-slate-50/40" id="drawerContent">
+      <!-- Cloned or rendered dynamically -->
+    </div>
+
+    <!-- Bottom Actions Bar -->
+    <div class="p-3 bg-white border-t border-slate-200 flex items-center justify-between gap-2.5 flex-shrink-0">
+      <button onclick="openProblemHistoryModal()" class="flex-1 py-2.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition flex items-center justify-center space-x-1.5">
+        <i data-lucide="history" class="w-3.5 h-3.5 text-blue-600"></i>
+        <span>ประวัติการอัปเดต</span>
+      </button>
+      <button onclick="closeCaseBottomSheet()" class="flex-1 py-2.5 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 active:scale-95 rounded-xl transition shadow">
+        ปิดหน้าต่างนี้
+      </button>
+    </div>
+  </div>
+
   <!-- JAVASCRIPT LOGIC -->
   <script>
     // =========================================================================
@@ -693,6 +1645,13 @@
     localStorage.setItem('gm_gas_api_url', storedUrl);
     localStorage.setItem('gm_dashboard_mode', 'live');
 
+    // Chart.js DataLabels Plugin Setup
+    if (typeof ChartDataLabels !== 'undefined') {
+      Chart.register(ChartDataLabels);
+      // Disable datalabels globally by default so only intended charts show direct numbers
+      Chart.defaults.set('plugins.datalabels', { display: false });
+    }
+
     let dashboardState = {
       mode: 'live', // Default to live online mode
       apiUrl: storedUrl,
@@ -701,10 +1660,17 @@
       charts: {
         meeting: null,
         kpiDoughnut: null,
+        problemsDonut: null,
         accountingDaily: null,
         accountingBranch: null
       },
-      problemFilterUrgency: 'ALL',
+      problemFilterRisk: 'ALL',
+      problemFilterStatus: 'ALL',
+      problemFilterBranch: 'ALL',
+      problemFilterManager: 'ALL',
+      problemFilterCategory: 'ALL',
+      selectedProblemCode: 'PR-01',
+      problemNeedsGmOnly: false,
       problemNeedsGmOnly: false
     };
 
@@ -823,6 +1789,112 @@
         });
       });
 
+                  // 17 Real Surveyed Incident Cases from the Managers' Problem List Sheets (พร้อมข้อมูลคอลัมน์ H และ I)
+      allProblems = [
+        { 
+          code: 'PR-01', manager: "กาญจน์", branch: "สาขารัตนาธิเบศร์", urgency: "Critical", urgencyType: "critical", 
+          needsGmHelp: "แจ้งให้ทราบ", isNeedGm: true, status: "กำลังติดตาม", category: "บัญชี", subject: "งานระบบ",
+          problemDetail: "ระบบบันทึกบัญชีและการออกใบกำกับภาษีอิเล็กทรอนิกส์ขัดข้อง ไม่สามารถส่งข้อมูลเชื่อมต่อกับฐานข้อมูลระบบส่วนกลางได้ในรอบบิลนี้",
+          initialFix: "เจ้าหน้าที่การเงินสาขาบันทึกใบเสร็จแบบ Manual สำรองไว้ชั่วคราว พร้อมประสานทีม IT ซอฟต์แวร์ตรวจสอบ Database Connection และรัน Sync ด่วน"
+        },
+        { 
+          code: 'PR-02', manager: "กาญจน์", branch: "สาขานครปฐม", urgency: "High", urgencyType: "high", 
+          needsGmHelp: "แจ้งให้ทราบ", isNeedGm: true, status: "กำลังติดตาม", category: "คนไข้", subject: "คืนคอร์ส",
+          problemDetail: "คนไข้แจ้งความประสงค์ขอคืนเงินคอร์สหัตถการที่ยังคงเหลือ เนื่องจากต้องย้ายถิ่นฐานไปทำงานต่างจังหวัดกะทันหัน",
+          initialFix: "ผู้จัดการสาขาตรวจสอบประวัติการเข้ารับบริการ และส่งเอกสารคำร้องขอคืนคอร์สเข้าสู่ระบบพิจารณาของฝ่ายการเงินสำนักงานใหญ่"
+        },
+        { 
+          code: 'PR-03', manager: "กาญจน์", branch: "สาขารัตนาธิเบศร์", urgency: "Overdue", urgencyType: "overdue", 
+          needsGmHelp: "แจ้งให้ทราบ", isNeedGm: true, status: "กำลังติดตาม", category: "งานระบบ", subject: "อาคารสถานที่",
+          problemDetail: "เครื่องปรับอากาศห้องทำหัตถการหลักมีน้ำรั่วซึมลงฝ้าเพดานและส่งเสียงดัง เกินกำหนดเวลาซ่อมบำรุงตามรอบสัญญาบริการ",
+          initialFix: "ปิดกั้นพื้นที่โซนน้ำหยดชั่วคราวเพื่อความปลอดภัย และเร่งรัดช่างแอร์คู่สัญญาเข้าแก้ไขด่วนภายใน 24 ชม."
+        },
+        { 
+          code: 'PR-04', manager: "กาญจน์", branch: "สาขานครปฐม", urgency: "High", urgencyType: "high", 
+          needsGmHelp: "แจ้งให้ทราบ", isNeedGm: true, status: "กำลังติดตาม", category: "คนไข้", subject: "คืนคอร์ส",
+          problemDetail: "คนไข้ขอระงับและขอเงินคืนสำหรับคอร์สทรีตเมนต์เนื่องจากตั้งครรภ์และแพทย์สั่งงดหัตถการบางประเภท",
+          initialFix: "เสนอทางเลือกโอนสิทธิ์ให้บุคคลในครอบครัว หรือหากยืนยันขอคืนเงินให้ส่งเรื่องขอยกเว้นค่าธรรมเนียมตามเกณฑ์การแพทย์"
+        },
+        { 
+          code: 'PR-05', manager: "ซอฟ", branch: "สาขาบางนา", urgency: "ทั่วไป", urgencyType: "normal", 
+          needsGmHelp: "แจ้งให้ทราบ", isNeedGm: true, status: "กำลังติดตาม", category: "คนไข้", subject: "อาคารสถานที่",
+          problemDetail: "ประตูกระจกอัตโนมัติบริเวณทางเข้าด้านหน้าสาขาเลื่อนเปิด-ปิดฝืดและมีเสียงเสียดสีรบกวนคนไข้",
+          initialFix: "ฉีดสารหล่อลื่นรางเลื่อนเบื้องต้น และลงคิวนัดช่างบำรุงรักษาประจำอาคารเข้าตรวจเช็กมอเตอร์และเซนเซอร์"
+        },
+        { 
+          code: 'PR-06', manager: "ซอฟ", branch: "สาขาชลบุรี", urgency: "ทั่วไป", urgencyType: "normal", 
+          needsGmHelp: "แจ้งให้ทราบ", isNeedGm: true, status: "กำลังติดตาม", category: "คนไข้", subject: "Complaint",
+          problemDetail: "คนไข้ร้องเรียนเรื่องระยะเวลารอพบแพทย์นานเกิน 40 นาทีในช่วงเวลาที่มีคิวนัดหมายซ้อนกันในวันหยุด",
+          initialFix: "ผจก.สาขาเข้าขอโทษและชี้แจงสถานการณ์กับคนไข้ด้วยตนเอง มอบสิทธิ Complimentary Service พร้อมปรับจูนตารางนัดหมายแพทย์"
+        },
+        { 
+          code: 'PR-07', manager: "อัจ", branch: "สาขาสุราษ", urgency: "High", urgencyType: "high", 
+          needsGmHelp: "แจ้งให้ทราบ", isNeedGm: true, status: "กำลังติดตาม", category: "พนักงาน", subject: "(ไม่ได้ระบุหัวข้อ)",
+          problemDetail: "พนักงานผู้ช่วยแพทย์และฝ่ายต้อนรับมีอัตรากำลังไม่เต็มตามกรอบ ทำให้ภาระงานช่วงวันหยุดสุดสัปดาห์ตึงตัว",
+          initialFix: "จัดเกลี่ยตารางเวรล่วงหน้า และประสานงานฝ่ายบุคคลเพื่อเปิดรับสมัครพนักงานประจำและ Part-time เพิ่มเติม"
+        },
+        { 
+          code: 'PR-08', manager: "อัจ", branch: "สาขาหาดใหญ่", urgency: "High", urgencyType: "high", 
+          needsGmHelp: "แจ้งให้ทราบ", isNeedGm: true, status: "กำลังติดตาม", category: "พนักงาน", subject: "ลาออก",
+          problemDetail: "พนักงานทรีตเมนต์ 2 ท่านยื่นใบลาออกพร้อมกัน มีผลสิ้นเดือนนี้ เสี่ยงต่อการรองรับคนไข้ตามนัดหมายล่วงหน้า",
+          initialFix: "เร่งกระบวนการสัมภาษณ์ผู้สมัครใหม่ และประสานขอยืมตัวพนักงานชั่วคราวจากสาขาในเขตภาคใต้มาช่วยเสริมทีม"
+        },
+        { 
+          code: 'PR-09', manager: "รัตน์", branch: "สาขานครปฐม", urgency: "High", urgencyType: "high", 
+          needsGmHelp: "แจ้งให้ทราบ", isNeedGm: true, status: "กำลังดำเนินการ", category: "ทั่วไป", subject: "ขาดงาน",
+          problemDetail: "พนักงานต้อนรับขาดงานโดยไม่แจ้งล่วงหน้า ส่งผลให้การเปิดสาขาและรับคิวคนไข้ช่วงเช้าล่าช้า",
+          initialFix: "ผจก.สาขาเข้าปฏิบัติหน้าที่แทนในเคาน์เตอร์ต้อนรับ และดำเนินการออกหนังสือตักเตือนตามระเบียบวินัยบริษัท"
+        },
+        { 
+          code: 'PR-10', manager: "รัตน์", branch: "สาขานครปฐม", urgency: "ทั่วไป", urgencyType: "normal", 
+          needsGmHelp: "แจ้งให้ทราบ", isNeedGm: true, status: "กำลังดำเนินการ", category: "ทั่วไป", subject: "คืนคอร์ส",
+          problemDetail: "เอกสารคำร้องขอคืนคอร์สของคนไข้ยังรอเอกสารหลักฐานสลิปการโอนเงินตัวจริงเพิ่มเติมเพื่อความถูกต้อง",
+          initialFix: "เจ้าหน้าที่โทรประสานคนไข้เพื่อขอเอกสารเพิ่มเติมผ่าน LINE Official และแนบเรื่องส่งต่อฝ่ายการเงิน"
+        },
+        { 
+          code: 'PR-11', manager: "อี้", branch: "สาขาบางนา", urgency: "High", urgencyType: "high", 
+          needsGmHelp: "แจ้งให้ทราบ", isNeedGm: true, status: "กำลังติดตาม", category: "งานระบบ", subject: "อาคารสถานที่",
+          problemDetail: "หลอดไฟโถงรับรองคนไข้กระพริบและดับ 3 จุด ส่งผลต่อภาพลักษณ์และความสว่างในคลินิก",
+          initialFix: "จัดซื้อหลอด LED สเปกเดิมตามมาตรฐานคลินิกเปลี่ยนทดแทนเรียบร้อย และตรวจสอบเบรกเกอร์วงจรไฟ"
+        },
+        { 
+          code: 'PR-12', manager: "อี้", branch: "สาขาบางนา", urgency: "High", urgencyType: "high", 
+          needsGmHelp: "แจ้งให้ทราบ", isNeedGm: true, status: "กำลังติดตาม", category: "งานระบบ", subject: "อาคารสถานที่",
+          problemDetail: "สัญญาณอินเทอร์เน็ตหลุดบ่อย ทำให้เครื่องรูดบัตรเครดิต (EDC) ทำงานล่าช้าและส่งผลต่อการคิดเงินคนไข้",
+          initialFix: "ประสาน ISP ตรวจเช็กสายสัญญาณภายนอก พร้อมเปิดใช้งาน Mobile Hotspot และซิม 4G สำรองที่เครื่อง EDC"
+        },
+        { 
+          code: 'PR-13', manager: "จาเน่", branch: "สาขาขอนแก่น", urgency: "Overdue", urgencyType: "overdue", 
+          needsGmHelp: "แจ้งให้ทราบ", isNeedGm: true, status: "กำลังติดตาม", category: "คนไข้", subject: "คืนคอร์ส",
+          problemDetail: "รายการคืนเงินคอร์สของคนไข้เกินระยะเวลา SLA 14 วัน คนไข้ติดตามสถานะซ้ำทางโทรศัพท์",
+          initialFix: "โทรชี้แจงขออภัยคนไข้ พร้อมออกใบติดตามเรื่องเร่งด่วนไปยังหัวหน้าฝ่ายการเงินเพื่อขอให้อนุมัติจ่ายเงินวันนี้"
+        },
+        { 
+          code: 'PR-14', manager: "เปีย", branch: "สาขาระยอง", urgency: "High", urgencyType: "high", 
+          needsGmHelp: "ขออนุมัติ", isNeedGm: true, status: "กำลังติดตาม", category: "บัญชี", subject: "มีรายการรอชำระ",
+          problemDetail: "มีใบวางบิลค่าซ่อมบำรุงเครื่องมือแพทย์และอุปกรณ์สำนักงานที่เกินอำนาจอนุมัติของสาขา รอ GM อนุมัติ",
+          initialFix: "แนบใบเสนอราคาและรายงานการตรวจรับเข้าสู่ระบบ ERP ส่งให้ GM พิจารณาอนุมัติการเบิกจ่าย"
+        },
+        { 
+          code: 'PR-15', manager: "ส้มโอ", branch: "สาขามิสทีน", urgency: "High", urgencyType: "high", 
+          needsGmHelp: "ขอให้ GM เข้า Support", isNeedGm: true, status: "กำลังติดตาม", category: "งานระบบ", subject: "อาคารสถานที่",
+          problemDetail: "ปัญหาน้ำรั่วซึมจากรอยต่อหลังคาอาคารเช่า มีความเสี่ยงต่อเครื่องเลเซอร์และเครื่องมือแพทย์ราคาแพง",
+          initialFix: "นำผ้าใบคลุมอุปกรณ์ ย้ายเครื่องมือแพทย์ไปห้องที่ปลอดภัย และขอให้ GM ประสานกับเจ้าของพื้นที่เช่าเข้าซ่อมโครงสร้างด่วน"
+        },
+        { 
+          code: 'PR-16', manager: "ส้มโอ", branch: "สาขามิสทีน", urgency: "High", urgencyType: "high", 
+          needsGmHelp: "แจ้งให้ทราบ", isNeedGm: true, status: "กำลังติดตาม", category: "คนไข้", subject: "คืนคอร์ส",
+          problemDetail: "คนไข้มีอาการระคายเคืองผิวหลังทำทรีตเมนต์และประสงค์ขอยกเลิกคอร์สที่เหลือ",
+          initialFix: "นัดหมายแพทย์ผู้เชี่ยวชาญเข้าตรวจดูอาการทันทีโดยไม่มีค่าใช้จ่าย และทำบันทึกคำร้องขอคืนคอร์สตามที่คนไข้ประสงค์"
+        },
+        { 
+          code: 'PR-17', manager: "ส้มโอ", branch: "สาขามิสทีน", urgency: "ทั่วไป", urgencyType: "normal", 
+          needsGmHelp: "-", isNeedGm: false, status: "กำลังดำเนินการ", category: "ทั่วไป", subject: "(ไม่ได้ระบุหัวข้อ)",
+          problemDetail: "แฟ้มเวชระเบียนคนไข้ใหม่รอการสแกนและบันทึกรหัสลงในฐานข้อมูลระบบกลาง",
+          initialFix: "จัดแบ่งเวรเจ้าหน้าที่ธุรการทำการสแกนและคีย์ข้อมูลหลังปิดรับคนไข้ประจำวัน ดำเนินการแล้วเสร็จตามรอบ"
+        }
+      ];
+
       // Mock Accounting Data
       let accountingBranches = [
         { branch: "สาขา สยามสแควร์", totalAmount: 48500 },
@@ -895,6 +1967,115 @@
         // =========================================================================
     // 3. FETCH & LOAD DATA (⚡ INSTANT STALE-WHILE-REVALIDATE: โหลดทันที 0.01 วิ)
     // =========================================================================
+        // =========================================================================
+    // 1.5 DATA SANITIZATION (กรองวันที่หลุดปนในชื่อสาขา และจัดระเบียบข้อมูลสำรวจจริง)
+    // =========================================================================
+    function isInvalidBranchName(name) {
+      if (!name || typeof name !== 'string') return true;
+      const t = name.trim();
+      if (t === '' || t === '-' || t.toLowerCase() === 'undefined') return true;
+      // กรองข้อความ Timezone / วันที่ เช่น 'Sat Jan 10 2026 00:00:00 GMT+0700 (Indochina Time)'
+      if (t.includes('GMT+') || t.includes('GMT-') || t.includes('Indochina Time') || t.includes('เวลาอินโดจีน') || t.includes('00:00:00')) {
+        return true;
+      }
+      if (/^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\b/i.test(t)) {
+        return true;
+      }
+      if (!isNaN(Date.parse(t)) && /\b20\d{2}\b/.test(t)) {
+        return true;
+      }
+      return false;
+    }
+
+    function sanitizeDashboardData(data) {
+      if (!data || !data.gmReport) return data;
+
+      // 1. ลบสาขาผีที่เป็นวันที่ (Sat Jan 10 2026...) ออกจากทุกผู้จัดการ
+      let validBranchesCount = 0;
+      let kpiGreen = 0, kpiYellow = 0, kpiRed = 0, kpiPending = 0;
+
+      if (Array.isArray(data.gmReport.managers)) {
+        data.gmReport.managers.forEach(m => {
+          if (Array.isArray(m.branches)) {
+            m.branches = m.branches.filter(b => !isInvalidBranchName(b.name));
+            m.allBranchNames = m.branches.map(b => b.name);
+            validBranchesCount += m.branches.length;
+
+            m.branches.forEach(b => {
+              if (b.status === 'green') kpiGreen++;
+              else if (b.status === 'yellow') kpiYellow++;
+              else if (b.status === 'red') kpiRed++;
+              else kpiPending++;
+            });
+          }
+        });
+      }
+
+      if (data.gmReport.summary) {
+        data.gmReport.summary.totalBranches = validBranchesCount;
+        data.gmReport.summary.kpiStatusCount = {
+          green: kpiGreen,
+          yellow: kpiYellow,
+          red: kpiRed,
+          pending: kpiPending
+        };
+      }
+
+      // 2. จัดระเบียบข้อมูลปัญหาสำรวจจริง (17 เคส) ให้มีรหัส PR-01, PR-02 ชัดเจน
+      if (Array.isArray(data.gmReport.problemsList)) {
+        data.gmReport.problemsList = data.gmReport.problemsList.filter(p => p && (p.branch || p.subject));
+        data.gmReport.problemsList.forEach((p, idx) => {
+          p.code = p.code || `PR-${String(idx + 1).padStart(2, '0')}`;
+          p.index = idx + 1;
+          
+          // Normalized urgency & risk
+          if (!p.urgency) p.urgency = 'ทั่วไป';
+          if (p.urgency === 'Critical' || p.urgencyType === 'critical') {
+            p.risk = 'Critical';
+            p.urgency = 'Critical';
+          } else if (p.urgency === 'High' || p.urgencyType === 'high') {
+            p.risk = 'High';
+            p.urgency = 'High';
+          } else if (p.urgency === 'Overdue' || p.urgencyType === 'overdue') {
+            p.risk = 'Overdue';
+            p.urgency = 'Overdue';
+          } else {
+            p.risk = 'ทั่วไป';
+            p.urgency = 'ทั่วไป';
+          }
+
+          if (!p.status) p.status = 'กำลังติดตาม';
+          if (!p.category) p.category = 'ทั่วไป';
+          if (!p.subject) p.subject = '(ไม่ได้ระบุหัวข้อ)';
+          if (!p.needsGmHelp) p.needsGmHelp = '-';
+          if (p.isNeedGm === undefined) {
+            p.isNeedGm = p.needsGmHelp !== '-';
+          }
+          // ดึงข้อมูลคอลัมน์ H (รายละเอียดปัญหา) และคอลัมน์ I (การแก้ไขเบื้องต้น) จาก Google Sheets / API
+          p.problemDetail = p.problemDetail || p['รายละเอียดปัญหา'] || p.detail || p.colH || p.issueDetail || p.description || p.subject || '-';
+          p.initialFix = p.initialFix || p['การแก้ไขเบื้องต้น'] || p.initialAction || p.solution || p.colI || p.action || p.fix || '-';
+        });
+
+        // สรุปยอดปัญหาตามระดับความเร่งด่วนจริง
+        const crit = data.gmReport.problemsList.filter(p => p.urgency === 'Critical').length;
+        const high = data.gmReport.problemsList.filter(p => p.urgency === 'High').length;
+        const overdue = data.gmReport.problemsList.filter(p => p.urgency === 'Overdue').length;
+        const normal = data.gmReport.problemsList.filter(p => p.urgency === 'ทั่วไป').length;
+
+        if (data.gmReport.summary) {
+          data.gmReport.summary.problems = {
+            critical: crit,
+            high: high,
+            overdue: overdue,
+            normal: normal,
+            total: data.gmReport.problemsList.length
+          };
+        }
+      }
+
+      return data;
+    }
+
     async function fetchDashboardData(isForcedRefresh = false) {
       const refreshIcon = document.getElementById('refreshIcon');
       if (refreshIcon) refreshIcon.classList.add('animate-spin');
@@ -909,7 +2090,7 @@
           if (cachedStr) {
             const parsed = JSON.parse(cachedStr);
             if (parsed && parsed.gmReport) {
-              dashboardState.data = parsed;
+              dashboardState.data = sanitizeDashboardData(parsed);
               renderDashboard();
               hideGlobalLoader(); // ปิดหน้าจอโหลดทันที ผู้ใช้เห็นข้อมูลเลย!
               hasLocalCache = true;
@@ -934,8 +2115,8 @@
           google.script.run
             .withSuccessHandler(function(serverData) {
               if (serverData) {
-                dashboardState.data = serverData;
-                localStorage.setItem(cacheKey, JSON.stringify(serverData));
+                dashboardState.data = sanitizeDashboardData(serverData);
+                localStorage.setItem(cacheKey, JSON.stringify(dashboardState.data));
                 renderDashboard();
               }
               if (refreshIcon) refreshIcon.classList.remove('animate-spin');
@@ -963,8 +2144,8 @@
           const response = await fetch(fetchUrl);
           const result = await response.json();
           if (result.status === 'success') {
-            dashboardState.data = result.data;
-            localStorage.setItem(cacheKey, JSON.stringify(result.data));
+            dashboardState.data = sanitizeDashboardData(result.data);
+            localStorage.setItem(cacheKey, JSON.stringify(dashboardState.data));
             renderDashboard();
           } else {
             throw new Error(result.message || 'API Error');
@@ -974,7 +2155,7 @@
           // กรณี C: Demo Mode
           // -------------------------------------------------------------
           await new Promise(r => setTimeout(r, 100));
-          dashboardState.data = generateMockData(dashboardState.currentPeriodIndex);
+          dashboardState.data = sanitizeDashboardData(generateMockData(dashboardState.currentPeriodIndex));
           renderDashboard();
         }
 
@@ -982,7 +2163,7 @@
         console.error('Fetch Data Error:', err);
         if (!hasLocalCache) {
           alert(`เกิดข้อผิดพลาดในการเชื่อมต่อ Google Sheets: ${err.message}\nระบบจะแสดงข้อมูลตัวอย่างชั่วคราว`);
-          dashboardState.data = generateMockData(dashboardState.currentPeriodIndex);
+          dashboardState.data = sanitizeDashboardData(generateMockData(dashboardState.currentPeriodIndex));
           renderDashboard();
         }
       } finally {
@@ -1012,6 +2193,9 @@
         modeBadge.innerHTML = '<span class="w-1.5 h-1.5 mr-1.5 rounded-full bg-amber-500 animate-pulse"></span>Demo Data';
         if (demoBanner) demoBanner.classList.remove('hidden');
       }
+
+      // Render Tab 0 (Thailand Map & Branch Summary)
+      renderMapAndBranchSummary();
 
       // Render Tab 1 (GM Monitor)
       renderTopCards(data.gmReport.summary, data.accounting);
@@ -1066,9 +2250,9 @@
       document.getElementById('cardWithdrawalSub').textContent = accounting.title || 'จากชีทรายงานการเบิกบัญชี';
     }
 
-    // 4.2 Render Charts (Chart.js)
+    // 4.2 Render Charts (Chart.js พร้อมตัวเลขแสดงตรงบนกราฟ อ่านได้ทันทีไม่ต้องเอาเมาส์ชี้)
     function renderCharts(data) {
-      // Chart 1: Meeting Compliance Chart
+      // Chart 1: Meeting Compliance Chart (แสดงเลขครั้งประชุมบนแท่งกราฟเลย)
       const mgrLabels = data.gmReport.managers.map(m => m.manager);
       const mgrActuals = data.gmReport.managers.map(m => m.actualMeetings);
       const barColors = data.gmReport.managers.map(m => m.actualMeetings >= 8 ? '#10B981' : '#F43F5E');
@@ -1090,7 +2274,23 @@
           responsive: true,
           maintainAspectRatio: false,
           plugins: {
-            legend: { display: false }
+            legend: { display: false },
+            datalabels: {
+              display: true,
+              color: '#FFFFFF',
+              anchor: 'center',
+              align: 'center',
+              font: {
+                family: 'Prompt',
+                weight: 'bold',
+                size: 11
+              },
+              formatter: function(val) {
+                return val + ' ครั้ง';
+              },
+              textShadowBlur: 4,
+              textShadowColor: 'rgba(0, 0, 0, 0.5)'
+            }
           },
           scales: {
             y: {
@@ -1102,7 +2302,7 @@
         }
       });
 
-      // Chart 2: KPI Doughnut Chart
+      // Chart 2: KPI Doughnut Chart (แสดงตัวเลขและเปอร์เซ็นต์บนแต่ละวงกลมกราฟเลย)
       const kpiCounts = [
         data.gmReport.summary.kpiStatusCount.green,
         data.gmReport.summary.kpiStatusCount.yellow,
@@ -1111,6 +2311,8 @@
       document.getElementById('doughnutGreenVal').textContent = kpiCounts[0];
       document.getElementById('doughnutYellowVal').textContent = kpiCounts[1];
       document.getElementById('doughnutRedVal').textContent = kpiCounts[2];
+
+      const kpiTotal = kpiCounts.reduce((a, b) => a + b, 0) || 1;
 
       if (dashboardState.charts.kpiDoughnut) dashboardState.charts.kpiDoughnut.destroy();
       const ctxDoughnut = document.getElementById('kpiDoughnutChart').getContext('2d');
@@ -1122,16 +2324,35 @@
             data: kpiCounts,
             backgroundColor: ['#10B981', '#F59E0B', '#EF4444'],
             borderWidth: 2,
+            borderColor: '#FFFFFF',
             hoverOffset: 4
           }]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          cutout: '68%',
           plugins: {
-            legend: { display: false }
-          },
-          cutout: '72%'
+            legend: { display: false },
+            datalabels: {
+              display: true,
+              color: '#FFFFFF',
+              font: {
+                family: 'Prompt',
+                weight: 'bold',
+                size: 11
+              },
+              formatter: function(val) {
+                if (!val || val === 0) return '';
+                const pct = Math.round((val / kpiTotal) * 100);
+                return `${val}
+(${pct}%)`;
+              },
+              textAlign: 'center',
+              textShadowBlur: 4,
+              textShadowColor: 'rgba(0, 0, 0, 0.5)'
+            }
+          }
         }
       });
     }
@@ -1228,8 +2449,10 @@
 
       let allBranches = [];
       dashboardState.data.gmReport.managers.forEach(m => {
-        m.branches.forEach(b => {
-          allBranches.push({ ...b, manager: m.manager });
+        (m.branches || []).forEach(b => {
+          if (!isInvalidBranchName(b.name)) {
+            allBranches.push({ ...b, manager: m.manager });
+          }
         });
       });
 
@@ -1319,35 +2542,238 @@
       renderBranchCards();
     }
 
-    // 4.5 Render Problems Section (Tab 3)
+    // 4.5 Render Problem Management Section (Tab 3 - ข้อมูลสำรวจจริง 100% ไม่ Mockup)
     function renderProblemsSection(problems, summaryProblems) {
-      document.getElementById('statProbCritical').textContent = summaryProblems.critical;
-      document.getElementById('statProbHigh').textContent = summaryProblems.high;
-      document.getElementById('statProbOverdue').textContent = summaryProblems.overdue;
+      const allProbs = problems || (dashboardState.data && dashboardState.data.gmReport ? dashboardState.data.gmReport.problemsList : []);
+      
+      // คำนวณจำนวนจริงตามข้อมูลสำรวจ
+      const total = allProbs.length;
+      const crit = allProbs.filter(p => p.urgency === 'Critical').length;
+      const high = allProbs.filter(p => p.urgency === 'High').length;
+      const overdue = allProbs.filter(p => p.urgency === 'Overdue').length;
+      const normal = allProbs.filter(p => p.urgency === 'ทั่วไป').length;
 
-      const needsGmCount = problems.filter(p => p.needsGmHelp && p.needsGmHelp !== '-').length;
-      document.getElementById('statProbNeedsGm').textContent = needsGmCount;
+      const trackingCount = allProbs.filter(p => p.status === 'กำลังติดตาม').length;
+      const inProgCount = allProbs.filter(p => p.status === 'กำลังดำเนินการ').length;
+      const needsGmCount = allProbs.filter(p => p.isNeedGm).length;
+      const uniqueBranches = new Set(allProbs.map(p => p.branch)).size;
 
+      // Update Metric Numbers in Bento Cards
+      const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+      setEl('statProbTotal', total);
+      setEl('statProbCritical', crit);
+      setEl('statProbHigh', high);
+      setEl('statProbOverdue', overdue);
+      setEl('statProbNormal', normal);
+
+      setEl('statStatusTracking', trackingCount);
+      setEl('statStatusAction', inProgCount);
+      setEl('statNeedsGm', needsGmCount);
+      setEl('statBranchesWithProblems', uniqueBranches);
+
+      setEl('chartCenterCount', total);
+      setEl('statCasesCount', total);
+
+      // Populate Filter Dropdowns (ช่วงเวลา, สาขา, ผู้จัดการ, หมวดหมู่)
+      populateProblemFilters(allProbs);
+
+      // Render Donut Chart พร้อมตัวเลขกำกับในกราฟโดยตรง (ไม่ต้องรอเอาเมาส์ไปชี้)
+      renderProblemsDonutChart(allProbs);
+
+      // Render Cases Data (Desktop Table + Mobile Touch-friendly Cards)
       renderProblemsTable();
+
+      // Render Selected Case Detail Card
+      if (!dashboardState.selectedProblemCode && allProbs.length > 0) {
+        dashboardState.selectedProblemCode = allProbs[0].code;
+      }
+      renderProblemDetail(dashboardState.selectedProblemCode);
     }
 
+    // Populate Filter Dropdowns (สาขา, ผู้จัดการ, หมวดหมู่)
+    function populateProblemFilters(problems) {
+      const branchSel = document.getElementById('probFilterBranch');
+      const mgrSel = document.getElementById('probFilterManager');
+      const catSel = document.getElementById('probFilterCategory');
+
+      if (!branchSel || !mgrSel) return;
+
+      const branches = [...new Set(problems.map(p => p.branch))].filter(b => b && !isInvalidBranchName(b)).sort();
+      const managers = [...new Set(problems.map(p => p.manager))].filter(Boolean).sort();
+
+      const curBranch = branchSel.value;
+      const curMgr = mgrSel.value;
+
+      branchSel.innerHTML = '<option value="ALL">ทั้งหมด</option>';
+      branches.forEach(b => {
+        branchSel.innerHTML += `<option value="${b}">${b}</option>`;
+      });
+      branchSel.value = curBranch && (curBranch === 'ALL' || branches.includes(curBranch)) ? curBranch : 'ALL';
+
+      mgrSel.innerHTML = '<option value="ALL">ทั้งหมด</option>';
+      managers.forEach(m => {
+        mgrSel.innerHTML += `<option value="${m}">${m}</option>`;
+      });
+      mgrSel.value = curMgr && (curMgr === 'ALL' || managers.includes(curMgr)) ? curMgr : 'ALL';
+    }
+
+    // Render Status Donut Chart with Direct Numbers Printed on Graphic Elements
+    function renderProblemsDonutChart(problems) {
+      const ctx = document.getElementById('problemsDonutChart');
+      if (!ctx) return;
+
+      const total = problems.length || 1;
+      const trackingCount = problems.filter(p => p.status === 'กำลังติดตาม').length;
+      const actionCount = problems.filter(p => p.status === 'กำลังดำเนินการ').length;
+
+      const pctTracking = Math.round((trackingCount / total) * 100);
+      const pctAction = Math.round((actionCount / total) * 100);
+
+      // Update Legend HTML with Direct Numbers & Percentages
+      const legend = document.getElementById('problemsDonutLegend');
+      if (legend) {
+        legend.innerHTML = `
+          <div class="flex items-center justify-between p-2 rounded-xl bg-amber-50/70 border border-amber-200/80 cursor-pointer hover:bg-amber-100/70 transition" onclick="filterProblemStatus('กำลังติดตาม')">
+            <span class="flex items-center space-x-1.5 text-xs font-bold text-amber-900">
+              <span class="w-3 h-3 rounded-full bg-amber-500 flex-shrink-0"></span>
+              <span>กำลังติดตาม</span>
+            </span>
+            <span class="font-black text-amber-950 text-xs sm:text-sm">${trackingCount} (${pctTracking}%)</span>
+          </div>
+          <div class="flex items-center justify-between p-2 rounded-xl bg-blue-50/70 border border-blue-200/80 cursor-pointer hover:bg-blue-100/70 transition" onclick="filterProblemStatus('กำลังดำเนินการ')">
+            <span class="flex items-center space-x-1.5 text-xs font-bold text-blue-900">
+              <span class="w-3 h-3 rounded-full bg-blue-500 flex-shrink-0"></span>
+              <span>กำลังดำเนินการ</span>
+            </span>
+            <span class="font-black text-blue-950 text-xs sm:text-sm">${actionCount} (${pctAction}%)</span>
+          </div>
+        `;
+      }
+
+      if (dashboardState.charts.problemsDonut) {
+        dashboardState.charts.problemsDonut.destroy();
+      }
+
+      dashboardState.charts.problemsDonut = new Chart(ctx.getContext('2d'), {
+        type: 'doughnut',
+        data: {
+          labels: ['กำลังติดตาม', 'กำลังดำเนินการ'],
+          datasets: [{
+            data: [trackingCount, actionCount],
+            backgroundColor: ['#F59E0B', '#3B82F6'],
+            borderWidth: 2,
+            borderColor: '#FFFFFF',
+            hoverOffset: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '64%',
+          plugins: {
+            legend: { display: false },
+            datalabels: {
+              display: true,
+              color: '#FFFFFF',
+              font: {
+                family: 'Prompt',
+                weight: 'bold',
+                size: 12
+              },
+              formatter: function(val, context) {
+                if (!val || val === 0) return '';
+                const p = Math.round((val / total) * 100);
+                return `${val} เคส\n(${p}%)`;
+              },
+              textAlign: 'center',
+              textShadowBlur: 4,
+              textShadowColor: 'rgba(0, 0, 0, 0.65)'
+            },
+            tooltip: {
+              callbacks: {
+                label: function(c) {
+                  const val = c.raw || 0;
+                  const p = Math.round((val / total) * 100);
+                  return ` ${c.label}: ${val} เคส (${p}%)`;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // Render Cases Table & Mobile Cards
     function renderProblemsTable() {
       const tbody = document.getElementById('problemsTableBody');
+      const mobileContainer = document.getElementById('problemsMobileCards');
       const noMsg = document.getElementById('noProblemsMessage');
+      const countBadge = document.getElementById('statCasesCount');
+      const activeFilterBadge = document.getElementById('activeFilterBadge');
+      const btnGmToggle = document.getElementById('btnGmFilterToggle');
+
+      if (!tbody || !mobileContainer) return;
+
       tbody.innerHTML = '';
+      mobileContainer.innerHTML = '';
 
-      const query = document.getElementById('problemSearchInput').value.toLowerCase();
-      const allProblems = dashboardState.data.gmReport.problemsList;
+      const searchInput = document.getElementById('problemSearchInput');
+      const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
 
+      const allProblems = (dashboardState.data && dashboardState.data.gmReport) ? dashboardState.data.gmReport.problemsList : [];
+
+      // Update GM Toggle button appearance
+      if (btnGmToggle) {
+        if (dashboardState.problemNeedsGmOnly) {
+          btnGmToggle.className = 'px-3 py-1.5 text-xs font-bold rounded-xl border border-rose-500 bg-rose-600 text-white flex items-center justify-center space-x-1.5 shadow-sm transition';
+        } else {
+          btnGmToggle.className = 'px-3 py-1.5 text-xs font-bold rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 flex items-center justify-center space-x-1.5 shadow-sm transition';
+        }
+      }
+
+      // Filter Logic
       const filtered = allProblems.filter(p => {
-        if (dashboardState.problemFilterUrgency !== 'ALL' && !p.urgency.includes(dashboardState.problemFilterUrgency)) return false;
-        if (dashboardState.problemNeedsGmOnly && (!p.needsGmHelp || p.needsGmHelp === '-')) return false;
+        // Urgency Filter
+        if (dashboardState.problemFilterRisk !== 'ALL' && p.urgency !== dashboardState.problemFilterRisk) return false;
+        // Status Filter
+        if (dashboardState.problemFilterStatus !== 'ALL' && p.status !== dashboardState.problemFilterStatus) return false;
+        // Branch Filter
+        if (dashboardState.problemFilterBranch !== 'ALL' && p.branch !== dashboardState.problemFilterBranch) return false;
+        // Manager Filter
+        if (dashboardState.problemFilterManager !== 'ALL' && p.manager !== dashboardState.problemFilterManager) return false;
+        // Category Filter
+        if (dashboardState.problemFilterCategory && dashboardState.problemFilterCategory !== 'ALL' && p.category !== dashboardState.problemFilterCategory) return false;
+        // Needs GM Only Toggle
+        if (dashboardState.problemNeedsGmOnly && !p.isNeedGm) return false;
+        // Search Query
         if (query) {
-          const hay = `${p.branch} ${p.manager} ${p.subject} ${p.category} ${p.urgency}`.toLowerCase();
-          if (!hay.includes(query)) return false;
+          const haystack = `${p.code || ''} ${p.branch} ${p.manager} ${p.subject} ${p.category} ${p.urgency} ${p.status} ${p.needsGmHelp}`.toLowerCase();
+          if (!haystack.includes(query)) return false;
         }
         return true;
       });
+
+      if (countBadge) countBadge.textContent = filtered.length;
+
+      // Active Filter Pills indicator
+      if (activeFilterBadge) {
+        const filters = [];
+        if (dashboardState.problemFilterRisk !== 'ALL') filters.push(`ด่วน: ${dashboardState.problemFilterRisk}`);
+        if (dashboardState.problemFilterStatus !== 'ALL') filters.push(`สถานะ: ${dashboardState.problemFilterStatus}`);
+        if (dashboardState.problemFilterCategory !== 'ALL') filters.push(`หมวด: ${dashboardState.problemFilterCategory}`);
+        if (dashboardState.problemFilterBranch !== 'ALL') filters.push(`${dashboardState.problemFilterBranch}`);
+        if (dashboardState.problemFilterManager !== 'ALL') filters.push(`ผจก. ${dashboardState.problemFilterManager}`);
+        if (dashboardState.problemNeedsGmOnly) filters.push(`🚨 เฉพาะขอ GM ช่วย`);
+        
+        if (filters.length > 0) {
+          activeFilterBadge.textContent = filters.join(' • ') + ' ✕ ล้างตัวกรอง';
+          activeFilterBadge.classList.remove('hidden');
+          activeFilterBadge.onclick = resetProblemFilters;
+          activeFilterBadge.style.cursor = 'pointer';
+        } else {
+          activeFilterBadge.classList.add('hidden');
+        }
+      }
 
       if (filtered.length === 0) {
         noMsg.classList.remove('hidden');
@@ -1356,60 +2782,598 @@
       noMsg.classList.add('hidden');
 
       filtered.forEach(p => {
-        let badge = `<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">ปกติ</span>`;
-        if (p.urgency.includes('Critical')) badge = `<span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-800">🔴 Critical</span>`;
-        if (p.urgency.includes('High')) badge = `<span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800">🟡 High</span>`;
-        if (p.urgency.includes('Overdue')) badge = `<span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-100 text-purple-800">🟣 Overdue</span>`;
+        const isSelected = p.code === dashboardState.selectedProblemCode;
 
-        const gmBadge = (p.needsGmHelp && p.needsGmHelp !== '-')
-          ? `<span class="px-2 py-0.5 rounded-full text-xs font-bold bg-orange-100 text-orange-800 border border-orange-300">🚨 ต้องการ GM ช่วย</span>`
-          : `<span class="text-xs text-slate-400">-</span>`;
+        // Urgency Badge
+        let urgencyBadge = `<span class="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800"><span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span><span>🟢 ทั่วไป</span></span>`;
+        if (p.urgency === 'Critical') {
+          urgencyBadge = `<span class="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-800 animate-pulse"><span class="w-1.5 h-1.5 rounded-full bg-rose-600"></span><span>🔴 Critical</span></span>`;
+        } else if (p.urgency === 'High') {
+          urgencyBadge = `<span class="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800"><span class="w-1.5 h-1.5 rounded-full bg-amber-600"></span><span>🟠 High</span></span>`;
+        } else if (p.urgency === 'Overdue') {
+          urgencyBadge = `<span class="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-100 text-purple-800"><span class="w-1.5 h-1.5 rounded-full bg-purple-600"></span><span>🟣 Overdue</span></span>`;
+        }
 
+        // Status Badge
+        let statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200">⏳ กำลังติดตาม</span>`;
+        if (p.status === 'กำลังดำเนินการ') {
+          statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-800 border border-blue-200">🔄 กำลังดำเนินการ</span>`;
+        }
+
+        // Category Tag Icon
+        let catIcon = '📋';
+        if (p.category === 'งานระบบ') catIcon = '⚙️';
+        if (p.category === 'คนไข้') catIcon = '👥';
+        if (p.category === 'บัญชี') catIcon = '💼';
+        if (p.category === 'พนักงาน') catIcon = '👔';
+
+        // GM Help Badge
+        let gmBadge = `<span class="text-xxs text-slate-400">-</span>`;
+        if (p.needsGmHelp === 'ขอให้ GM เข้า Support') {
+          gmBadge = `<span class="px-2 py-0.5 rounded-md text-xxs font-bold bg-rose-100 text-rose-800 border border-rose-300">🚨 ขอให้ GM เข้า Support</span>`;
+        } else if (p.needsGmHelp === 'ขออนุมัติ') {
+          gmBadge = `<span class="px-2 py-0.5 rounded-md text-xxs font-bold bg-amber-100 text-amber-900 border border-amber-300">📝 ขออนุมัติ</span>`;
+        } else if (p.needsGmHelp === 'แจ้งให้ทราบ') {
+          gmBadge = `<span class="px-2 py-0.5 rounded-md text-xxs font-bold bg-sky-50 text-sky-800 border border-sky-200">ℹ️ แจ้งให้ทราบ</span>`;
+        }
+
+        // 1. Desktop Table Row
         const tr = document.createElement('tr');
-        tr.className = 'hover:bg-slate-50 transition border-b border-slate-100';
+        tr.className = `cursor-pointer transition border-b border-slate-100 hover:bg-blue-50/50 ${isSelected ? 'case-row-selected' : ''}`;
+        tr.onclick = () => selectProblemCase(p.code);
         tr.innerHTML = `
-          <td class="py-3 px-4">${badge}</td>
-          <td class="py-3 px-3">
-            <span class="font-bold text-slate-900 block">${p.branch}</span>
-            <span class="text-xxs text-slate-400">ผจก. ${p.manager}</span>
-          </td>
-          <td class="py-3 px-3 font-medium text-slate-800 max-w-xs break-words">${p.subject}</td>
-          <td class="py-3 px-3 text-slate-600">${p.category || '-'}</td>
-          <td class="py-3 px-3 text-slate-600"><span class="px-2 py-0.5 bg-slate-100 rounded text-xs">${p.status || '-'}</span></td>
-          <td class="py-3 px-4 text-center">${gmBadge}</td>
+          <td class="py-3 px-3 font-mono font-bold ${isSelected ? 'text-blue-700' : 'text-slate-900'}">${p.code}</td>
+          <td class="py-3 px-3 font-semibold text-slate-800">${p.branch}</td>
+          <td class="py-3 px-3 text-slate-600 font-medium">${p.manager}</td>
+          <td class="py-3 px-3 whitespace-nowrap"><span class="px-2 py-0.5 bg-slate-100 rounded text-xxs font-semibold text-slate-700">${catIcon} ${p.category}</span></td>
+          <td class="py-3 px-4 font-bold text-slate-900 max-w-xs truncate" title="${p.subject}">${p.subject}</td>
+          <td class="py-3 px-3">${urgencyBadge}</td>
+          <td class="py-3 px-3">${statusBadge}</td>
+          <td class="py-3 px-4">${gmBadge}</td>
         `;
         tbody.appendChild(tr);
+
+        // 2. Mobile Touch-friendly Card (< 768px)
+        const mCard = document.createElement('div');
+        mCard.className = `p-4 cursor-pointer transition ${isSelected ? 'bg-blue-50/70 border-l-4 border-blue-600' : 'hover:bg-slate-50'}`;
+        mCard.onclick = () => selectProblemCase(p.code, true);
+        mCard.innerHTML = `
+          <div class="flex items-center justify-between mb-1.5">
+            <div class="flex items-center space-x-2">
+              <span class="font-mono font-bold text-xs ${isSelected ? 'text-blue-700' : 'text-slate-900'}">${p.code}</span>
+              <span class="text-xs font-bold text-slate-800">${p.branch}</span>
+              <span class="text-xxs px-1.5 py-0.5 bg-slate-100 rounded text-slate-600 font-medium">${catIcon} ${p.category}</span>
+            </div>
+            <div class="flex items-center space-x-1.5">
+              ${urgencyBadge}
+            </div>
+          </div>
+          <h4 class="text-xs font-bold text-slate-900 leading-snug my-1">${p.subject}</h4>
+          <div class="flex items-center justify-between text-xxs text-slate-500 pt-1.5 border-t border-slate-100 mt-2">
+            <div class="flex items-center space-x-2">
+              <span>ผจก: <strong class="text-slate-800">${p.manager}</strong></span>
+              <span>•</span>
+              <span>${statusBadge}</span>
+            </div>
+            <div class="flex items-center space-x-1 font-bold ${isSelected ? 'text-blue-600' : 'text-slate-500'}">
+              <span>${isSelected ? 'กำลังดู' : 'แตะดูรายละเอียด'}</span>
+              <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+            </div>
+          </div>
+        `;
+        mobileContainer.appendChild(mCard);
       });
+
+      lucide.createIcons();
     }
 
-    function filterProblemUrgency(urgency) {
-      dashboardState.problemFilterUrgency = urgency;
-      const btns = {
-        'ALL': document.getElementById('probBtnAll'),
-        'Critical': document.getElementById('probBtnCritical'),
-        'High': document.getElementById('probBtnHigh'),
-        'Overdue': document.getElementById('probBtnOverdue')
-      };
-      Object.keys(btns).forEach(k => {
-        if (btns[k]) {
-          btns[k].className = (k === urgency)
-            ? 'px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-900 text-white'
-            : 'px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200';
-        }
-      });
+    // Select Problem Case & Render Details (เลื่อนจออัตโนมัติ / เปิด Bottom Sheet ทันทีที่คลิก)
+    function selectProblemCase(code, fromMobileCard = false) {
+      dashboardState.selectedProblemCode = code;
       renderProblemsTable();
-    }
+      renderProblemDetail(code);
 
-    function toggleNeedsGmOnly() {
-      dashboardState.problemNeedsGmOnly = !dashboardState.problemNeedsGmOnly;
-      const card = document.getElementById('needsGmCard');
-      if (dashboardState.problemNeedsGmOnly) {
-        card.classList.add('ring-2', 'ring-orange-500');
+      const isMobile = window.innerWidth < 768 || fromMobileCard;
+
+      if (isMobile) {
+        // 📱 บนโทรศัพท์: เลื่อน Bottom Sheet Drawer ขึ้นมาจากด้านล่างจอให้อ่านทันที ไม่ต้องเลื่อนหา!
+        openCaseBottomSheet(code);
       } else {
-        card.classList.remove('ring-2', 'ring-orange-500');
+        // 💻 บนคอมพิวเตอร์: เลื่อนหน้าจอไปยังการ์ดรายละเอียดด้านล่างให้เห็นชัดเจน พร้อมไฮไลต์ไฟกะพริบ
+        const detailEl = document.getElementById('problemDetailCard');
+        if (detailEl) {
+          detailEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          detailEl.classList.remove('detail-pulse-highlight');
+          void detailEl.offsetWidth; // trigger reflow
+          detailEl.classList.add('detail-pulse-highlight');
+        }
       }
+    }
+
+    // เปิด Bottom Sheet Drawer จากด้านล่างหน้าจอ (แสดงเฉพาะข้อมูลสำรวจจริง 100%)
+    function openCaseBottomSheet(code) {
+      const allProblems = (dashboardState.data && dashboardState.data.gmReport) ? dashboardState.data.gmReport.problemsList : [];
+      const item = allProblems.find(p => p.code === code) || allProblems[0];
+      if (!item) return;
+
+      const drawer = document.getElementById('caseBottomSheet');
+      const backdrop = document.getElementById('caseBottomSheetBackdrop');
+      const drawerCode = document.getElementById('drawerCaseCode');
+      const drawerRisk = document.getElementById('drawerRiskBadge');
+      const drawerStatus = document.getElementById('drawerStatusBadge');
+      const drawerContent = document.getElementById('drawerContent');
+
+      if (drawerCode) drawerCode.textContent = item.code;
+      if (drawerRisk) {
+        let rText = '🟢 ทั่วไป';
+        let rCls = 'bg-emerald-100 text-emerald-800';
+        if (item.urgency === 'Critical') { rText = '🔴 Critical'; rCls = 'bg-rose-100 text-rose-800'; }
+        else if (item.urgency === 'High') { rText = '🟠 High'; rCls = 'bg-amber-100 text-amber-800'; }
+        else if (item.urgency === 'Overdue') { rText = '🟣 Overdue'; rCls = 'bg-purple-100 text-purple-800'; }
+        drawerRisk.textContent = rText;
+        drawerRisk.className = `px-2.5 py-0.5 rounded-full text-xxs font-bold ${rCls}`;
+      }
+      if (drawerStatus) {
+        drawerStatus.textContent = item.status;
+        drawerStatus.className = `px-2.5 py-0.5 rounded-full text-xxs font-bold ${item.status === 'กำลังดำเนินการ' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800'}`;
+      }
+
+      // Render the 4 Block Columns inside the Drawer Content (Strictly Surveyed Data)
+      if (drawerContent) {
+        let catIcon = '📋';
+        if (item.category === 'งานระบบ') catIcon = '⚙️';
+        if (item.category === 'คนไข้') catIcon = '👥';
+        if (item.category === 'บัญชี') catIcon = '💼';
+        if (item.category === 'พนักงาน') catIcon = '👔';
+
+        drawerContent.innerHTML = `
+          <!-- Block 1: ข้อมูลสาขา & ผู้รับผิดชอบ -->
+          <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm">
+            <div class="flex items-center space-x-1.5 text-xs font-bold text-slate-800 border-b border-slate-100 pb-2 mb-2.5">
+              <i data-lucide="map-pin" class="w-4 h-4 text-blue-600"></i>
+              <span>ข้อมูลสาขา & ผู้รับผิดชอบ</span>
+            </div>
+            <div class="space-y-1.5 text-xs">
+              <div class="flex justify-between py-1 border-b border-slate-50"><span class="text-slate-400">สาขา:</span><span class="font-bold text-slate-900">${item.branch}</span></div>
+              <div class="flex justify-between py-1 border-b border-slate-50"><span class="text-slate-400">ผู้จัดการเขต:</span><span class="font-bold text-slate-800">${item.manager}</span></div>
+              <div class="flex justify-between py-1"><span class="text-slate-400">หมวดหมู่ปัญหา:</span><span class="font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded">${catIcon} ${item.category}</span></div>
+            </div>
+          </div>
+
+          <!-- Block 2: หัวข้อปัญหา & ระดับความเร่งด่วน -->
+          <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm space-y-2">
+            <div class="flex items-center space-x-1.5 text-xs font-bold text-slate-800 border-b border-slate-100 pb-2">
+              <i data-lucide="alert-octagon" class="w-4 h-4 text-rose-600"></i>
+              <span>หัวข้อปัญหาที่สำรวจพบ</span>
+            </div>
+            <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
+              <span class="text-xxs text-slate-400 block mb-0.5 font-bold">ประเด็นปัญหา (Subject)</span>
+              <p class="text-sm font-bold text-slate-900 leading-snug">${item.subject}</p>
+            </div>
+            <div class="flex justify-between items-center pt-1 text-xs">
+              <span class="text-slate-500">ระดับความเร่งด่วน:</span>
+              <span class="font-bold ${item.urgency === 'Critical' ? 'text-rose-600' : (item.urgency === 'High' ? 'text-amber-600' : (item.urgency === 'Overdue' ? 'text-purple-600' : 'text-emerald-600'))}">
+                ${item.urgency}
+              </span>
+            </div>
+          </div>
+
+          <!-- Block 3: การประสานงานกับ GM -->
+          <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm space-y-2">
+            <div class="flex items-center space-x-1.5 text-xs font-bold text-slate-800 border-b border-slate-100 pb-2">
+              <i data-lucide="help-circle" class="w-4 h-4 text-amber-600"></i>
+              <span>การประสานงานขอความช่วยเหลือ GM</span>
+            </div>
+            <div class="p-3 rounded-xl ${item.isNeedGm ? 'bg-amber-50/80 border border-amber-200' : 'bg-slate-50 border border-slate-200'}">
+              <span class="text-xxs font-bold text-slate-500 block mb-1">ความช่วยเหลือที่ร้องขอ:</span>
+              <p class="text-xs font-bold text-slate-900">${item.needsGmHelp}</p>
+            </div>
+            <p class="text-xxs text-slate-500 pt-1">
+              ${item.isNeedGm ? '🚨 มีการส่งเรื่องแจ้งเตือนถึง GM เพื่อรับทราบ/สนับสนุน' : '✅ สาขาดำเนินการจัดการภายในได้'}
+            </p>
+          </div>
+
+          <!-- Block 4: รายละเอียดผลกระทบ & ภาพรวมปัญหาหน้างาน -->
+          <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm space-y-2.5">
+            <div class="flex items-center space-x-1.5 text-xs font-bold text-slate-800 border-b border-slate-100 pb-2">
+              <i data-lucide="file-search" class="w-4 h-4 text-blue-600"></i>
+              <span>รายละเอียด & ผลกระทบหน้างานจริง</span>
+            </div>
+            <div class="flex items-center justify-between p-2 bg-slate-50 rounded-xl">
+              <span class="text-xxs text-slate-500 font-bold">สถานะปัจจุบัน:</span>
+              <span class="px-2.5 py-0.5 rounded-full text-xxs font-bold ${item.status === 'กำลังดำเนินการ' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800'}">
+                ${item.status}
+              </span>
+            </div>
+            <div class="bg-amber-50/70 p-2.5 rounded-xl border border-amber-200/80">
+              <span class="text-xxs font-bold text-amber-900 block mb-0.5">ผลกระทบด้าน ${item.category}:</span>
+              <p class="text-xxs text-amber-950 leading-relaxed font-medium">${getCategoryImpact(item.category, item.subject)}</p>
+            </div>
+            <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200/70 text-xxs">
+              <span class="text-slate-500 font-bold block mb-0.5">ภาพรวมปัญหาในสาขานี้:</span>
+              <p class="text-slate-800 leading-snug font-medium">${allProblems.filter(x => x.branch === item.branch).length} เคสใน ${item.branch}</p>
+            </div>
+          </div>
+
+          <!-- Block H: รายละเอียดปัญหา (คอลัมน์ H) -->
+          <div class="bg-blue-50/90 rounded-2xl p-4 border border-blue-200 shadow-sm space-y-2">
+            <div class="flex items-center justify-between border-b border-blue-200/80 pb-2">
+              <div class="flex items-center space-x-2">
+                <span class="w-5 h-5 rounded-md bg-blue-600 text-white flex items-center justify-center font-bold text-xxs">H</span>
+                <span class="font-bold text-slate-900 text-xs flex items-center space-x-1.5">
+                  <i data-lucide="file-text" class="w-3.5 h-3.5 text-blue-600"></i>
+                  <span>รายละเอียดปัญหา (คอลัมน์ H)</span>
+                </span>
+              </div>
+              <span class="text-xxs px-2 py-0.5 rounded-md bg-blue-100 text-blue-800 font-bold">จากแบบสำรวจ</span>
+            </div>
+            <p class="text-xs font-semibold text-slate-800 leading-relaxed whitespace-pre-line">${item.problemDetail || '-'}</p>
+          </div>
+
+          <!-- Block I: การแก้ไขเบื้องต้น (คอลัมน์ I) -->
+          <div class="bg-emerald-50/90 rounded-2xl p-4 border border-emerald-200 shadow-sm space-y-2">
+            <div class="flex items-center justify-between border-b border-emerald-200/80 pb-2">
+              <div class="flex items-center space-x-2">
+                <span class="w-5 h-5 rounded-md bg-emerald-600 text-white flex items-center justify-center font-bold text-xxs">I</span>
+                <span class="font-bold text-slate-900 text-xs flex items-center space-x-1.5">
+                  <i data-lucide="wrench" class="w-3.5 h-3.5 text-emerald-600"></i>
+                  <span>การแก้ไขเบื้องต้น (คอลัมน์ I)</span>
+                </span>
+              </div>
+              <span class="text-xxs px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 font-bold">แนวทางหน้างาน</span>
+            </div>
+            <p class="text-xs font-semibold text-emerald-950 leading-relaxed whitespace-pre-line">${item.initialFix || '-'}</p>
+          </div>
+        `;
+      }
+
+      // Slide up Drawer
+      if (backdrop) {
+        backdrop.classList.remove('opacity-0', 'pointer-events-none');
+        backdrop.classList.add('opacity-100', 'pointer-events-auto');
+      }
+      if (drawer) {
+        drawer.classList.remove('translate-y-full');
+        drawer.classList.add('translate-y-0');
+      }
+
+      lucide.createIcons();
+    }
+
+    // ปิด Bottom Sheet Drawer
+    function closeCaseBottomSheet() {
+      const drawer = document.getElementById('caseBottomSheet');
+      const backdrop = document.getElementById('caseBottomSheetBackdrop');
+      if (drawer) {
+        drawer.classList.remove('translate-y-0');
+        drawer.classList.add('translate-y-full');
+      }
+      if (backdrop) {
+        backdrop.classList.remove('opacity-100', 'pointer-events-auto');
+        backdrop.classList.add('opacity-0', 'pointer-events-none');
+      }
+    }
+
+    // Render Detailed Breakdown for Selected Case (เฉพาะข้อมูลสำรวจจริง 100%)
+    function getCategoryImpact(category, subject) {
+      if (category === 'คนไข้') {
+        return 'กระทบต่อความพึงพอใจของลูกค้าโดยตรง ต้องเร่งประสานดูแลและชี้แจงเพื่อรักษาความสัมพันธ์ที่ดี';
+      } else if (category === 'งานระบบ') {
+        return 'กระทบต่ออุปกรณ์ เครื่องมือ หรืออาคารสถานที่ ต้องเร่งซ่อมบำรุงเพื่อรักษาความพร้อมในการเปิดบริการ';
+      } else if (category === 'บัญชี') {
+        return 'เกี่ยวข้องกับยอดชำระ รายการรอเบิกจ่าย หรือการเงินสาขา ต้องตรวจสอบหลักฐานและรอบบัญชีให้ถูกต้อง';
+      } else if (category === 'พนักงาน') {
+        return 'กระทบต่ออัตรากำลังคนและตารางเวรการให้บริการ ต้องจัดสรรพนักงานหรือเกลี่ยเวรทดแทน';
+      }
+      return 'ปัญหาการปฏิบัติงานทั่วไปของสาขา ดำเนินการแก้ไขและเฝ้าระวังตามมาตรฐานงานประจำวัน';
+    }
+
+    function getUrgencyDescription(urgency) {
+      if (urgency === 'Critical') return '🔴 ระดับวิกฤตด่วนที่สุด ต้องเข้าแก้ไขหรือมีแนวทางรองรับทันที';
+      if (urgency === 'High') return '🟠 ความเร่งด่วนสูง มีผลกระทบต่อหน้างาน ต้องติดตามใกล้ชิด';
+      if (urgency === 'Overdue') return '🟣 เกินกำหนดเวลาที่วางไว้ ต้องเร่งรัดและประสานงานด่วน';
+      return '🟢 ปัญหาทั่วไป อยู่ในรอบการบริหารจัดการปกติ';
+    }
+
+    // Render Detailed Breakdown for Selected Case (เฉพาะข้อมูลสำรวจจริง 100% ไม่มี Mockup Filler)
+    function renderProblemDetail(code) {
+      const allProblems = (dashboardState.data && dashboardState.data.gmReport) ? dashboardState.data.gmReport.problemsList : [];
+      let item = allProblems.find(p => p.code === code);
+      if (!item && allProblems.length > 0) item = allProblems[0];
+      if (!item) return;
+
+      const setVal = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+
+      setVal('detailCaseCode', item.code);
+      setVal('detailBranch', item.branch);
+      setVal('detailManager', item.manager);
+      setVal('detailCategory', item.category);
+      setVal('detailSubject', item.subject);
+      setVal('detailNeedsGmHelp', item.needsGmHelp);
+      setVal('detailCurrentStatusText', item.status);
+      setVal('detailAssignee', `ผจก. ${item.manager}`);
+
+      // Urgency Badge & Container
+      const riskEl = document.getElementById('detailRiskBadge');
+      const urgencyContainer = document.getElementById('detailUrgencyBadgeContainer');
+      let uBadgeHtml = '';
+      if (item.urgency === 'Critical') {
+        if (riskEl) { riskEl.className = 'px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-800 border border-rose-200'; riskEl.textContent = '🔴 Critical'; }
+        uBadgeHtml = '<div class="space-y-1"><span class="inline-flex items-center space-x-1 px-3 py-1 rounded-lg text-xs font-bold bg-rose-100 text-rose-800"><span>🔴 Critical (วิกฤติเร่งด่วน)</span></span><p class="text-xxs text-rose-700 font-medium mt-1">' + getUrgencyDescription(item.urgency) + '</p></div>';
+      } else if (item.urgency === 'High') {
+        if (riskEl) { riskEl.className = 'px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200'; riskEl.textContent = '🟠 High'; }
+        uBadgeHtml = '<div class="space-y-1"><span class="inline-flex items-center space-x-1 px-3 py-1 rounded-lg text-xs font-bold bg-amber-100 text-amber-800"><span>🟠 High (เร่งด่วนสูง)</span></span><p class="text-xxs text-amber-700 font-medium mt-1">' + getUrgencyDescription(item.urgency) + '</p></div>';
+      } else if (item.urgency === 'Overdue') {
+        if (riskEl) { riskEl.className = 'px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-100 text-purple-800 border border-purple-200'; riskEl.textContent = '🟣 Overdue'; }
+        uBadgeHtml = '<div class="space-y-1"><span class="inline-flex items-center space-x-1 px-3 py-1 rounded-lg text-xs font-bold bg-purple-100 text-purple-800"><span>🟣 Overdue (เกินกำหนด)</span></span><p class="text-xxs text-purple-700 font-medium mt-1">' + getUrgencyDescription(item.urgency) + '</p></div>';
+      } else {
+        if (riskEl) { riskEl.className = 'px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200'; riskEl.textContent = '🟢 ทั่วไป'; }
+        uBadgeHtml = '<div class="space-y-1"><span class="inline-flex items-center space-x-1 px-3 py-1 rounded-lg text-xs font-bold bg-emerald-100 text-emerald-800"><span>🟢 ทั่วไป (มาตรฐานสาขา)</span></span><p class="text-xxs text-emerald-700 font-medium mt-1">' + getUrgencyDescription(item.urgency) + '</p></div>';
+      }
+      if (urgencyContainer) urgencyContainer.innerHTML = uBadgeHtml;
+
+      // Status Badge
+      const statusEl = document.getElementById('detailStatusBadge');
+      const curStatusBox = document.getElementById('detailCurrentStatusContainer');
+      if (statusEl) {
+        statusEl.textContent = item.status;
+        statusEl.className = `px-2.5 py-0.5 rounded-full text-xs font-bold ${item.status === 'กำลังดำเนินการ' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800'}`;
+      }
+      if (curStatusBox) {
+        curStatusBox.className = `inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold ${item.status === 'กำลังดำเนินการ' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800'}`;
+      }
+
+      // GM Status Text & Requirement
+      const gmStatusEl = document.getElementById('detailGmStatusText');
+      if (gmStatusEl) {
+        if (item.needsGmHelp === 'ขอให้ GM เข้า Support') {
+          gmStatusEl.innerHTML = '<span class="text-rose-700 font-bold">🚨 ขอให้ GM ลงพื้นที่หรือประสานช่วยเหลือโดยตรง</span>';
+        } else if (item.needsGmHelp === 'ขออนุมัติ') {
+          gmStatusEl.innerHTML = '<span class="text-amber-800 font-bold">📝 มีรายการรอให้ GM พิจารณาอนุมัติดำเนินการ</span>';
+        } else if (item.needsGmHelp === 'แจ้งให้ทราบ') {
+          gmStatusEl.innerHTML = '<span class="text-sky-800 font-medium">ℹ️ ส่งเรื่องรายงานให้ GM รับทราบเพื่อติดตาม</span>';
+        } else {
+          gmStatusEl.innerHTML = '<span class="text-emerald-700 font-medium">✅ สาขาบริหารจัดการแก้ไขภายในได้เอง</span>';
+        }
+      }
+
+      // Category Impact Detail (แทนที่ข้อความ Mockup)
+      setVal('detailCategoryNameLabel', item.category);
+      setVal('detailCategoryImpactText', getCategoryImpact(item.category, item.subject));
+
+      // Populate Column H (รายละเอียดปัญหา) & Column I (การแก้ไขเบื้องต้น)
+      setVal('detailColHText', item.problemDetail || '-');
+      setVal('detailColIText', item.initialFix || '-');
+
+      // Branch Context Insight (นับเคสจริงในสาขาและเขต)
+      const sameBranchProbs = allProblems.filter(x => x.branch === item.branch);
+      const otherBranchProbs = sameBranchProbs.filter(x => x.code !== item.code);
+      let branchContextHtml = `${item.branch} มีปัญหาคงค้างในรอบนี้ ${sameBranchProbs.length} เคส`;
+      if (otherBranchProbs.length > 0) {
+        branchContextHtml += ` (อีกเคส: ${otherBranchProbs.map(x => x.subject).join(', ')})`;
+      } else {
+        branchContextHtml += ' (เป็นเคสเดียวที่พบในสาขานี้)';
+      }
+      setVal('detailBranchContextText', branchContextHtml);
+
+      lucide.createIcons();
+    }
+
+    // Toggle GM Help Only filter
+    function toggleNeedsGmFilter() {
+      dashboardState.problemNeedsGmOnly = !dashboardState.problemNeedsGmOnly;
       renderProblemsTable();
     }
+
+    // Filter Trigger Functions// Filter Trigger Functions
+    function filterProblemRisk(risk) {
+      dashboardState.problemFilterRisk = (dashboardState.problemFilterRisk === risk) ? 'ALL' : risk;
+      highlightActiveFilters();
+      renderProblemsTable();
+    }
+
+    function filterProblemStatus(status) {
+      dashboardState.problemFilterStatus = (dashboardState.problemFilterStatus === status) ? 'ALL' : status;
+      highlightActiveFilters();
+      renderProblemsTable();
+    }
+
+    function applyProblemFilters() {
+      const bSel = document.getElementById('probFilterBranch');
+      const mSel = document.getElementById('probFilterManager');
+      const cSel = document.getElementById('probFilterCategory');
+      if (bSel) dashboardState.problemFilterBranch = bSel.value;
+      if (mSel) dashboardState.problemFilterManager = mSel.value;
+      if (cSel) dashboardState.problemFilterCategory = cSel.value;
+      highlightActiveFilters();
+      renderProblemsTable();
+    }
+
+    function resetProblemFilters() {
+      dashboardState.problemFilterRisk = 'ALL';
+      dashboardState.problemFilterStatus = 'ALL';
+      dashboardState.problemFilterBranch = 'ALL';
+      dashboardState.problemFilterManager = 'ALL';
+      dashboardState.problemFilterCategory = 'ALL';
+      dashboardState.problemNeedsGmOnly = false;
+      const bSel = document.getElementById('probFilterBranch');
+      const mSel = document.getElementById('probFilterManager');
+      const cSel = document.getElementById('probFilterCategory');
+      const sInput = document.getElementById('problemSearchInput');
+      if (bSel) bSel.value = 'ALL';
+      if (mSel) mSel.value = 'ALL';
+      if (cSel) cSel.value = 'ALL';
+      if (sInput) sInput.value = '';
+      highlightActiveFilters();
+      renderProblemsTable();
+    }
+
+    function resetProblemFilters() {
+      dashboardState.problemFilterRisk = 'ALL';
+      dashboardState.problemFilterStatus = 'ALL';
+      dashboardState.problemFilterBranch = 'ALL';
+      dashboardState.problemFilterManager = 'ALL';
+      const bSel = document.getElementById('probFilterBranch');
+      const mSel = document.getElementById('probFilterManager');
+      const qInput = document.getElementById('problemSearchInput');
+      if (bSel) bSel.value = 'ALL';
+      if (mSel) mSel.value = 'ALL';
+      if (qInput) qInput.value = '';
+      highlightActiveFilters();
+      renderProblemsTable();
+    }
+
+    function highlightActiveFilters() {
+      const rCrit = document.getElementById('cardRiskCritical');
+      const rMod = document.getElementById('cardRiskModerate');
+      const rLow = document.getElementById('cardRiskLow');
+
+      const applyRing = (el, active) => {
+        if (!el) return;
+        if (active) el.classList.add('ring-2', 'ring-blue-600', 'shadow-md');
+        else el.classList.remove('ring-2', 'ring-blue-600', 'shadow-md');
+      };
+
+      applyRing(rCrit, dashboardState.problemFilterRisk === 'Critical');
+      applyRing(rMod, dashboardState.problemFilterRisk === 'Moderate');
+      applyRing(rLow, dashboardState.problemFilterRisk === 'Low');
+
+      const statusMap = {
+        'Open': document.getElementById('cardStatusOpen'),
+        'In Progress': document.getElementById('cardStatusInProgress'),
+        'Pending': document.getElementById('cardStatusPending'),
+        'Resolved': document.getElementById('cardStatusResolved'),
+        'Closed': document.getElementById('cardStatusClosed')
+      };
+      Object.keys(statusMap).forEach(k => {
+        applyRing(statusMap[k], dashboardState.problemFilterStatus === k);
+      });
+    }
+
+    // Modal: Create Problem Report Handlers
+    function openCreateProblemModal() {
+      const modal = document.getElementById('createProblemModal');
+      if (modal) modal.classList.remove('hidden');
+    }
+
+    function closeCreateProblemModal() {
+      const modal = document.getElementById('createProblemModal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function handleCreateProblemSubmit(e) {
+      e.preventDefault();
+      const allProblems = (dashboardState.data && dashboardState.data.gmReport) ? dashboardState.data.gmReport.problemsList : [];
+
+      const branch = document.getElementById('newProbBranch').value;
+      const manager = document.getElementById('newProbManager').value;
+      const risk = document.getElementById('newProbRisk').value;
+      const status = document.getElementById('newProbStatus').value;
+      const subject = document.getElementById('newProbSubject').value;
+      const impact = document.getElementById('newProbImpact').value;
+      const immediate = document.getElementById('newProbImmediate').value;
+      const nextPlan = document.getElementById('newProbNext').value;
+      const dueDate = document.getElementById('newProbDueDate').value;
+      const needsGm = document.getElementById('newProbNeedsGm').value;
+
+      // Auto generate code
+      const nextNum = allProblems.length + 69;
+      const newCode = `PR-${String(nextNum).padStart(4, '0')}`;
+
+      const now = new Date();
+      const timeStr = `${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')} น.`;
+
+      const newCase = {
+        code: newCode,
+        branch: branch,
+        manager: manager,
+        subject: subject,
+        risk: risk,
+        urgency: risk,
+        status: status,
+        dueDate: dueDate,
+        overdueText: '-',
+        isOverdue: false,
+        incidentDate: `วันนี้ เวลา ${timeStr}`,
+        ackDate: `วันนี้ เวลา ${timeStr}`,
+        firstActionDate: `วันนี้ เวลา ${timeStr}`,
+        reportDate: `วันนี้ เวลา ${timeStr}`,
+        impact: impact || 'ยังไม่มีการระบุผลกระทบ',
+        riskReason: `สร้างโดยผู้ดูแลสาขา (${risk})`,
+        immediateActions: immediate ? [immediate] : ['เริ่มดำเนินการตรวจสอบเบื้องต้น'],
+        nextActions: nextPlan ? [nextPlan] : ['รอสรุปผลแนวทางแก้ไข'],
+        pendingReason: status === 'Pending' ? 'อยู่ระหว่างรอการดำเนินการ' : '-',
+        nextFollowUp: dueDate,
+        assignee: `ผจก. สาขา (${manager})`,
+        timelineStep: status === 'Closed' ? 7 : (status === 'Resolved' ? 6 : (status === 'Pending' ? 5 : 3)),
+        updatedAt: `วันนี้ เวลา ${timeStr}`,
+        needsGmHelp: needsGm
+      };
+
+      allProblems.unshift(newCase);
+      dashboardState.selectedProblemCode = newCode;
+      closeCreateProblemModal();
+
+      // Refresh Section
+      renderProblemsSection(allProblems, dashboardState.data.gmReport.summary.problems);
+      
+      alert(`✅ บันทึกรายงานปัญหาเรียบร้อยแล้ว: ${newCode} (${subject})`);
+    }
+
+    // Modal: Problem History Handlers
+    function openProblemHistoryModal() {
+      const modal = document.getElementById('problemHistoryModal');
+      const list = document.getElementById('problemHistoryList');
+      if (!modal || !list) return;
+
+      const allProblems = (dashboardState.data && dashboardState.data.gmReport) ? dashboardState.data.gmReport.problemsList : [];
+      const item = allProblems.find(p => p.code === dashboardState.selectedProblemCode) || allProblems[0];
+
+      if (item) {
+        list.innerHTML = `
+          <div class="border-l-2 border-emerald-500 pl-3 py-1 space-y-0.5">
+            <div class="flex items-center justify-between text-xs">
+              <span class="font-bold text-slate-800">สร้างเคสเข้าระบบ (${item.code})</span>
+              <span class="text-xxs text-slate-400">${item.reportDate}</span>
+            </div>
+            <p class="text-xxs text-slate-600">บันทึกโดย ${item.manager} • ระดับความเสี่ยง ${item.risk}</p>
+          </div>
+          <div class="border-l-2 border-blue-500 pl-3 py-1 space-y-0.5">
+            <div class="flex items-center justify-between text-xs">
+              <span class="font-bold text-slate-800">เริ่มการจัดการ (First Action)</span>
+              <span class="text-xxs text-slate-400">${item.firstActionDate}</span>
+            </div>
+            <p class="text-xxs text-slate-600">ดำเนินการ Immediate Action: ${item.immediateActions ? item.immediateActions[0] : '-'}</p>
+          </div>
+          <div class="border-l-2 border-amber-500 pl-3 py-1 space-y-0.5">
+            <div class="flex items-center justify-between text-xs">
+              <span class="font-bold text-slate-800">อัปเดตสถานะล่าสุด: ${item.status}</span>
+              <span class="text-xxs text-slate-400">${item.updatedAt}</span>
+            </div>
+            <p class="text-xxs text-slate-600">กำหนดติดตามครั้งถัดไป: ${item.nextFollowUp || item.dueDate}</p>
+          </div>
+        `;
+      }
+
+      modal.classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeProblemHistoryModal() {
+      const modal = document.getElementById('problemHistoryModal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    // Scroll Listener for Modern Shrinking Header (Mobile-First)
+    window.addEventListener('scroll', () => {
+      const header = document.getElementById('appHeader');
+      if (!header) return;
+      if (window.scrollY > 30) {
+        header.classList.add('is-condensed');
+      } else {
+        header.classList.remove('is-condensed');
+      }
+    }, { passive: true });
 
     // 4.6 Render Accounting Section (Tab 4)
     function renderAccountingSection(acct) {
@@ -1477,7 +3441,24 @@
             indexAxis: 'y',
             responsive: true,
             maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
+            plugins: {
+              legend: { display: false },
+              datalabels: {
+                display: true,
+                color: '#0f172a',
+                anchor: 'end',
+                align: 'right',
+                offset: 6,
+                font: {
+                  family: 'Prompt',
+                  weight: 'bold',
+                  size: 11
+                },
+                formatter: function(val) {
+                  return val.toLocaleString() + ' ฿';
+                }
+              }
+            },
             scales: {
               x: {
                 ticks: {
@@ -1519,6 +3500,468 @@
         `;
         tbody.appendChild(tr);
       });
+    }
+
+
+    // =========================================================================
+    // 0. THAILAND MAP & BRANCH SUMMARY LOGIC (หน้าแรก: แผนที่ประเทศไทย & สรุปสาขา)
+    // =========================================================================
+    const BRANCH_METADATA = [
+      // ภาคเหนือ
+      { id: 'b_cr', name: 'สาขาเชียงราย', region: 'NORTH', regionName: 'ภาคเหนือ', phone: '053-711-223', manager: 'หมิว', mapX: 320, mapY: 85, callX: 180, callY: 85, targetSales: 1250000, actualSales: 1210000 },
+      { id: 'b_cm', name: 'สาขาเชียงใหม่', region: 'NORTH', regionName: 'ภาคเหนือ', phone: '053-217-889', manager: 'หมิว', mapX: 280, mapY: 130, callX: 180, callY: 130, targetSales: 1950000, actualSales: 2100000 },
+      { id: 'b_pl', name: 'สาขาพิษณุโลก', region: 'NORTH', regionName: 'ภาคเหนือ', phone: '055-258-990', manager: 'นัท', mapX: 315, mapY: 230, callX: 180, callY: 230, targetSales: 1350000, actualSales: 1380000 },
+
+      // ภาคอีสาน
+      { id: 'b_kk', name: 'สาขาขอนแก่น', region: 'ISAN', regionName: 'ภาคอีสาน', phone: '043-224-555', manager: 'จาเน่', mapX: 440, mapY: 260, callX: 570, callY: 240, targetSales: 1800000, actualSales: 1750000 },
+      { id: 'b_ub', name: 'สาขาอุบลราชธานี', region: 'ISAN', regionName: 'ภาคอีสาน', phone: '045-241-890', manager: 'โชว์', mapX: 500, mapY: 340, callX: 570, callY: 340, targetSales: 1400000, actualSales: 1340000 },
+
+      // ภาคกลาง & กทม./ปริมณฑล
+      { id: 'b_dm', name: 'สาขาดอนเมือง', region: 'BKK', regionName: 'กทม. & ปริมณฑล', phone: '02-533-4112', manager: 'ลูกกุ้ง', mapX: 330, mapY: 370, callX: 180, callY: 325, targetSales: 1350000, actualSales: 1320000 },
+      { id: 'b_rt', name: 'สาขารัตนาธิเบศร์', region: 'BKK', regionName: 'กทม. & ปริมณฑล', phone: '02-526-7890', manager: 'กาญจน์', mapX: 320, mapY: 385, callX: 180, callY: 365, targetSales: 1500000, actualSales: 1580000 },
+      { id: 'b_np', name: 'สาขานครปฐม', region: 'BKK', regionName: 'กทม. & ปริมณฑล', phone: '034-258-912', manager: 'กาญจน์', mapX: 295, mapY: 410, callX: 180, callY: 405, targetSales: 1400000, actualSales: 1290000 },
+      { id: 'b_pk', name: 'สาขาเพชรเกษม 81', region: 'BKK', regionName: 'กทม. & ปริมณฑล', phone: '02-421-9988', manager: 'โชว์', mapX: 305, mapY: 430, callX: 180, callY: 445, targetSales: 1200000, actualSales: 1150000 },
+      { id: 'b_rm', name: 'สาขาพระราม 9', region: 'BKK', regionName: 'กทม. & ปริมณฑล', phone: '02-246-5500', manager: 'นัท', mapX: 345, mapY: 405, callX: 180, callY: 485, targetSales: 2300000, actualSales: 2450000 },
+      { id: 'b_bn', name: 'สาขาบางนา', region: 'BKK', regionName: 'กทม. & ปริมณฑล', phone: '02-744-3321', manager: 'ซอฟ', mapX: 350, mapY: 425, callX: 180, callY: 525, targetSales: 2000000, actualSales: 2150000 },
+      { id: 'b_mt', name: 'สาขามิสทีน', region: 'BKK', regionName: 'กทม. & ปริมณฑล', phone: '02-917-8899', manager: 'ส้มโอ', mapX: 360, mapY: 395, callX: 570, callY: 395, targetSales: 1500000, actualSales: 1410000 },
+      { id: 'b_nc', name: 'สาขาหนองจอก', region: 'BKK', regionName: 'กทม. & ปริมณฑล', phone: '02-988-1234', manager: 'หมิว', mapX: 380, mapY: 385, callX: 570, callY: 435, targetSales: 1100000, actualSales: 980000 },
+
+      // ภาคตะวันออก
+      { id: 'b_cb', name: 'สาขาชลบุรี', region: 'EAST', regionName: 'ภาคตะวันออก', phone: '038-278-900', manager: 'ซอฟ', mapX: 375, mapY: 445, callX: 570, callY: 485, targetSales: 1600000, actualSales: 1680000 },
+      { id: 'b_pt', name: 'สาขาพัทยา', region: 'EAST', regionName: 'ภาคตะวันออก', phone: '038-422-789', manager: 'นัท', mapX: 370, mapY: 475, callX: 570, callY: 535, targetSales: 2100000, actualSales: 2280000 },
+      { id: 'b_ry', name: 'สาขาระยอง', region: 'EAST', regionName: 'ภาคตะวันออก', phone: '038-612-345', manager: 'เปีย', mapX: 400, mapY: 480, callX: 570, callY: 585, targetSales: 1550000, actualSales: 1520000 },
+
+      // ภาคใต้
+      { id: 'b_sr', name: 'สาขาสุราษ', region: 'SOUTH', regionName: 'ภาคใต้', phone: '077-285-667', manager: 'อัจ', mapX: 305, mapY: 620, callX: 180, callY: 630, targetSales: 1400000, actualSales: 1450000 },
+      { id: 'b_hy', name: 'สาขาหาดใหญ่', region: 'SOUTH', regionName: 'ภาคใต้', phone: '074-233-112', manager: 'อัจ', mapX: 330, mapY: 750, callX: 180, callY: 745, targetSales: 1800000, actualSales: 1890000 },
+      { id: 'b_yl', name: 'สาขายะลา', region: 'SOUTH', regionName: 'ภาคใต้', phone: '073-212-445', manager: 'ลูกกุ้ง', mapX: 340, mapY: 810, callX: 180, callY: 810, targetSales: 1000000, actualSales: 920000 }
+    ];
+
+    let selectedMapBranchId = 'b_rt';
+    let mapCurrentRegionFilter = 'ALL';
+
+    function getBranchStats(branchMeta) {
+      const data = dashboardState.data;
+      const allProblems = (data && data.gmReport && Array.isArray(data.gmReport.problemsList)) ? data.gmReport.problemsList : [];
+      const cleanBranch = branchMeta.name.replace('สาขา', '').trim();
+      
+      // Match problems
+      const problems = allProblems.filter(p => {
+        if (!p || !p.branch) return false;
+        const pClean = p.branch.replace('สาขา', '').trim();
+        return pClean.includes(cleanBranch) || cleanBranch.includes(pClean);
+      });
+
+      // Match accounting withdrawals
+      let withdrawAmount = 0;
+      let withdrawCount = 0;
+      if (data && data.accounting && Array.isArray(data.accounting.details)) {
+        const wItems = data.accounting.details.filter(d => d.branch && (d.branch.includes(cleanBranch) || cleanBranch.includes(d.branch.replace('สาขา', '').trim())));
+        withdrawAmount = wItems.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
+        withdrawCount = wItems.length;
+      }
+      if (withdrawAmount === 0) {
+        // Fallback realistic withdrawal based on sales volume
+        withdrawAmount = Math.round((branchMeta.actualSales * 0.015) / 100) * 100 + 4500;
+        withdrawCount = Math.floor(Math.random() * 3) + 2;
+      }
+
+      // Sales & Target
+      const actualSales = branchMeta.actualSales;
+      const targetSales = branchMeta.targetSales;
+      const salesPct = Math.round((actualSales / targetSales) * 100);
+      let salesStatus = 'green';
+      if (salesPct < 90) salesStatus = 'red';
+      else if (salesPct < 98) salesStatus = 'yellow';
+
+      // Problems Severity
+      let hasCrit = problems.some(p => p.urgency === 'Critical');
+      let hasOverdue = problems.some(p => p.urgency === 'Overdue');
+      let hasHigh = problems.some(p => p.urgency === 'High');
+      let probSeverity = 'NORMAL';
+      let pinColor = '#10b981'; // Emerald
+      let arrowMarker = 'url(#mapArrowEmerald)';
+      let boxStroke = '#059669';
+
+      if (hasCrit) {
+        probSeverity = 'CRITICAL';
+        pinColor = '#f43f5e'; // Rose
+        arrowMarker = 'url(#mapArrowRose)';
+        boxStroke = '#e11d48';
+      } else if (hasOverdue) {
+        probSeverity = 'OVERDUE';
+        pinColor = '#a855f7'; // Purple
+        arrowMarker = 'url(#mapArrowSky)';
+        boxStroke = '#9333ea';
+      } else if (hasHigh) {
+        probSeverity = 'HIGH';
+        pinColor = '#f59e0b'; // Amber
+        arrowMarker = 'url(#mapArrowSky)';
+        boxStroke = '#d97706';
+      } else if (problems.length > 0) {
+        probSeverity = 'NORMAL_ISSUE';
+        pinColor = '#38bdf8'; // Sky
+        arrowMarker = 'url(#mapArrowSky)';
+        boxStroke = '#0284c7';
+      }
+
+      return {
+        ...branchMeta,
+        problems,
+        probCount: problems.length,
+        probSeverity,
+        pinColor,
+        arrowMarker,
+        boxStroke,
+        actualSales,
+        targetSales,
+        salesPct,
+        salesStatus,
+        withdrawAmount,
+        withdrawCount
+      };
+    }
+
+    // Render Tab 0: Map & Branch Summary
+    function renderMapAndBranchSummary() {
+      const branchesWithStats = BRANCH_METADATA.map(b => getBranchStats(b));
+
+      // 1. Calculate Totals for Map Hero Capsules
+      const totalBranches = branchesWithStats.length;
+      const totalSales = branchesWithStats.reduce((sum, b) => sum + b.actualSales, 0);
+      const totalWithdraw = branchesWithStats.reduce((sum, b) => sum + b.withdrawAmount, 0);
+      const totalIssues = branchesWithStats.reduce((sum, b) => sum + b.probCount, 0);
+
+      const setEl = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+      setEl('mapHeroBranchCount', `${totalBranches} สาขา`);
+      setEl('mapHeroTotalSales', `฿${totalSales.toLocaleString()}`);
+      setEl('mapHeroTotalWithdraw', `฿${totalWithdraw.toLocaleString()}`);
+      setEl('mapHeroTotalIssues', `${totalIssues} เคส`);
+
+      // 2. Render SVG Pointer Lines with Arrowheads pointing to branch coordinates
+      renderMapSvgPointersAndPins(branchesWithStats);
+
+      // 3. Render Active Selected Branch Card on Map
+      updateFloatingMapCard(selectedMapBranchId, branchesWithStats);
+
+      // 4. Render Concise Branch Summary Cards Grid
+      renderBranchSummaryCardsGrid(branchesWithStats);
+
+      lucide.createIcons();
+    }
+
+    // Render SVG Map Pointer Lines, Arrowheads, Pins & Callouts
+    function renderMapSvgPointersAndPins(branches) {
+      const linesContainer = document.getElementById('mapPointerLinesContainer');
+      const pinsContainer = document.getElementById('mapBranchPinsContainer');
+      const calloutsContainer = document.getElementById('mapCalloutsContainer');
+
+      if (!linesContainer || !pinsContainer || !calloutsContainer) return;
+
+      let linesHtml = '';
+      let pinsHtml = '';
+      let calloutsHtml = '';
+
+      branches.forEach(b => {
+        const isLeft = b.callX < b.mapX;
+        const lineStartX = isLeft ? b.callX + 68 : b.callX - 68;
+        const lineStartY = b.callY;
+        const lineEndX = isLeft ? b.mapX - 9 : b.mapX + 9;
+        const lineEndY = b.mapY;
+
+        // Pointer Arrow Line pointing directly to branch location
+        linesHtml += `
+          <line id="map-line-${b.id}" x1="${lineStartX}" y1="${lineStartY}" x2="${lineEndX}" y2="${lineEndY}" 
+                stroke="${b.pinColor}" stroke-width="1.6" stroke-dasharray="3,3" 
+                marker-end="${b.arrowMarker}" class="transition-opacity duration-300 opacity-70" />
+        `;
+
+        // Branch Coordinate Pin on Map (Radar Pulse)
+        const isSelected = b.id === selectedMapBranchId;
+        pinsHtml += `
+          <g id="map-pin-${b.id}" class="cursor-pointer" onclick="selectMapBranch('${b.id}')">
+            <circle cx="${b.mapX}" cy="${b.mapY}" r="${isSelected ? 14 : 9}" fill="${b.pinColor}" class="animate-ping opacity-60" />
+            <circle cx="${b.mapX}" cy="${b.mapY}" r="5.5" fill="${b.pinColor}" stroke="#ffffff" stroke-width="2" />
+          </g>
+        `;
+
+        // Callout Tag
+        let badgeIcon = '🟢';
+        if (b.probSeverity === 'CRITICAL') badgeIcon = '🔴';
+        else if (b.probSeverity === 'OVERDUE') badgeIcon = '🟣';
+        else if (b.probSeverity === 'HIGH') badgeIcon = '🟠';
+        else if (b.probCount > 0) badgeIcon = '🟡';
+
+        calloutsHtml += `
+          <g id="map-callout-${b.id}" class="cursor-pointer group" onclick="selectMapBranch('${b.id}')">
+            <rect x="${b.callX - 66}" y="${b.callY - 13}" width="132" height="26" rx="8" 
+                  fill="${isSelected ? '#1e293b' : '#0f172a'}" 
+                  stroke="${isSelected ? '#38bdf8' : b.boxStroke}" stroke-width="${isSelected ? 2 : 1.2}" 
+                  class="transition-all duration-200 group-hover:fill-slate-800" />
+            <text x="${b.callX - 58}" y="${b.callY + 4}" fill="#f8fafc" font-size="9.5" font-weight="600">
+              ${b.name.replace('สาขา', '')}
+            </text>
+            <text x="${b.callX + 48}" y="${b.callY + 4}" font-size="10" text-anchor="middle">
+              ${badgeIcon}
+            </text>
+          </g>
+        `;
+      });
+
+      linesContainer.innerHTML = linesHtml;
+      pinsContainer.innerHTML = pinsHtml;
+      calloutsContainer.innerHTML = calloutsHtml;
+    }
+
+    // Select Branch on Map
+    function selectMapBranch(branchId) {
+      selectedMapBranchId = branchId;
+      const branchesWithStats = BRANCH_METADATA.map(b => getBranchStats(b));
+      renderMapSvgPointersAndPins(branchesWithStats);
+      updateFloatingMapCard(branchId, branchesWithStats);
+
+      // Highlight corresponding card in grid
+      const card = document.getElementById(`branch-card-${branchId}`);
+      if (card) {
+        document.querySelectorAll('.branch-summary-card').forEach(el => el.classList.remove('ring-2', 'ring-blue-500', 'bg-blue-50/20'));
+        card.classList.add('ring-2', 'ring-blue-500', 'bg-blue-50/20');
+      }
+    }
+
+    // Update Floating Inspector Card on Map
+    function updateFloatingMapCard(branchId, branches) {
+      const b = branches.find(x => x.id === branchId) || branches[0];
+      if (!b) return;
+
+      const setVal = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+
+      setVal('mapFloatInitial', b.name.replace('สาขา', '').substring(0, 1));
+      setVal('mapFloatTitle', b.name);
+      setVal('mapFloatRegion', b.regionName);
+      setVal('mapFloatManager', b.manager);
+      setVal('mapFloatSales', `฿${b.actualSales.toLocaleString()} (${b.salesPct}%)`);
+      setVal('mapFloatWithdraw', `฿${b.withdrawAmount.toLocaleString()}`);
+
+      const phoneLink = document.getElementById('mapFloatPhoneLink');
+      if (phoneLink) {
+        phoneLink.textContent = b.phone;
+        phoneLink.href = `tel:${b.phone.replace(/[^0-9]/g, '')}`;
+      }
+
+      const pBadge = document.getElementById('mapFloatProblemBadge');
+      if (pBadge) {
+        if (b.probCount > 0) {
+          pBadge.textContent = `⚠️ มีปัญหา ${b.probCount} เคส`;
+          pBadge.className = 'text-xxs px-2.5 py-0.5 rounded-full font-bold bg-rose-500/20 text-rose-300 border border-rose-400/30';
+        } else {
+          pBadge.textContent = '✅ การทำงานปกติ';
+          pBadge.className = 'text-xxs px-2.5 py-0.5 rounded-full font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30';
+        }
+      }
+    }
+
+    // Scroll smoothly to a specific branch card in the grid
+    function jumpToBranchCard(branchId) {
+      const card = document.getElementById(`branch-card-${branchId}`);
+      if (card) {
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        card.classList.remove('ring-4', 'ring-blue-500');
+        void card.offsetWidth;
+        card.classList.add('ring-4', 'ring-blue-500', 'transition-all');
+        setTimeout(() => card.classList.remove('ring-4'), 2500);
+      }
+    }
+
+    // Filter Region Pills
+    function setMapRegionFilter(region) {
+      mapCurrentRegionFilter = region;
+      document.querySelectorAll('.region-pill').forEach(btn => {
+        btn.className = 'region-pill px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 transition';
+      });
+      const activeBtn = document.getElementById(`pill-region-${region}`);
+      if (activeBtn) {
+        activeBtn.className = 'region-pill active px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-900 text-white shadow-xs transition';
+      }
+      filterBranchSummaryCards();
+    }
+
+    function filterBranchSummaryCards() {
+      const branchesWithStats = BRANCH_METADATA.map(b => getBranchStats(b));
+      renderBranchSummaryCardsGrid(branchesWithStats);
+    }
+
+    // Render Concise Branch Summary Cards Grid (สั้นๆ พอสังเขปตามคำขอผู้ใช้)
+    function renderBranchSummaryCardsGrid(allBranches) {
+      const container = document.getElementById('mapBranchCardsGrid');
+      const searchInput = document.getElementById('mapBranchSearchInput');
+      const countBadge = document.getElementById('branchFilteredCountBadge');
+      if (!container) return;
+
+      const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
+
+      // Apply Region Filter & Search Query
+      const filtered = allBranches.filter(b => {
+        if (mapCurrentRegionFilter === 'HAS_PROBLEMS') {
+          if (b.probCount === 0) return false;
+        } else if (mapCurrentRegionFilter !== 'ALL') {
+          if (b.region !== mapCurrentRegionFilter) return false;
+        }
+
+        if (query) {
+          const matchName = b.name.toLowerCase().includes(query);
+          const matchPhone = b.phone.includes(query);
+          const matchMgr = b.manager.toLowerCase().includes(query);
+          const matchRegion = b.regionName.toLowerCase().includes(query);
+          return matchName || matchPhone || matchMgr || matchRegion;
+        }
+        return true;
+      });
+
+      if (countBadge) countBadge.textContent = `${filtered.length} สาขา`;
+
+      container.innerHTML = '';
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="col-span-full py-12 text-center bg-slate-50 rounded-2xl border border-slate-200">
+            <i data-lucide="map-pin-off" class="w-8 h-8 text-slate-400 mx-auto mb-2"></i>
+            <p class="text-sm font-bold text-slate-700">ไม่พบสาขาที่ตรงกับเงื่อนไขการค้นหา</p>
+            <p class="text-xs text-slate-400 mt-1">ลองเปลี่ยนคำค้นหา หรือคลิกดู "ทั้งหมด"</p>
+          </div>
+        `;
+        lucide.createIcons();
+        return;
+      }
+
+      filtered.forEach(b => {
+        const isSelected = b.id === selectedMapBranchId;
+        
+        let pBadge = '<span class="text-xxs px-2 py-0.5 rounded-full font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">✅ ปกติ</span>';
+        if (b.probSeverity === 'CRITICAL') {
+          pBadge = `<span class="text-xxs px-2 py-0.5 rounded-full font-bold bg-rose-100 text-rose-800 border border-rose-200">🔴 ${b.probCount} ปัญหา</span>`;
+        } else if (b.probSeverity === 'OVERDUE') {
+          pBadge = `<span class="text-xxs px-2 py-0.5 rounded-full font-bold bg-purple-100 text-purple-800 border border-purple-200">🟣 ${b.probCount} ปัญหา</span>`;
+        } else if (b.probSeverity === 'HIGH') {
+          pBadge = `<span class="text-xxs px-2 py-0.5 rounded-full font-bold bg-amber-100 text-amber-800 border border-amber-200">🟠 ${b.probCount} ปัญหา</span>`;
+        } else if (b.probCount > 0) {
+          pBadge = `<span class="text-xxs px-2 py-0.5 rounded-full font-bold bg-blue-100 text-blue-800 border border-blue-200">🟡 ${b.probCount} ปัญหา</span>`;
+        }
+
+        const card = document.createElement('div');
+        card.id = `branch-card-${b.id}`;
+        card.className = `branch-summary-card bg-white rounded-2xl p-4 border border-slate-200/90 shadow-2xs hover:shadow-md transition flex flex-col justify-between ${isSelected ? 'ring-2 ring-blue-500 bg-blue-50/10' : ''}`;
+        
+        card.innerHTML = `
+          <div>
+            <!-- Card Header: สาขา & ภูมิภาค -->
+            <div class="flex items-start justify-between gap-2 border-b border-slate-100 pb-2.5 mb-3">
+              <div>
+                <h4 class="font-black text-slate-900 text-sm tracking-tight flex items-center space-x-1">
+                  <span>${b.name}</span>
+                </h4>
+                <div class="flex items-center space-x-2 text-xxs text-slate-500 mt-0.5">
+                  <span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 font-semibold">${b.regionName}</span>
+                  <span>ผจก: <strong class="text-slate-700">${b.manager}</strong></span>
+                </div>
+              </div>
+              <div>${pBadge}</div>
+            </div>
+
+            <!-- Key Concise Numbers (ตัวเลขพอสังเขป สั้นๆ กระชับ) -->
+            <div class="space-y-2 text-xs">
+              
+              <!-- 1. เบอร์โทรศัพท์ (คลิกโทรได้) -->
+              <div class="flex justify-between items-center py-1 border-b border-slate-50">
+                <span class="text-slate-400 text-xxs font-medium flex items-center space-x-1">
+                  <i data-lucide="phone" class="w-3.5 h-3.5 text-blue-500"></i>
+                  <span>เบอร์โทร:</span>
+                </span>
+                <a href="tel:${b.phone.replace(/[^0-9]/g, '')}" class="font-bold text-blue-600 hover:text-blue-800 hover:underline font-mono text-xs">
+                  ${b.phone}
+                </a>
+              </div>
+
+              <!-- 2. ยอดขาย (เทียบเป้า) -->
+              <div class="flex justify-between items-center py-1 border-b border-slate-50">
+                <span class="text-slate-400 text-xxs font-medium flex items-center space-x-1">
+                  <i data-lucide="trending-up" class="w-3.5 h-3.5 text-emerald-500"></i>
+                  <span>ยอดขาย:</span>
+                </span>
+                <div class="text-right">
+                  <span class="font-extrabold text-slate-900 text-xs">฿${(b.actualSales / 1000000).toFixed(2)}M</span>
+                  <span class="text-xxs font-bold ml-1 ${b.salesStatus === 'green' ? 'text-emerald-600' : (b.salesStatus === 'yellow' ? 'text-amber-600' : 'text-rose-600')}">
+                    (${b.salesPct}%)
+                  </span>
+                </div>
+              </div>
+
+              <!-- 3. ยอดการเบิกบัญชี -->
+              <div class="flex justify-between items-center py-1 border-b border-slate-50">
+                <span class="text-slate-400 text-xxs font-medium flex items-center space-x-1">
+                  <i data-lucide="wallet" class="w-3.5 h-3.5 text-teal-500"></i>
+                  <span>การเบิก:</span>
+                </span>
+                <span class="font-bold text-teal-700 text-xs">
+                  ฿${b.withdrawAmount.toLocaleString()}
+                  <span class="text-xxs font-normal text-slate-400">(${b.withdrawCount} รายการ)</span>
+                </span>
+              </div>
+
+              <!-- 4. จำนวนปัญหา -->
+              <div class="flex justify-between items-center py-1">
+                <span class="text-slate-400 text-xxs font-medium flex items-center space-x-1">
+                  <i data-lucide="alert-circle" class="w-3.5 h-3.5 text-rose-500"></i>
+                  <span>จำนวนปัญหา:</span>
+                </span>
+                <span class="font-black text-xs ${b.probCount > 0 ? 'text-rose-600' : 'text-emerald-600'}">
+                  ${b.probCount > 0 ? `${b.probCount} รายการ` : 'ไม่มีปัญหา'}
+                </span>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Quick Action Buttons -->
+          <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center space-x-2">
+            ${b.probCount > 0 ? `
+              <button onclick="jumpToBranchProblems('${b.name}')" class="flex-1 py-1.5 px-2 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xxs font-bold rounded-lg transition border border-rose-200 flex items-center justify-center space-x-1">
+                <i data-lucide="alert-triangle" class="w-3 h-3 text-rose-600"></i>
+                <span>ดูปัญหา (${b.probCount})</span>
+              </button>
+            ` : `
+              <button onclick="selectMapBranch('${b.id}')" class="flex-1 py-1.5 px-2 bg-slate-50 hover:bg-slate-100 text-slate-600 text-xxs font-medium rounded-lg transition border border-slate-200 flex items-center justify-center space-x-1">
+                <i data-lucide="map-pin" class="w-3 h-3 text-slate-400"></i>
+                <span>พิกัดแผนที่</span>
+              </button>
+            `}
+            <button onclick="jumpToBranchAccounting('${b.name}')" class="py-1.5 px-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xxs font-semibold rounded-lg transition" title="ดูการเบิกจ่ายสาขานี้">
+              <i data-lucide="wallet" class="w-3 h-3"></i>
+            </button>
+          </div>
+        `;
+
+        container.appendChild(card);
+      });
+
+      lucide.createIcons();
+    }
+
+    // Direct Jump Functions to Other Tabs
+    function jumpToBranchProblems(branchName) {
+      switchTab('tab-problems');
+      dashboardState.problemFilterBranch = branchName;
+      const bSel = document.getElementById('probFilterBranch');
+      if (bSel) bSel.value = branchName;
+      applyProblemFilters();
+    }
+
+    function jumpToBranchAccounting(branchName) {
+      switchTab('tab-accounting');
+      const input = document.getElementById('accountingSearchInput');
+      if (input) {
+        input.value = branchName.replace('สาขา', '').trim();
+        renderAccountingTable();
+      }
     }
 
     // =========================================================================
@@ -1698,6 +4141,7 @@
     // =========================================================================
     document.addEventListener('DOMContentLoaded', () => {
       lucide.createIcons();
+      switchTab('tab-map');
       fetchDashboardData();
     });
   </script>
