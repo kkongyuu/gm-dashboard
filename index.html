@@ -357,9 +357,8 @@
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4 border-b border-slate-800 pb-4">
           <div>
             <div class="flex items-center space-x-2">
-              <span class="flex h-3 w-3 relative">
-                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
-                <span class="relative inline-flex rounded-full h-3 w-3 bg-sky-500"></span>
+              <span class="flex h-2.5 w-2.5 relative">
+                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-sky-500"></span>
               </span>
               <h3 class="text-base sm:text-lg font-bold text-white tracking-tight">แผนที่ประเทศไทย & ลูกศรชี้พิกัดสาขา</h3>
             </div>
@@ -371,7 +370,7 @@
           <!-- Map Legend / Pin indicators -->
           <div class="flex flex-wrap items-center gap-2 text-xxs font-medium text-slate-300 bg-slate-950/60 px-3 py-1.5 rounded-xl border border-slate-800">
             <span class="flex items-center space-x-1">
-              <span class="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse"></span>
+              <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
               <span>🔴 มีปัญหาเร่งด่วน</span>
             </span>
             <span class="flex items-center space-x-1">
@@ -1787,111 +1786,7 @@
         });
       });
 
-                  // 17 Real Surveyed Incident Cases from the Managers' Problem List Sheets (พร้อมเนื้อหาและการแก้ไขปัญหา)
-      allProblems = [
-        { 
-          code: 'PR-01', manager: "กาญจน์", branch: "สาขารัตนาธิเบศร์", urgency: "Critical", urgencyType: "critical", 
-          needsGmHelp: "แจ้งให้ทราบ", isNeedGm: true, status: "กำลังติดตาม", category: "บัญชี", subject: "งานระบบ",
-          problemDetail: "ระบบบันทึกบัญชีและการออกใบกำกับภาษีอิเล็กทรอนิกส์ขัดข้อง ไม่สามารถส่งข้อมูลเชื่อมต่อกับฐานข้อมูลระบบส่วนกลางได้ในรอบบิลนี้",
-          initialFix: "เจ้าหน้าที่การเงินสาขาบันทึกใบเสร็จแบบ Manual สำรองไว้ชั่วคราว พร้อมประสานทีม IT ซอฟต์แวร์ตรวจสอบ Database Connection และรัน Sync ด่วน"
-        },
-        { 
-          code: 'PR-02', manager: "กาญจน์", branch: "สาขานครปฐม", urgency: "High", urgencyType: "high", 
-          needsGmHelp: "แจ้งให้ทราบ", isNeedGm: true, status: "กำลังติดตาม", category: "คนไข้", subject: "คืนคอร์ส",
-          problemDetail: "คนไข้แจ้งความประสงค์ขอคืนเงินคอร์สหัตถการที่ยังคงเหลือ เนื่องจากต้องย้ายถิ่นฐานไปทำงานต่างจังหวัดกะทันหัน",
-          initialFix: "ผู้จัดการสาขาตรวจสอบประวัติการเข้ารับบริการ และส่งเอกสารคำร้องขอคืนคอร์สเข้าสู่ระบบพิจารณาของฝ่ายการเงินสำนักงานใหญ่"
-        },
-        { 
-          code: 'PR-03', manager: "กาญจน์", branch: "สาขารัตนาธิเบศร์", urgency: "Overdue", urgencyType: "overdue", 
-          needsGmHelp: "แจ้งให้ทราบ", isNeedGm: true, status: "กำลังติดตาม", category: "งานระบบ", subject: "อาคารสถานที่",
-          problemDetail: "เครื่องปรับอากาศห้องทำหัตถการหลักมีน้ำรั่วซึมลงฝ้าเพดานและส่งเสียงดัง เกินกำหนดเวลาซ่อมบำรุงตามรอบสัญญาบริการ",
-          initialFix: "ปิดกั้นพื้นที่โซนน้ำหยดชั่วคราวเพื่อความปลอดภัย และเร่งรัดช่างแอร์คู่สัญญาเข้าแก้ไขด่วนภายใน 24 ชม."
-        },
-        { 
-          code: 'PR-04', manager: "กาญจน์", branch: "สาขานครปฐม", urgency: "High", urgencyType: "high", 
-          needsGmHelp: "แจ้งให้ทราบ", isNeedGm: true, status: "กำลังติดตาม", category: "คนไข้", subject: "คืนคอร์ส",
-          problemDetail: "คนไข้ขอระงับและขอเงินคืนสำหรับคอร์สทรีตเมนต์เนื่องจากตั้งครรภ์และแพทย์สั่งงดหัตถการบางประเภท",
-          initialFix: "เสนอทางเลือกโอนสิทธิ์ให้บุคคลในครอบครัว หรือหากยืนยันขอคืนเงินให้ส่งเรื่องขอยกเว้นค่าธรรมเนียมตามเกณฑ์การแพทย์"
-        },
-        { 
-          code: 'PR-05', manager: "ซอฟ", branch: "สาขาบางนา", urgency: "ทั่วไป", urgencyType: "normal", 
-          needsGmHelp: "แจ้งให้ทราบ", isNeedGm: true, status: "กำลังติดตาม", category: "คนไข้", subject: "อาคารสถานที่",
-          problemDetail: "ประตูกระจกอัตโนมัติบริเวณทางเข้าด้านหน้าสาขาเลื่อนเปิด-ปิดฝืดและมีเสียงเสียดสีรบกวนคนไข้",
-          initialFix: "ฉีดสารหล่อลื่นรางเลื่อนเบื้องต้น และลงคิวนัดช่างบำรุงรักษาประจำอาคารเข้าตรวจเช็กมอเตอร์และเซนเซอร์"
-        },
-        { 
-          code: 'PR-06', manager: "ซอฟ", branch: "สาขาชลบุรี", urgency: "ทั่วไป", urgencyType: "normal", 
-          needsGmHelp: "แจ้งให้ทราบ", isNeedGm: true, status: "กำลังติดตาม", category: "คนไข้", subject: "Complaint",
-          problemDetail: "คนไข้ร้องเรียนเรื่องระยะเวลารอพบแพทย์นานเกิน 40 นาทีในช่วงเวลาที่มีคิวนัดหมายซ้อนกันในวันหยุด",
-          initialFix: "ผจก.สาขาเข้าขอโทษและชี้แจงสถานการณ์กับคนไข้ด้วยตนเอง มอบสิทธิ Complimentary Service พร้อมปรับจูนตารางนัดหมายแพทย์"
-        },
-        { 
-          code: 'PR-07', manager: "อัจ", branch: "สาขาสุราษ", urgency: "High", urgencyType: "high", 
-          needsGmHelp: "แจ้งให้ทราบ", isNeedGm: true, status: "กำลังติดตาม", category: "พนักงาน", subject: "(ไม่ได้ระบุหัวข้อ)",
-          problemDetail: "พนักงานผู้ช่วยแพทย์และฝ่ายต้อนรับมีอัตรากำลังไม่เต็มตามกรอบ ทำให้ภาระงานช่วงวันหยุดสุดสัปดาห์ตึงตัว",
-          initialFix: "จัดเกลี่ยตารางเวรล่วงหน้า และประสานงานฝ่ายบุคคลเพื่อเปิดรับสมัครพนักงานประจำและ Part-time เพิ่มเติม"
-        },
-        { 
-          code: 'PR-08', manager: "อัจ", branch: "สาขาหาดใหญ่", urgency: "High", urgencyType: "high", 
-          needsGmHelp: "แจ้งให้ทราบ", isNeedGm: true, status: "กำลังติดตาม", category: "พนักงาน", subject: "ลาออก",
-          problemDetail: "พนักงานทรีตเมนต์ 2 ท่านยื่นใบลาออกพร้อมกัน มีผลสิ้นเดือนนี้ เสี่ยงต่อการรองรับคนไข้ตามนัดหมายล่วงหน้า",
-          initialFix: "เร่งกระบวนการสัมภาษณ์ผู้สมัครใหม่ และประสานขอยืมตัวพนักงานชั่วคราวจากสาขาในเขตภาคใต้มาช่วยเสริมทีม"
-        },
-        { 
-          code: 'PR-09', manager: "รัตน์", branch: "สาขานครปฐม", urgency: "High", urgencyType: "high", 
-          needsGmHelp: "แจ้งให้ทราบ", isNeedGm: true, status: "กำลังดำเนินการ", category: "ทั่วไป", subject: "ขาดงาน",
-          problemDetail: "พนักงานต้อนรับขาดงานโดยไม่แจ้งล่วงหน้า ส่งผลให้การเปิดสาขาและรับคิวคนไข้ช่วงเช้าล่าช้า",
-          initialFix: "ผจก.สาขาเข้าปฏิบัติหน้าที่แทนในเคาน์เตอร์ต้อนรับ และดำเนินการออกหนังสือตักเตือนตามระเบียบวินัยบริษัท"
-        },
-        { 
-          code: 'PR-10', manager: "รัตน์", branch: "สาขานครปฐม", urgency: "ทั่วไป", urgencyType: "normal", 
-          needsGmHelp: "แจ้งให้ทราบ", isNeedGm: true, status: "กำลังดำเนินการ", category: "ทั่วไป", subject: "คืนคอร์ส",
-          problemDetail: "เอกสารคำร้องขอคืนคอร์สของคนไข้ยังรอเอกสารหลักฐานสลิปการโอนเงินตัวจริงเพิ่มเติมเพื่อความถูกต้อง",
-          initialFix: "เจ้าหน้าที่โทรประสานคนไข้เพื่อขอเอกสารเพิ่มเติมผ่าน LINE Official และแนบเรื่องส่งต่อฝ่ายการเงิน"
-        },
-        { 
-          code: 'PR-11', manager: "อี้", branch: "สาขาบางนา", urgency: "High", urgencyType: "high", 
-          needsGmHelp: "แจ้งให้ทราบ", isNeedGm: true, status: "กำลังติดตาม", category: "งานระบบ", subject: "อาคารสถานที่",
-          problemDetail: "หลอดไฟโถงรับรองคนไข้กระพริบและดับ 3 จุด ส่งผลต่อภาพลักษณ์และความสว่างในคลินิก",
-          initialFix: "จัดซื้อหลอด LED สเปกเดิมตามมาตรฐานคลินิกเปลี่ยนทดแทนเรียบร้อย และตรวจสอบเบรกเกอร์วงจรไฟ"
-        },
-        { 
-          code: 'PR-12', manager: "อี้", branch: "สาขาบางนา", urgency: "High", urgencyType: "high", 
-          needsGmHelp: "แจ้งให้ทราบ", isNeedGm: true, status: "กำลังติดตาม", category: "งานระบบ", subject: "อาคารสถานที่",
-          problemDetail: "สัญญาณอินเทอร์เน็ตหลุดบ่อย ทำให้เครื่องรูดบัตรเครดิต (EDC) ทำงานล่าช้าและส่งผลต่อการคิดเงินคนไข้",
-          initialFix: "ประสาน ISP ตรวจเช็กสายสัญญาณภายนอก พร้อมเปิดใช้งาน Mobile Hotspot และซิม 4G สำรองที่เครื่อง EDC"
-        },
-        { 
-          code: 'PR-13', manager: "จาเน่", branch: "สาขาขอนแก่น", urgency: "Overdue", urgencyType: "overdue", 
-          needsGmHelp: "แจ้งให้ทราบ", isNeedGm: true, status: "กำลังติดตาม", category: "คนไข้", subject: "คืนคอร์ส",
-          problemDetail: "รายการคืนเงินคอร์สของคนไข้เกินระยะเวลา SLA 14 วัน คนไข้ติดตามสถานะซ้ำทางโทรศัพท์",
-          initialFix: "โทรชี้แจงขออภัยคนไข้ พร้อมออกใบติดตามเรื่องเร่งด่วนไปยังหัวหน้าฝ่ายการเงินเพื่อขอให้อนุมัติจ่ายเงินวันนี้"
-        },
-        { 
-          code: 'PR-14', manager: "เปีย", branch: "สาขาระยอง", urgency: "High", urgencyType: "high", 
-          needsGmHelp: "ขออนุมัติ", isNeedGm: true, status: "กำลังติดตาม", category: "บัญชี", subject: "มีรายการรอชำระ",
-          problemDetail: "มีใบวางบิลค่าซ่อมบำรุงเครื่องมือแพทย์และอุปกรณ์สำนักงานที่เกินอำนาจอนุมัติของสาขา รอ GM อนุมัติ",
-          initialFix: "แนบใบเสนอราคาและรายงานการตรวจรับเข้าสู่ระบบ ERP ส่งให้ GM พิจารณาอนุมัติการเบิกจ่าย"
-        },
-        { 
-          code: 'PR-15', manager: "ส้มโอ", branch: "สาขามิสทีน", urgency: "High", urgencyType: "high", 
-          needsGmHelp: "ขอให้ GM เข้า Support", isNeedGm: true, status: "กำลังติดตาม", category: "งานระบบ", subject: "อาคารสถานที่",
-          problemDetail: "ปัญหาน้ำรั่วซึมจากรอยต่อหลังคาอาคารเช่า มีความเสี่ยงต่อเครื่องเลเซอร์และเครื่องมือแพทย์ราคาแพง",
-          initialFix: "นำผ้าใบคลุมอุปกรณ์ ย้ายเครื่องมือแพทย์ไปห้องที่ปลอดภัย และขอให้ GM ประสานกับเจ้าของพื้นที่เช่าเข้าซ่อมโครงสร้างด่วน"
-        },
-        { 
-          code: 'PR-16', manager: "ส้มโอ", branch: "สาขามิสทีน", urgency: "High", urgencyType: "high", 
-          needsGmHelp: "แจ้งให้ทราบ", isNeedGm: true, status: "กำลังติดตาม", category: "คนไข้", subject: "คืนคอร์ส",
-          problemDetail: "คนไข้มีอาการระคายเคืองผิวหลังทำทรีตเมนต์และประสงค์ขอยกเลิกคอร์สที่เหลือ",
-          initialFix: "นัดหมายแพทย์ผู้เชี่ยวชาญเข้าตรวจดูอาการทันทีโดยไม่มีค่าใช้จ่าย และทำบันทึกคำร้องขอคืนคอร์สตามที่คนไข้ประสงค์"
-        },
-        { 
-          code: 'PR-17', manager: "ส้มโอ", branch: "สาขามิสทีน", urgency: "ทั่วไป", urgencyType: "normal", 
-          needsGmHelp: "-", isNeedGm: false, status: "กำลังดำเนินการ", category: "ทั่วไป", subject: "(ไม่ได้ระบุหัวข้อ)",
-          problemDetail: "แฟ้มเวชระเบียนคนไข้ใหม่รอการสแกนและบันทึกรหัสลงในฐานข้อมูลระบบกลาง",
-          initialFix: "จัดแบ่งเวรเจ้าหน้าที่ธุรการทำการสแกนและคีย์ข้อมูลหลังปิดรับคนไข้ประจำวัน ดำเนินการแล้วเสร็จตามรอบ"
-        }
-      ];
+                  allProblems = [];
 
       // Mock Accounting Data
       let accountingBranches = [
@@ -1966,82 +1861,9 @@
     // 3. FETCH & LOAD DATA (⚡ INSTANT STALE-WHILE-REVALIDATE: โหลดทันที 0.01 วิ)
     // =========================================================================
         // =========================================================================
-    // 1.5 DATA SANITIZATION (กรองวันที่หลุดปนในชื่อสาขา และจัดระเบียบข้อมูลสำรวจจริง)
+    // 1.5 DATA SANITIZATION (กรองเฉพาะข้อมูลจริงจาก Google Sheets 100% ไม่มี Mockup)
     // =========================================================================
-        // ฐานข้อมูลปัญหาสำรวจจริง 100% ตรงตาม Google Sheet (รวมถึงสาขามิสทีนและสาขาอื่นๆ)
-    const SURVEYED_PROBLEM_DETAILS = {
-      // สาขามิสทีน (ตรงตาม Google Sheet ของผู้ใช้งาน 100%)
-      'สาขามิสทีน_อาคารสถานที่': {
-        detail: 'งดจ่ายกระแสไฟวันที่ 6/9/69 ตั้งแต่เวลา 8.00- 15.30',
-        fix: 'ส่งเรื่องดำเนินการให้คุณจิ๋วจัดหาบริษัทปั่นไฟเข้ามาค่ะ'
-      },
-      'สาขามิสทีน_คืนคอร์ส': {
-        detail: 'UN 8154 คุณลัดดาวัลย์ ขอคืนคอร์ส เนื่องจากอาการปวดไม่ค่อยดีแล้วทำการรักษาไป 1 ครั้งเป็นเคสการรักษา ปัญหาเพิ่มเติมคนไข้กังวลเรื่องหมุนเงินไม่ทัน',
-        fix: 'SNคุณฝืนโทรสอบถามคนไข้ดูรายละเอียดเรียบร้อย แต่ต้องติดตามอีกทีวันที่ 5/9/69'
-      },
-      'สาขามิสทีน_(ไม่ได้ระบุหัวข้อ)': {
-        detail: 'แฟ้มเวชระเบียนคนไข้ใหม่รอการสแกนและบันทึกรหัสลงในฐานข้อมูลระบบกลาง',
-        fix: 'จัดแบ่งเวรเจ้าหน้าที่ธุรการทำการสแกนและคีย์ข้อมูลหลังปิดรับคนไข้ประจำวัน ดำเนินการแล้วเสร็จตามรอบ'
-      },
-
-      // สาขารัตนาธิเบศร์
-      'สาขารัตนาธิเบศร์_งานระบบ': {
-        detail: 'ระบบบันทึกบัญชีและการออกใบกำกับภาษีอิเล็กทรอนิกส์ขัดข้อง ไม่สามารถส่งข้อมูลเชื่อมต่อกับฐานข้อมูลระบบส่วนกลางได้ในรอบบิลนี้',
-        fix: 'เจ้าหน้าที่การเงินสาขาบันทึกใบเสร็จแบบ Manual สำรองไว้ชั่วคราว พร้อมประสานทีม IT ซอฟต์แวร์ตรวจสอบ Database Connection และรัน Sync ด่วน'
-      },
-      'สาขารัตนาธิเบศร์_อาคารสถานที่': {
-        detail: 'เครื่องปรับอากาศห้องทำหัตถการหลักมีน้ำรั่วซึมลงฝ้าเพดานและส่งเสียงดัง เกินกำหนดเวลาซ่อมบำรุงตามรอบสัญญาบริการ',
-        fix: 'ปิดกั้นพื้นที่โซนน้ำหยดชั่วคราวเพื่อความปลอดภัย และเร่งรัดช่างแอร์คู่สัญญาเข้าแก้ไขด่วนภายใน 24 ชม.'
-      },
-
-      // สาขานครปฐม
-      'สาขานครปฐม_คืนคอร์ส': {
-        detail: 'คนไข้แจ้งความประสงค์ขอคืนเงินคอร์สหัตถการที่ยังคงเหลือ เนื่องจากต้องย้ายถิ่นฐานไปทำงานต่างจังหวัดกะทันหัน',
-        fix: 'ผู้จัดการสาขาตรวจสอบประวัติการเข้ารับบริการ และส่งเอกสารคำร้องขอคืนคอร์สเข้าสู่ระบบพิจารณาของฝ่ายการเงินสำนักงานใหญ่'
-      },
-      'สาขานครปฐม_ขาดงาน': {
-        detail: 'พนักงานต้อนรับขาดงานโดยไม่แจ้งล่วงหน้า ส่งผลให้การเปิดสาขาและรับคิวคนไข้ช่วงเช้าล่าช้า',
-        fix: 'ผจก.สาขาเข้าปฏิบัติหน้าที่แทนในเคาน์เตอร์ต้อนรับ และดำเนินการออกหนังสือตักเตือนตามระเบียบวินัยบริษัท'
-      },
-
-      // สาขาบางนา
-      'สาขาบางนา_อาคารสถานที่': {
-        detail: 'ประตูกระจกอัตโนมัติบริเวณทางเข้าด้านหน้าสาขาเลื่อนเปิด-ปิดฝืด และหลอดไฟโถงรับรองคนไข้กระพริบ 3 จุด',
-        fix: 'ปรับตั้งเซนเซอร์ตรวจจับและฉีดสารหล่อลื่นรางเลื่อน พร้อมจัดซื้อหลอด LED สเปกเดิมเปลี่ยนทดแทนเรียบร้อย'
-      },
-
-      // สาขาชลบุรี
-      'สาขาชลบุรี_Complaint': {
-        detail: 'คนไข้ร้องเรียนเรื่องระยะเวลารอพบแพทย์นานเกิน 40 นาทีในช่วงเวลาที่มีคิวนัดหมายซ้อนกันในวันหยุด',
-        fix: 'ผจก.สาขาเข้าขอโทษและชี้แจงสถานการณ์กับคนไข้ด้วยตนเอง มอบสิทธิ Complimentary Service พร้อมปรับจูนตารางนัดหมายแพทย์'
-      },
-
-      // สาขาสุราษ
-      'สาขาสุราษ_(ไม่ได้ระบุหัวข้อ)': {
-        detail: 'พนักงานผู้ช่วยแพทย์และฝ่ายต้อนรับมีอัตรากำลังไม่เต็มตามกรอบ ทำให้ภาระงานช่วงวันหยุดสุดสัปดาห์ตึงตัว',
-        fix: 'จัดเกลี่ยตารางเวรล่วงหน้า และประสานงานฝ่ายบุคคลเพื่อเปิดรับสมัครพนักงานประจำและ Part-time เพิ่มเติม'
-      },
-
-      // สาขาหาดใหญ่
-      'สาขาหาดใหญ่_ลาออก': {
-        detail: 'พนักงานทรีตเมนต์ 2 ท่านยื่นใบลาออกพร้อมกัน มีผลสิ้นเดือนนี้ เสี่ยงต่อการรองรับคนไข้ตามนัดหมายล่วงหน้า',
-        fix: 'เร่งกระบวนการสัมภาษณ์ผู้สมัครใหม่ และประสานขอยืมตัวพนักงานชั่วคราวจากสาขาในเขตภาคใต้มาช่วยเสริมทีม'
-      },
-
-      // สาขาขอนแก่น
-      'สาขาขอนแก่น_คืนคอร์ส': {
-        detail: 'รายการคืนเงินคอร์สของคนไข้เกินระยะเวลา SLA 14 วัน คนไข้ติดตามสถานะซ้ำทางโทรศัพท์',
-        fix: 'โทรชี้แจงขออภัยคนไข้ พร้อมออกใบติดตามเรื่องเร่งด่วนไปยังหัวหน้าฝ่ายการเงินเพื่อขอให้อนุมัติจ่ายเงินวันนี้'
-      },
-
-      // สาขาระยอง
-      'สาขาระยอง_มีรายการรอชำระ': {
-        detail: 'มีใบวางบิลค่าซ่อมบำรุงเครื่องมือแพทย์และอุปกรณ์สำนักงานที่เกินอำนาจอนุมัติของสาขา รอ GM อนุมัติ',
-        fix: 'แนบใบเสนอราคาและรายงานการตรวจรับเข้าสู่ระบบ ERP ส่งให้ GM พิจารณาอนุมัติการเบิกจ่าย'
-      }
-    };
-
-    function isInvalidBranchName(name) {
+function isInvalidBranchName(name) {
       if (!name || typeof name !== 'string') return true;
       const t = name.trim();
       if (t === '' || t === '-' || t.toLowerCase() === 'undefined') return true;
@@ -2126,19 +1948,12 @@
           p.problemDetail = p['เนื้อหา'] || p.content || p.problemDetail || p['รายละเอียดปัญหา'] || p.detail || p.colH || p.issueDetail || p.description || '';
           p.initialFix = p['การแก้ไขปัญหา'] || p['การแก้ไขเบื้องต้น'] || p.initialFix || p.initialAction || p.solution || p.colI || p.action || p.fix || '';
 
-          // เชื่อมโยงข้อมูลสำรวจจริง (หาก Google Apps Script ส่งมาเฉพาะหัวข้อ)
-          if (!p.problemDetail || p.problemDetail === '-' || p.problemDetail === p.subject) {
-            const key = `${p.branch}_${p.subject}`;
-            if (SURVEYED_PROBLEM_DETAILS[key]) {
-              p.problemDetail = SURVEYED_PROBLEM_DETAILS[key].detail;
-              p.initialFix = (p.initialFix && p.initialFix !== '-') ? p.initialFix : SURVEYED_PROBLEM_DETAILS[key].fix;
-            } else if (SURVEYED_PROBLEM_DETAILS[`${p.branch}_(ไม่ได้ระบุหัวข้อ)`]) {
-              p.problemDetail = SURVEYED_PROBLEM_DETAILS[`${p.branch}_(ไม่ได้ระบุหัวข้อ)`].detail;
-              p.initialFix = (p.initialFix && p.initialFix !== '-') ? p.initialFix : SURVEYED_PROBLEM_DETAILS[`${p.branch}_(ไม่ได้ระบุหัวข้อ)`].fix;
-            } else {
-              p.problemDetail = p.subject || '(ไม่มีรายละเอียดเพิ่มเติม)';
-              p.initialFix = p.initialFix || '-';
-            }
+          // ข้อมูลเนื้อหาและการแก้ไขปัญหา ใช้เฉพาะที่มาจาก Google Sheet จริงเท่านั้น หากไม่มีระบุให้แสดง '-'
+          if (!p.problemDetail || p.problemDetail === '-') {
+            p.problemDetail = p.subject || '-';
+          }
+          if (!p.initialFix) {
+            p.initialFix = '-';
           }
         });
 
@@ -2166,7 +1981,9 @@
       const refreshIcon = document.getElementById('refreshIcon');
       if (refreshIcon) refreshIcon.classList.add('animate-spin');
 
-      const cacheKey = 'gm_dash_cache_local_p' + dashboardState.currentPeriodIndex;
+      // Clear old caches with legacy mock data
+      ['gm_dash_cache_local_p0', 'gm_dash_cache_local_p1', 'gm_dash_cache_local_p2', 'gm_dash_cache_v3_p0', 'gm_dash_cache_v3_p1'].forEach(k => localStorage.removeItem(k));
+      const cacheKey = 'gm_dash_cache_v5_live_p' + dashboardState.currentPeriodIndex;
       let hasLocalCache = false;
 
       // ⚡ ขั้นตอนที่ 1: ตรวจสอบแคชในเบราว์เซอร์ ถ้ามี แสดงผลทันทีใน 0.01 วินาที! ไม่ต้องรอ!
@@ -3793,11 +3610,11 @@
                 marker-end="${b.arrowMarker}" class="transition-opacity duration-300 opacity-70" />
         `;
 
-        // Branch Coordinate Pin on Map (Radar Pulse)
+        // Branch Coordinate Pin on Map (Clean Static Pin, No pulsating/flickering animation)
         const isSelected = b.id === selectedMapBranchId;
         pinsHtml += `
           <g id="map-pin-${b.id}" class="cursor-pointer" onclick="selectMapBranch('${b.id}')">
-            <circle cx="${b.mapX}" cy="${b.mapY}" r="${isSelected ? 14 : 9}" fill="${b.pinColor}" class="animate-ping opacity-60" />
+            ${isSelected ? `<circle cx="${b.mapX}" cy="${b.mapY}" r="11" fill="${b.pinColor}" fill-opacity="0.25" stroke="${b.pinColor}" stroke-width="1.5" />` : ''}
             <circle cx="${b.mapX}" cy="${b.mapY}" r="5.5" fill="${b.pinColor}" stroke="#ffffff" stroke-width="2" />
           </g>
         `;
