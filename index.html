@@ -177,6 +177,63 @@
       }
     }
 
+    /* Interactive Split-View Map & Expandable Branch Detail Panel */
+    #mapSplitStage {
+      transition: gap 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    #mapSvgColumn {
+      transition: width 0.35s cubic-bezier(0.22, 1, 0.36, 1), max-width 0.35s cubic-bezier(0.22, 1, 0.36, 1), transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .map-side-inspector {
+      display: block;
+      opacity: 1;
+      translate: 0 0;
+      transition:
+        display 0.35s,
+        opacity 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+        translate 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+      transition-behavior: allow-discrete;
+    }
+    @starting-style {
+      .map-side-inspector {
+        opacity: 0;
+        translate: 24px 0;
+      }
+      .map-side-inspector[data-side="left"] {
+        opacity: 0;
+        translate: -24px 0;
+      }
+    }
+    .map-side-inspector:where([hidden], [data-closing]) {
+      opacity: 0;
+      translate: 24px 0;
+    }
+    .map-side-inspector[data-side="left"]:where([hidden], [data-closing]) {
+      opacity: 0;
+      translate: -24px 0;
+    }
+    .map-side-inspector[hidden] {
+      display: none !important;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      #mapSplitStage,
+      #mapSvgColumn,
+      .map-side-inspector {
+        translate: none !important;
+        transition-duration: 0.05s !important;
+      }
+      @starting-style {
+        .map-side-inspector,
+        .map-side-inspector[data-side="left"] {
+          translate: none !important;
+        }
+      }
+      .map-side-inspector:where([hidden], [data-closing]),
+      .map-side-inspector[data-side="left"]:where([hidden], [data-closing]) {
+        translate: none !important;
+      }
+    }
+
     /* Respect Reduced Motion Preferences for View Transitions & Spinners */
     @media (prefers-reduced-motion: reduce) {
       ::view-transition-group(*),
@@ -388,45 +445,54 @@
       </div>
 
       <!-- 2. Interactive Thailand Map with Pointer Arrows & Live Callouts -->
-      <div class="bg-slate-900 rounded-3xl border border-slate-800 shadow-2xl p-4 sm:p-6 relative">
+      <div id="mapSectionContainer" class="bg-slate-900 rounded-3xl border border-slate-800 shadow-2xl p-4 sm:p-6 relative overflow-hidden">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4 border-b border-slate-800 pb-4">
           <div>
             <div class="flex items-center space-x-2">
               <span class="flex h-2.5 w-2.5 relative">
                 <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-sky-500"></span>
               </span>
-              <h3 class="text-base sm:text-lg font-bold text-white tracking-tight">แผนที่ประเทศไทย & ลูกศรชี้พิกัดสาขา</h3>
+              <h3 class="text-base sm:text-lg font-bold text-white tracking-tight">แผนที่เครือข่ายสาขา & ข้อมูลเจาะลึกรายสาขา</h3>
             </div>
             <p class="text-xxs sm:text-xs text-slate-400 mt-0.5">
-              ลูกศรชี้ตรงเข้าจุดที่ตั้งสาขาจริง แตะหรือคลิกที่ชื่อสาขาเพื่อดูข้อมูลตัวเลขโดยสังเขป
+              คลิกที่ชื่อสาขาบนแผนที่ หรือคลิกที่การ์ดสาขาด้านล่าง เพื่อเลื่อนแผนที่และขยายหน้าต่างสรุปข้อมูลสาขาแบบครบจบในที่เดียว
             </p>
           </div>
 
-          <!-- Map Legend / Pin indicators -->
-          <div class="flex flex-wrap items-center gap-2 text-xxs font-medium text-slate-300 bg-slate-950/60 px-3 py-1.5 rounded-xl border border-slate-800">
-            <span class="flex items-center space-x-1">
-              <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
-              <span>🔴 มีปัญหาเร่งด่วน</span>
-            </span>
-            <span class="flex items-center space-x-1">
-              <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
-              <span>🟠 ปัญหาเฝ้าระวัง</span>
-            </span>
-            <span class="flex items-center space-x-1">
-              <span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
-              <span>🟣 เกินกำหนด</span>
-            </span>
-            <span class="flex items-center space-x-1">
-              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-              <span>🟢 การทำงานปกติ</span>
-            </span>
+          <!-- Map Legend & Quick Tour Controls -->
+          <div class="flex flex-wrap items-center gap-2 text-xxs font-medium text-slate-300">
+            <div class="flex flex-wrap items-center gap-2 bg-slate-950/60 px-3 py-1.5 rounded-xl border border-slate-800">
+              <span class="flex items-center space-x-1">
+                <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+                <span>🔴 เร่งด่วน</span>
+              </span>
+              <span class="flex items-center space-x-1">
+                <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                <span>🟠 เฝ้าระวัง</span>
+              </span>
+              <span class="flex items-center space-x-1">
+                <span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
+                <span>🟣 เกินกำหนด</span>
+              </span>
+              <span class="flex items-center space-x-1">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                <span>🟢 ปกติ</span>
+              </span>
+            </div>
+
+            <button onclick="toggleMapAutoTour()" id="btnMapHeaderAutoTour" class="px-3 py-1.5 rounded-xl bg-sky-500/15 hover:bg-sky-500/25 text-sky-300 border border-sky-400/30 font-bold transition flex items-center space-x-1.5">
+              <i data-lucide="play" class="w-3.5 h-3.5"></i>
+              <span id="mapHeaderAutoTourText">เล่นวนดูสาขา</span>
+            </button>
           </div>
         </div>
 
-        <!-- The SVG Vector Map Layout -->
-        <div class="relative w-full flex justify-center items-center overflow-x-auto custom-scrollbar py-2">
-          <div class="w-full max-w-[840px] relative">
-            <svg id="thailandVectorMap" viewBox="0 0 760 900" class="w-full h-auto max-h-[720px] select-none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Interactive Split-View Stage (Default: Centered Map | Clicked: Map shifts left/right & Branch Inspector expands beside it) -->
+        <div id="mapSplitStage" class="relative w-full flex flex-col lg:flex-row justify-center items-center lg:items-stretch gap-6 py-1">
+          
+          <!-- Left/Right Shiftable Thailand Vector Map Column -->
+          <div id="mapSvgColumn" class="w-full max-w-[820px] flex flex-col items-center justify-center relative mx-auto">
+            <svg id="thailandVectorMap" viewBox="0 0 760 900" class="w-full h-auto max-h-[700px] select-none transition-all duration-300" xmlns="http://www.w3.org/2000/svg">
               <defs>
                 <!-- Arrow Marker definition -->
                 <marker id="mapArrowSky" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
@@ -491,70 +557,143 @@
               <g id="mapBranchPinsContainer"></g>
               <g id="mapCalloutsContainer"></g>
             </svg>
-          </div>
-        </div>
 
-        <!-- 3. Active Selected Branch Detailed Console (ไม่ตกขอบ 100% สวยงาม ชัดเจน ทุกอุปกรณ์) -->
-        <div id="mapFloatingCard" class="mt-4 bg-slate-950/80 backdrop-blur-md rounded-2xl p-4 sm:p-5 border border-slate-700/80 shadow-2xl transition-all duration-300">
-          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div class="flex items-center space-x-3.5">
-              <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-600/40 to-indigo-600/40 text-blue-400 border border-blue-500/40 flex items-center justify-center font-black text-base shadow-inner flex-shrink-0" id="mapFloatInitial">
-                -
-              </div>
-              <div>
-                <div class="flex flex-wrap items-center gap-2">
-                  <h4 class="font-bold text-white text-base sm:text-lg" id="mapFloatTitle">กำลังโหลดข้อมูลสาขา...</h4>
-                  <span class="text-xxs px-2.5 py-0.5 rounded-full font-bold bg-blue-500/20 text-blue-300 border border-blue-400/30" id="mapFloatRegion">-</span>
-                  <span class="text-xxs px-2.5 py-0.5 rounded-full font-bold bg-slate-700 text-slate-300 border border-slate-600" id="mapFloatProblemBadge">-</span>
+            <!-- Default Idle Prompt Banner (Shown only when no branch is clicked yet) -->
+            <div id="mapIdlePrompt" class="mt-2 inline-flex items-center space-x-2 px-4 py-2 rounded-full bg-slate-950/80 border border-slate-800 text-xs text-slate-300 shadow-lg">
+              <i data-lucide="mouse-pointer-click" class="w-4 h-4 text-sky-400"></i>
+              <span>คลิกเลือก <strong>สาขาบนแผนที่</strong> หรือคลิก <strong>การ์ดสาขาด้านล่าง</strong> เพื่อเลื่อนแผนที่และเปิดหน้าต่างสรุปข้อมูลสาขา</span>
+            </div>
+          </div>
+
+          <!-- 3. Expandable Side Branch Executive Inspector (ย้ายมาแสดงข้างแผนที่เมื่อคลิก พร้อมรวมข้อมูลการ์ดขาวครบจบในหน้าเดียว) -->
+          <aside id="mapFloatingCard" hidden data-side="right" class="map-side-inspector w-full lg:w-[46%] xl:w-[44%] flex-shrink-0 bg-slate-950/90 backdrop-blur-md rounded-2xl p-4 sm:p-5 border border-slate-700/80 shadow-2xl flex flex-col justify-between">
+            <div class="space-y-4">
+              
+              <!-- Top Control Bar: Navigation, Auto-Tour, Side Indicator & Close -->
+              <div class="flex items-center justify-between gap-2 pb-3 border-b border-slate-800/90">
+                <div class="inline-flex items-center space-x-1 bg-slate-900 px-2 py-1 rounded-xl border border-slate-700/80">
+                  <button onclick="stepMapBranch(-1)" title="สาขาก่อนหน้า" class="p-1 text-slate-300 hover:text-white transition rounded-lg hover:bg-slate-800">
+                    <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                  </button>
+                  <button onclick="toggleMapAutoTour()" id="btnMapAutoTour" class="px-2.5 py-0.5 text-xxs font-bold text-sky-300 hover:text-white transition flex items-center space-x-1">
+                    <i data-lucide="play" class="w-3.5 h-3.5"></i>
+                    <span id="mapAutoTourText">เล่นวนดูสาขา</span>
+                  </button>
+                  <button onclick="stepMapBranch(1)" title="สาขาถัดไป" class="p-1 text-slate-300 hover:text-white transition rounded-lg hover:bg-slate-800">
+                    <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                  </button>
                 </div>
-                <div class="flex flex-wrap items-center gap-2 sm:gap-3 text-xs text-slate-300 mt-1">
-                  <span>ผู้จัดการเขต: <span id="mapFloatManager" class="text-white font-semibold">-</span></span>
-                  <span class="text-slate-600 hidden sm:inline">|</span>
-                  <span id="mapFloatIssuesSnippet" class="text-slate-400 font-medium">-</span>
-                  <span class="text-slate-600 hidden sm:inline">|</span>
-                  <!-- Map Branch Navigator & Auto-Tour Controls -->
-                  <div class="inline-flex items-center space-x-1 bg-slate-900 px-2 py-0.5 rounded-lg border border-slate-700">
-                    <button onclick="stepMapBranch(-1)" title="สาขาก่อนหน้า" class="p-1 text-slate-300 hover:text-white transition">
-                      <i data-lucide="chevron-left" class="w-3.5 h-3.5"></i>
-                    </button>
-                    <button onclick="toggleMapAutoTour()" id="btnMapAutoTour" class="px-2 py-0.5 text-xxs font-bold text-sky-300 hover:text-white transition flex items-center space-x-1">
-                      <i data-lucide="play" class="w-3 h-3"></i>
-                      <span id="mapAutoTourText">เล่นวนดูสาขา</span>
-                    </button>
-                    <button onclick="stepMapBranch(1)" title="สาขาถัดไป" class="p-1 text-slate-300 hover:text-white transition">
-                      <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
-                    </button>
+
+                <div class="flex items-center space-x-1.5">
+                  <button onclick="toggleMapPanelSide()" title="สลับฝั่งซ้าย/ขวาของแผนที่" class="px-2.5 py-1 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white text-xxs font-semibold border border-slate-700/80 transition flex items-center space-x-1">
+                    <i data-lucide="arrow-left-right" class="w-3.5 h-3.5 text-sky-400"></i>
+                    <span id="mapPanelSideLabel">สลับฝั่ง</span>
+                  </button>
+                  <button onclick="closeMapBranchPanel()" title="ปิดหน้าต่างและกลับสู่แผนที่ปกติ" class="p-1.5 rounded-xl bg-slate-900 hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 border border-slate-700/80 hover:border-rose-500/40 transition">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Branch Identity Header (รวมข้อมูลจากแถบเดิม + การ์ดขาว) -->
+              <div class="flex items-start justify-between gap-3">
+                <div class="flex items-start space-x-3.5">
+                  <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-600/40 to-indigo-600/40 text-blue-300 border border-blue-500/40 flex items-center justify-center font-black text-lg shadow-inner flex-shrink-0" id="mapFloatInitial">
+                    -
+                  </div>
+                  <div>
+                    <div class="flex flex-wrap items-center gap-1.5">
+                      <h4 class="font-black text-white text-lg sm:text-xl tracking-tight" id="mapFloatTitle">-</h4>
+                      <span id="mapFloatRankBadge" class="hidden"></span>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2 text-xs text-slate-300 mt-1">
+                      <span class="text-xxs px-2.5 py-0.5 rounded-full font-bold bg-blue-500/20 text-blue-300 border border-blue-400/30" id="mapFloatRegion">-</span>
+                      <span>ผู้จัดการเขต: <strong id="mapFloatManager" class="text-white font-bold">-</strong></span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="flex flex-col items-end gap-1 flex-shrink-0">
+                  <span class="text-xxs px-2.5 py-0.5 rounded-full font-bold bg-slate-800 text-slate-300 border border-slate-700" id="mapFloatKpiStatusBadge">-</span>
+                  <span class="text-xxs px-2.5 py-0.5 rounded-full font-bold bg-slate-800 text-slate-300 border border-slate-700" id="mapFloatProblemBadge">-</span>
+                </div>
+              </div>
+
+              <!-- Highlight Block 1: 🎯 Target Revenue (ยอดสะสมเทียบเป้า 10 วัน จากการ์ดขาวครบถ้วน) -->
+              <div id="mapFloatRevenueBox" class="rounded-2xl p-3.5 sm:p-4 bg-slate-900/95 border border-slate-800 space-y-2">
+                <div class="flex items-center justify-between text-xs">
+                  <span class="font-bold text-slate-300 flex items-center space-x-1.5">
+                    <span>🎯</span>
+                    <span id="mapFloatSalesSub">ยอดสะสมเทียบเป้า 10 วัน</span>
+                  </span>
+                  <span class="font-extrabold text-emerald-400 text-xs" id="mapFloatSalesPct">-</span>
+                </div>
+                <div class="flex items-baseline justify-between gap-2">
+                  <span class="text-xl sm:text-2xl font-black text-white tracking-tight" id="mapFloatSales">-</span>
+                  <span class="text-xs text-slate-400 font-medium" id="mapFloatEstimatedTarget">-</span>
+                </div>
+                <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden border border-slate-700/60">
+                  <div id="mapFloatSalesBar" class="bg-emerald-400 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+                <p id="mapFloatSalesCriteria" class="text-xxs text-slate-400 leading-relaxed pt-0.5">-</p>
+              </div>
+
+              <!-- Highlight Block 2: 4 Core Branch Metrics Grid (รวมจากการ์ดขาว: CRM, ลูกค้าใหม่ NCM, % การนัด, การเบิกบัญชี) -->
+              <div class="grid grid-cols-2 gap-2.5">
+                <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800/90">
+                  <span class="text-xxs text-slate-400 block font-medium">❤️ CRM ต่อเป้า</span>
+                  <span class="text-sm sm:text-base font-black text-pink-400 mt-0.5 block" id="mapFloatCrm">-</span>
+                </div>
+                <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800/90">
+                  <span class="text-xxs text-slate-400 block font-medium">👥 ลูกค้าใหม่ (NCM)</span>
+                  <span class="text-sm sm:text-base font-black text-sky-300 mt-0.5 block" id="mapFloatNrm">-</span>
+                </div>
+                <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800/90">
+                  <span class="text-xxs text-slate-400 block font-medium">📅 เปอร์เซ็นต์การนัด</span>
+                  <span class="text-sm sm:text-base font-black text-indigo-300 mt-0.5 block" id="mapFloatAppoint">-</span>
+                </div>
+                <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800/90">
+                  <span class="text-xxs text-slate-400 block font-medium">💰 การเบิกบัญชี</span>
+                  <div class="flex items-baseline space-x-1.5 mt-0.5">
+                    <span class="text-sm sm:text-base font-black text-teal-300" id="mapFloatWithdraw">-</span>
+                    <span class="text-xxs text-slate-400 font-medium" id="mapFloatWithdrawCount">(0 รายการ)</span>
                   </div>
                 </div>
               </div>
+
+              <!-- Highlight Block 3: รายการปัญหาคงค้างของสาขานี้ (แสดงรายการปัญหาจริงทันทีในหน้าเดียว) -->
+              <div class="bg-slate-900/90 rounded-2xl p-3.5 border border-slate-800/90 space-y-2">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-slate-200 flex items-center space-x-1.5">
+                    <i data-lucide="alert-circle" class="w-4 h-4 text-rose-400"></i>
+                    <span>สถานะปัญหาและการปฏิบัติงานสาขา</span>
+                  </span>
+                  <span id="mapFloatIssuesSnippet" class="text-xxs font-bold text-emerald-400">-</span>
+                </div>
+                <div id="mapFloatProblemsListContainer" class="space-y-1.5 max-h-40 overflow-y-auto custom-scrollbar pr-1">
+                  <!-- Populated dynamically with actual branch problems or normal status -->
+                </div>
+              </div>
+
             </div>
 
-            <!-- 4 Quick Number Badges & Navigation Action (ดึงจาก ผลประกอบการสาขา & บัญชี) -->
-            <div class="flex flex-wrap items-center gap-2 sm:gap-2.5 self-end md:self-center">
-              <div class="bg-slate-900/90 px-3 py-2 rounded-xl border border-slate-800 text-center min-w-[130px]">
-                <span class="text-xxs text-slate-400 block font-medium">🎯 Target Revenue</span>
-                <span class="text-xs sm:text-sm font-bold text-emerald-400 block" id="mapFloatSales">-</span>
-                <div class="w-full bg-slate-800 rounded-full h-1 mt-1 overflow-hidden">
-                  <div id="mapFloatSalesBar" class="bg-emerald-400 h-1 rounded-full transition-all duration-300" style="width: 0%"></div>
-                </div>
-                <span class="text-xxxs text-slate-400 block mt-0.5" id="mapFloatSalesSub">ยอดสะสมเทียบเป้า</span>
-              </div>
-              <div class="bg-slate-900/90 px-3 py-2 rounded-xl border border-slate-800 text-center min-w-[100px]">
-                <span class="text-xxs text-slate-400 block font-medium">❤️ CRM ต่อเป้า</span>
-                <span class="text-xs sm:text-sm font-bold text-pink-400 block" id="mapFloatCrm">-</span>
-                <span class="text-xxxs text-slate-400 block mt-0.5" id="mapFloatNrm">👥 ลูกค้าใหม่: -</span>
-              </div>
-              <div class="bg-slate-900/90 px-3 py-2 rounded-xl border border-slate-800 text-center min-w-[85px]">
-                <span class="text-xxs text-slate-400 block font-medium">💰 ยอดเบิกรวม</span>
-                <span class="text-xs sm:text-sm font-bold text-teal-300 block" id="mapFloatWithdraw">-</span>
-                <span class="text-xxxs text-slate-400 block mt-0.5" id="mapFloatAppoint">📅 การนัด: -</span>
-              </div>
-              <button onclick="jumpToBranchCard(selectedMapBranchId)" class="px-3.5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition shadow-lg flex items-center space-x-1.5 whitespace-nowrap active:scale-95">
-                <span>ดูการ์ดสรุป</span>
+            <!-- Bottom Quick Actions inside Inspector -->
+            <div class="mt-4 pt-3 border-t border-slate-800/90 flex flex-wrap items-center gap-2">
+              <button id="btnMapJumpProblems" onclick="jumpToBranchProblemsFromMap()" class="flex-1 py-2 px-3 bg-rose-500/20 hover:bg-rose-500/30 text-rose-200 border border-rose-500/30 rounded-xl text-xs font-bold transition flex items-center justify-center space-x-1.5">
+                <i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-rose-400"></i>
+                <span id="btnMapJumpProblemsText">ดูรายละเอียดปัญหา</span>
+              </button>
+              <button onclick="jumpToBranchAccountingFromMap()" class="py-2 px-3 bg-teal-500/20 hover:bg-teal-500/30 text-teal-200 border border-teal-500/30 rounded-xl text-xs font-bold transition flex items-center justify-center space-x-1.5">
+                <i data-lucide="wallet" class="w-3.5 h-3.5 text-teal-300"></i>
+                <span>ดูการเบิกสาขานี้</span>
+              </button>
+              <button onclick="jumpToBranchCard(selectedMapBranchId)" class="py-2 px-3 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-semibold transition flex items-center justify-center space-x-1" title="เลื่อนลงไปที่การ์ดขาวด้านล่าง">
+                <span>การ์ดขาว</span>
                 <i data-lucide="arrow-down" class="w-3.5 h-3.5"></i>
               </button>
             </div>
-          </div>
+          </aside>
+
         </div>
       </div>
 
@@ -3139,8 +3278,38 @@
       { id: 'b_yl', matchKeys: ['ยะลา'], defaultName: 'สาขายะลา', region: 'SOUTH', regionName: 'ภาคใต้', mapX: 329, mapY: 785, callX: 110, callY: 805 }
     ];
 
-    let selectedMapBranchId = 'b_rt';
+    let selectedMapBranchId = null;
+    let mapInspectorPreferredSide = 'auto'; // 'auto' | 'left' | 'right'
     let mapCurrentRegionFilter = 'ALL';
+
+    let supportsDisplayTransition;
+    function canTransitionDisplay() {
+      if (supportsDisplayTransition !== undefined) return supportsDisplayTransition;
+      if (!window.CSS?.supports?.('transition-behavior', 'allow-discrete') || !document.body) {
+        return false;
+      }
+      const probe = document.createElement('div');
+      probe.style.cssText = 'transition: display 1s allow-discrete !important; display: block;';
+      document.body.appendChild(probe);
+      getComputedStyle(probe).display;
+      probe.style.display = 'none';
+      supportsDisplayTransition = getComputedStyle(probe).display === 'block';
+      probe.remove();
+      return supportsDisplayTransition;
+    }
+
+    const supportsScopedTransition = typeof Element !== 'undefined' && 'startViewTransition' in Element.prototype;
+    function runMapScopedTransition(updateDOM) {
+      const stage = document.getElementById('mapSplitStage');
+      if (stage && supportsScopedTransition) {
+        const transition = stage.startViewTransition(() => {
+          updateDOM();
+        });
+        transition.ready.catch(() => {});
+      } else {
+        updateDOM();
+      }
+    }
 
     function normalizeBranchKey(name) {
       if (!name) return '';
@@ -3463,23 +3632,31 @@
       selectMapBranch(branches[nextIdx].id);
     }
 
-    function toggleMapAutoTour() {
-      const btnText = document.getElementById('mapAutoTourText');
+    function syncAutoTourButtonsUI(isRunning) {
       const btn = document.getElementById('btnMapAutoTour');
+      const headerBtn = document.getElementById('btnMapHeaderAutoTour');
+      if (isRunning) {
+        if (btn) btn.innerHTML = '<i data-lucide="pause" class="w-3.5 h-3.5 text-amber-400"></i><span id="mapAutoTourText" class="text-amber-300">หยุดเล่นวน</span>';
+        if (headerBtn) headerBtn.innerHTML = '<i data-lucide="pause" class="w-3.5 h-3.5 text-amber-400"></i><span id="mapHeaderAutoTourText" class="text-amber-300">หยุดเล่นวน</span>';
+      } else {
+        if (btn) btn.innerHTML = '<i data-lucide="play" class="w-3.5 h-3.5"></i><span id="mapAutoTourText">เล่นวนดูสาขา</span>';
+        if (headerBtn) headerBtn.innerHTML = '<i data-lucide="play" class="w-3.5 h-3.5"></i><span id="mapHeaderAutoTourText">เล่นวนดูสาขา</span>';
+      }
+      lucide.createIcons();
+    }
+
+    function toggleMapAutoTour() {
       if (mapAutoTourTimer) {
         clearInterval(mapAutoTourTimer);
         mapAutoTourTimer = null;
-        if (btnText) btnText.textContent = 'เล่นวนดูสาขา';
-        if (btn) btn.innerHTML = '<i data-lucide="play" class="w-3 h-3"></i><span id="mapAutoTourText">เล่นวนดูสาขา</span>';
-        lucide.createIcons();
+        syncAutoTourButtonsUI(false);
         showToast('⏸ หยุดการเล่นวนดูสาขาแล้ว');
       } else {
         stepMapBranch(1);
         mapAutoTourTimer = setInterval(() => {
           stepMapBranch(1);
         }, 3500);
-        if (btn) btn.innerHTML = '<i data-lucide="pause" class="w-3 h-3 text-amber-400"></i><span id="mapAutoTourText" class="text-amber-300">หยุดเล่นวน</span>';
-        lucide.createIcons();
+        syncAutoTourButtonsUI(true);
         showToast('▶ เริ่มเล่นวนดูข้อมูลทุกสาขาอัตโนมัติ (ทุก 3.5 วินาที)');
       }
     }
@@ -3543,14 +3720,14 @@
       setEl('pill-region-STATUS_RED', `🔴 ต่ำกว่าเป้า (${redSalesCount})`);
       setEl('pill-region-HAS_PROBLEMS', `🚨 มีปัญหาคงค้าง (${countHasProbs})`);
 
-      if (branchesWithStats.length > 0 && !branchesWithStats.some(b => b.id === selectedMapBranchId)) {
-        selectedMapBranchId = branchesWithStats[0].id;
+      if (selectedMapBranchId !== null && !branchesWithStats.some(b => b.id === selectedMapBranchId)) {
+        selectedMapBranchId = null;
       }
 
       // 2. Render SVG Pointer Lines with Arrowheads pointing to branch coordinates
       renderMapSvgPointersAndPins(branchesWithStats);
 
-      // 3. Render Active Selected Branch Card on Map
+      // 3. Render Active Selected Branch Card on Map (or keep default centered map if null)
       updateFloatingMapCard(selectedMapBranchId, branchesWithStats);
 
       // 4. Render Concise Branch Summary Cards Grid
@@ -3578,19 +3755,22 @@
         const lineEndX = isLeft ? b.mapX - 9 : b.mapX + 9;
         const lineEndY = b.mapY;
 
+        const isSelected = b.id === selectedMapBranchId;
+        const hasSelection = selectedMapBranchId !== null;
+        const dimOpacity = hasSelection && !isSelected ? 'opacity-40' : 'opacity-75';
+
         // Pointer Arrow Line pointing directly to branch location
         linesHtml += `
           <line id="map-line-${b.id}" x1="${lineStartX}" y1="${lineStartY}" x2="${lineEndX}" y2="${lineEndY}" 
-                stroke="${b.pinColor}" stroke-width="1.6" stroke-dasharray="3,3" 
-                marker-end="${b.arrowMarker}" class="transition-opacity duration-300 opacity-70" />
+                stroke="${isSelected ? '#38bdf8' : b.pinColor}" stroke-width="${isSelected ? '2.4' : '1.6'}" stroke-dasharray="${isSelected ? 'none' : '3,3'}" 
+                marker-end="${b.arrowMarker}" class="transition-all duration-300 ${dimOpacity}" />
         `;
 
         // Branch Coordinate Pin on Map
-        const isSelected = b.id === selectedMapBranchId;
         pinsHtml += `
           <g id="map-pin-${b.id}" class="cursor-pointer" onclick="selectMapBranch('${b.id}')">
-            ${isSelected ? `<circle cx="${b.mapX}" cy="${b.mapY}" r="11" fill="${b.pinColor}" fill-opacity="0.25" stroke="${b.pinColor}" stroke-width="1.5" />` : ''}
-            <circle cx="${b.mapX}" cy="${b.mapY}" r="5.5" fill="${b.pinColor}" stroke="#ffffff" stroke-width="2" />
+            ${isSelected ? `<circle cx="${b.mapX}" cy="${b.mapY}" r="13" fill="${b.pinColor}" fill-opacity="0.28" stroke="#38bdf8" stroke-width="2" />` : ''}
+            <circle cx="${b.mapX}" cy="${b.mapY}" r="${isSelected ? '6.5' : '5.5'}" fill="${b.pinColor}" stroke="#ffffff" stroke-width="2" />
           </g>
         `;
 
@@ -3605,9 +3785,9 @@
           <g id="map-callout-${b.id}" class="cursor-pointer group" onclick="selectMapBranch('${b.id}')">
             <rect x="${b.callX - 66}" y="${b.callY - 13}" width="132" height="26" rx="8" 
                    fill="${isSelected ? '#1e293b' : '#0f172a'}" 
-                  stroke="${isSelected ? '#38bdf8' : b.boxStroke}" stroke-width="${isSelected ? 2 : 1.2}" 
+                  stroke="${isSelected ? '#38bdf8' : b.boxStroke}" stroke-width="${isSelected ? 2.2 : 1.2}" 
                   class="transition-all duration-200 group-hover:fill-slate-800" />
-            <text x="${b.callX - 58}" y="${b.callY + 4}" fill="#f8fafc" font-size="9.5" font-weight="600">
+            <text x="${b.callX - 58}" y="${b.callY + 4}" fill="${isSelected ? '#ffffff' : '#f8fafc'}" font-size="9.5" font-weight="${isSelected ? '800' : '600'}">
               ${b.name.replace('สาขา', '')}
             </text>
             <text x="${b.callX + 48}" y="${b.callY + 4}" font-size="10" text-anchor="middle">
@@ -3622,60 +3802,185 @@
       calloutsContainer.innerHTML = calloutsHtml;
     }
 
-    // Select Branch on Map
-    function selectMapBranch(branchId) {
+    // Select Branch on Map or from White Branch Card below
+    function selectMapBranch(branchId, options = {}) {
       selectedMapBranchId = branchId;
       const branchesWithStats = getLiveBranchesWithStats();
-      renderMapSvgPointersAndPins(branchesWithStats);
-      updateFloatingMapCard(branchId, branchesWithStats);
 
-      // Highlight corresponding card in grid
+      runMapScopedTransition(() => {
+        renderMapSvgPointersAndPins(branchesWithStats);
+        updateFloatingMapCard(branchId, branchesWithStats);
+      });
+
+      // Highlight corresponding white card in grid
+      document.querySelectorAll('.branch-summary-card').forEach(el => {
+        el.classList.remove('ring-2', 'ring-blue-500', 'bg-blue-50/20');
+      });
       const card = document.getElementById(`branch-card-${branchId}`);
       if (card) {
-        document.querySelectorAll('.branch-summary-card').forEach(el => el.classList.remove('ring-2', 'ring-blue-500', 'bg-blue-50/20'));
         card.classList.add('ring-2', 'ring-blue-500', 'bg-blue-50/20');
+      }
+
+      // If clicked from a white card below, smoothly scroll up to the map stage so user sees the shifted map + expanded branch panel
+      if (options.scrollToMap) {
+        const mapSection = document.getElementById('mapSectionContainer');
+        if (mapSection) {
+          mapSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
       }
     }
 
-    // Update Floating Inspector Card on Map (แสดงเฉพาะข้อมูลจริงจาก Google Sheet)
+    // Close Expanded Branch Inspector & Return Map to Default Centered View
+    function closeMapBranchPanel() {
+      if (mapAutoTourTimer) {
+        clearInterval(mapAutoTourTimer);
+        mapAutoTourTimer = null;
+        syncAutoTourButtonsUI(false);
+      }
+
+      selectedMapBranchId = null;
+      const branchesWithStats = getLiveBranchesWithStats();
+      const inspector = document.getElementById('mapFloatingCard');
+
+      const finishClose = () => {
+        renderMapSvgPointersAndPins(branchesWithStats);
+        updateFloatingMapCard(null, branchesWithStats);
+        document.querySelectorAll('.branch-summary-card').forEach(el => {
+          el.classList.remove('ring-2', 'ring-blue-500', 'bg-blue-50/20');
+        });
+      };
+
+      if (inspector && !inspector.hidden && !canTransitionDisplay()) {
+        inspector.setAttribute('data-closing', '');
+        inspector.addEventListener('animationend', () => {
+          inspector.removeAttribute('data-closing');
+          finishClose();
+        }, { once: true });
+      } else {
+        runMapScopedTransition(finishClose);
+      }
+    }
+
+    // Toggle Left / Right Side Placement of the Branch Inspector beside the Map
+    function toggleMapPanelSide() {
+      const inspector = document.getElementById('mapFloatingCard');
+      const currentSide = inspector ? (inspector.getAttribute('data-side') || 'right') : 'right';
+      mapInspectorPreferredSide = currentSide === 'right' ? 'left' : 'right';
+
+      if (selectedMapBranchId) {
+        const branchesWithStats = getLiveBranchesWithStats();
+        runMapScopedTransition(() => {
+          updateFloatingMapCard(selectedMapBranchId, branchesWithStats);
+        });
+      }
+    }
+
+    // Update Side Inspector Panel on Map (แสดงเฉพาะข้อมูลจริง + รวมข้อมูลจากการ์ดขาวครบจบในหน้าเดียว)
     function updateFloatingMapCard(branchId, branches) {
-      const b = branches.find(x => x.id === branchId) || branches[0];
-      if (!b) return;
+      const inspector = document.getElementById('mapFloatingCard');
+      const splitStage = document.getElementById('mapSplitStage');
+      const mapSvgCol = document.getElementById('mapSvgColumn');
+      const idlePrompt = document.getElementById('mapIdlePrompt');
+
+      const b = branchId ? branches.find(x => x.id === branchId) : null;
+
+      // Default unclicked state: Center map & keep inspector hidden
+      if (!b) {
+        if (inspector) {
+          inspector.removeAttribute('data-closing');
+          inspector.hidden = true;
+        }
+        if (idlePrompt) idlePrompt.classList.remove('hidden');
+        if (splitStage) {
+          splitStage.classList.remove('lg:flex-row-reverse', 'lg:justify-between');
+          splitStage.classList.add('lg:flex-row', 'justify-center');
+        }
+        if (mapSvgCol) {
+          mapSvgCol.className = 'w-full max-w-[820px] flex flex-col items-center justify-center relative mx-auto transition-all duration-300';
+        }
+        return;
+      }
+
+      // Clicked state: Determine panel side (left or right of map) and shift map accordingly
+      let targetSide = mapInspectorPreferredSide;
+      if (targetSide === 'auto') {
+        targetSide = 'right';
+      }
+
+      if (inspector) {
+        inspector.removeAttribute('data-closing');
+        inspector.setAttribute('data-side', targetSide);
+        inspector.hidden = false;
+      }
+      if (idlePrompt) idlePrompt.classList.add('hidden');
+
+      if (splitStage) {
+        splitStage.classList.remove('justify-center');
+        splitStage.classList.add('lg:justify-between');
+        if (targetSide === 'left') {
+          splitStage.classList.remove('lg:flex-row');
+          splitStage.classList.add('lg:flex-row-reverse');
+        } else {
+          splitStage.classList.remove('lg:flex-row-reverse');
+          splitStage.classList.add('lg:flex-row');
+        }
+      }
+
+      if (mapSvgCol) {
+        mapSvgCol.className = 'w-full lg:w-[52%] xl:w-[54%] max-w-[600px] flex flex-col items-center justify-center relative mx-0 transition-all duration-300';
+      }
+
+      const sideLabel = document.getElementById('mapPanelSideLabel');
+      if (sideLabel) {
+        sideLabel.textContent = targetSide === 'left' ? 'ย้ายไปขวาแผนที่' : 'ย้ายไปซ้ายแผนที่';
+      }
 
       const setVal = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
 
+      // 1. Branch Identity & Sales Rank Badge
       setVal('mapFloatInitial', b.name.replace('สาขา', '').trim().substring(0, 1) || '-');
       setVal('mapFloatTitle', b.name);
       setVal('mapFloatRegion', b.regionName);
       setVal('mapFloatManager', b.manager !== '-' ? `ผจก. ${b.manager}` : 'ผจก. -');
 
-      const salesDisplay = b.hasSales
-        ? `฿${b.actualSales.toLocaleString()}${b.salesPct !== null ? ` (${b.salesPct}%)` : ''}`
-        : 'รอสรุปผล (-)';
-      setVal('mapFloatSales', salesDisplay);
-
-      const salesBar = document.getElementById('mapFloatSalesBar');
-      if (salesBar) {
-        const pctW = b.salesPct !== null ? Math.min(Math.max(b.salesPct, 4), 100) : 0;
-        salesBar.style.width = `${pctW}%`;
-        salesBar.className = `h-1 rounded-full transition-all duration-300 ${b.salesStatus === 'green' ? 'bg-emerald-400' : (b.salesStatus === 'yellow' ? 'bg-amber-400' : (b.salesStatus === 'red' ? 'bg-rose-400' : 'bg-slate-600'))}`;
+      const salesRankedIds = [...branches]
+        .filter(x => x.hasSales && x.actualSales > 0)
+        .sort((a, c) => (c.actualSales || 0) - (a.actualSales || 0))
+        .map(x => x.id);
+      const salesRank = salesRankedIds.indexOf(b.id);
+      const rankBadgeEl = document.getElementById('mapFloatRankBadge');
+      if (rankBadgeEl) {
+        if (salesRank === 0) {
+          rankBadgeEl.textContent = '🏆 อันดับ 1 ยอดขาย';
+          rankBadgeEl.className = 'text-xxxs px-2 py-0.5 rounded-md bg-amber-400/20 text-amber-300 border border-amber-400/40 font-extrabold';
+        } else if (salesRank === 1) {
+          rankBadgeEl.textContent = '🥈 อันดับ 2 ยอดขาย';
+          rankBadgeEl.className = 'text-xxxs px-2 py-0.5 rounded-md bg-slate-300/20 text-slate-200 border border-slate-300/40 font-extrabold';
+        } else if (salesRank === 2) {
+          rankBadgeEl.textContent = '🥉 อันดับ 3 ยอดขาย';
+          rankBadgeEl.className = 'text-xxxs px-2 py-0.5 rounded-md bg-orange-400/20 text-orange-300 border border-orange-400/40 font-extrabold';
+        } else {
+          rankBadgeEl.className = 'hidden';
+          rankBadgeEl.textContent = '';
+        }
       }
 
-      let statusLabel = b.salesSubTitle || 'ยอดสะสมเทียบเป้า';
-      if (b.salesStatus === 'green') statusLabel = '🟢 ตามเกณฑ์เป้าหมาย';
-      else if (b.salesStatus === 'yellow') statusLabel = '🟡 เสี่ยงต่ำกว่าเป้าหมาย';
-      else if (b.salesStatus === 'red') statusLabel = '🔴 ต่ำกว่าเกณฑ์เป้าหมาย';
-      setVal('mapFloatSalesSub', statusLabel);
-
-      setVal('mapFloatCrm', b.crmValue !== '-' ? b.crmValue : 'รอสรุป (-)');
-      setVal('mapFloatNrm', `👥 ลูกค้าใหม่: ${b.nrmValue !== '-' ? `${b.nrmValue} ราย` : '-'}`);
-      setVal('mapFloatWithdraw', `฿${b.withdrawAmount.toLocaleString()}`);
-      setVal('mapFloatAppoint', `📅 การนัด: ${b.appointValue}`);
-
-      const snippet = document.getElementById('mapFloatIssuesSnippet');
-      if (snippet) {
-        snippet.textContent = b.probCount > 0 ? `พบปัญหา: ${b.probCount} เคส` : 'สถานะปกติ';
-        snippet.className = b.probCount > 0 ? 'text-rose-400 font-bold' : 'text-emerald-400 font-medium';
+      // 2. KPI Status Badge & Problem Status Badge
+      const kpiStatusBadge = document.getElementById('mapFloatKpiStatusBadge');
+      if (kpiStatusBadge) {
+        if (b.salesStatus === 'green') {
+          kpiStatusBadge.textContent = '🟢 ตามเป้า';
+          kpiStatusBadge.className = 'text-xxs px-2.5 py-0.5 rounded-full font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30';
+        } else if (b.salesStatus === 'yellow') {
+          kpiStatusBadge.textContent = '🟡 เสี่ยงต่ำกว่าเป้า';
+          kpiStatusBadge.className = 'text-xxs px-2.5 py-0.5 rounded-full font-bold bg-amber-500/20 text-amber-300 border border-amber-400/30';
+        } else if (b.salesStatus === 'red') {
+          kpiStatusBadge.textContent = '🔴 ต่ำกว่าเป้า';
+          kpiStatusBadge.className = 'text-xxs px-2.5 py-0.5 rounded-full font-bold bg-rose-500/20 text-rose-300 border border-rose-400/30';
+        } else {
+          kpiStatusBadge.textContent = '⏳ รอส่งยอด';
+          kpiStatusBadge.className = 'text-xxs px-2.5 py-0.5 rounded-full font-bold bg-slate-800 text-slate-400 border border-slate-700';
+        }
       }
 
       const pBadge = document.getElementById('mapFloatProblemBadge');
@@ -3688,10 +3993,116 @@
           pBadge.className = 'text-xxs px-2.5 py-0.5 rounded-full font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30';
         }
       }
+
+      // 3. Target Revenue Block (จากการ์ดขาวครบถ้วน)
+      setVal('mapFloatSalesSub', b.salesSubTitle || 'ยอดสะสมเทียบเป้า 10 วัน');
+      const salesPctEl = document.getElementById('mapFloatSalesPct');
+      if (salesPctEl) {
+        salesPctEl.textContent = b.salesPct !== null ? `${b.salesPct}% ของเป้า` : 'รอสรุปผล';
+        salesPctEl.className = `font-extrabold text-xs ${b.salesStatus === 'green' ? 'text-emerald-400' : (b.salesStatus === 'yellow' ? 'text-amber-400' : (b.salesStatus === 'red' ? 'text-rose-400' : 'text-slate-400'))}`;
+      }
+
+      setVal('mapFloatSales', b.hasSales ? `฿${b.actualSales.toLocaleString()}` : 'รอสรุปผล (-)');
+      setVal('mapFloatEstimatedTarget', b.estimatedTarget ? `เป้า ~฿${b.estimatedTarget.toLocaleString()}` : (b.salesRawText && b.salesRawText !== '-' ? b.salesRawText : ''));
+
+      const salesBar = document.getElementById('mapFloatSalesBar');
+      if (salesBar) {
+        const pctW = b.salesPct !== null ? Math.min(Math.max(b.salesPct, 4), 100) : 0;
+        salesBar.style.width = `${pctW}%`;
+        salesBar.className = `h-2 rounded-full transition-all duration-300 ${b.salesStatus === 'green' ? 'bg-emerald-400' : (b.salesStatus === 'yellow' ? 'bg-amber-400' : (b.salesStatus === 'red' ? 'bg-rose-400' : 'bg-slate-600'))}`;
+      }
+
+      let defaultCriteria = 'อยู่ระหว่างรอสรุปรายงานยอดขายสะสมประจำรอบ';
+      if (b.salesStatus === 'green') defaultCriteria = '🟢 ผลประกอบการอยู่ในเกณฑ์เป้าหมายประจำรอบ';
+      else if (b.salesStatus === 'yellow') defaultCriteria = '🟡 ผลประกอบการใกล้เคียงเป้าหมาย ควรเร่งติดตามยอด';
+      else if (b.salesStatus === 'red') defaultCriteria = '🔴 ผลประกอบการต่ำกว่าเกณฑ์เป้าหมาย ต้องเร่งวางแผนกระตุ้นยอด';
+      setVal('mapFloatSalesCriteria', b.salesCriteria || defaultCriteria);
+
+      // 4. 4 Core Metrics Grid (CRM, ลูกค้าใหม่ NCM, % การนัด, การเบิกบัญชี)
+      const crmEl = document.getElementById('mapFloatCrm');
+      if (crmEl) {
+        crmEl.textContent = b.crmValue !== '-' ? b.crmValue : 'รอสรุป (-)';
+        crmEl.className = `text-sm sm:text-base font-black mt-0.5 block ${b.crmStatus === 'green' ? 'text-emerald-400' : (b.crmStatus === 'yellow' ? 'text-amber-300' : (b.crmStatus === 'red' ? 'text-rose-400' : 'text-pink-400'))}`;
+      }
+      setVal('mapFloatNrm', b.nrmValue !== '-' ? `${b.nrmValue} ราย` : '-');
+      setVal('mapFloatAppoint', b.appointValue !== '-' ? b.appointValue : '-');
+      setVal('mapFloatWithdraw', `฿${b.withdrawAmount.toLocaleString()}`);
+      setVal('mapFloatWithdrawCount', `(${b.withdrawCount} รายการ)`);
+
+      // 5. Active Problems List inside Inspector
+      const snippet = document.getElementById('mapFloatIssuesSnippet');
+      if (snippet) {
+        snippet.textContent = b.probCount > 0 ? `พบปัญหา ${b.probCount} เคส` : 'ไม่มีปัญหาคงค้าง';
+        snippet.className = b.probCount > 0 ? 'text-xxs font-bold text-rose-400' : 'text-xxs font-bold text-emerald-400';
+      }
+
+      const probsContainer = document.getElementById('mapFloatProblemsListContainer');
+      if (probsContainer) {
+        if (b.problems && b.problems.length > 0) {
+          probsContainer.innerHTML = b.problems.map(p => {
+            let uBadge = '<span class="text-xxxs px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold">ทั่วไป</span>';
+            if (p.urgency === 'Critical') uBadge = '<span class="text-xxxs px-1.5 py-0.5 rounded bg-rose-500/25 text-rose-300 font-bold">🔴 Critical</span>';
+            else if (p.urgency === 'Overdue') uBadge = '<span class="text-xxxs px-1.5 py-0.5 rounded bg-purple-500/25 text-purple-300 font-bold">🟣 Overdue</span>';
+            else if (p.urgency === 'High') uBadge = '<span class="text-xxxs px-1.5 py-0.5 rounded bg-amber-500/25 text-amber-300 font-bold">🟠 High</span>';
+
+            return `
+              <div onclick="openCaseBottomSheet('${p.code}')" class="p-2.5 rounded-xl bg-slate-950/90 hover:bg-slate-800/90 border border-slate-800 hover:border-slate-700 cursor-pointer transition flex items-start justify-between gap-2">
+                <div class="min-w-0">
+                  <div class="flex items-center space-x-1.5">
+                    <span class="text-xxs font-extrabold text-sky-400">${p.code}</span>
+                    <span class="text-xxxs px-1.5 py-0.5 rounded bg-slate-800 text-slate-300">${p.category || 'ทั่วไป'}</span>
+                  </div>
+                  <p class="text-xs font-bold text-white truncate mt-0.5">${p.subject || '-'}</p>
+                  ${p.problemDetail && p.problemDetail !== '-' ? `<p class="text-xxs text-slate-400 line-clamp-1 mt-0.5">${p.problemDetail}</p>` : ''}
+                </div>
+                <div class="flex flex-col items-end gap-1 flex-shrink-0">
+                  ${uBadge}
+                  <span class="text-xxxs text-sky-400 font-semibold">คลิกดูเคส →</span>
+                </div>
+              </div>
+            `;
+          }).join('');
+        } else {
+          probsContainer.innerHTML = `
+            <div class="p-3 rounded-xl bg-emerald-950/30 border border-emerald-500/20 flex items-center space-x-2.5 text-emerald-300">
+              <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400 flex-shrink-0"></i>
+              <span class="text-xs font-medium">การปฏิบัติงานของ${b.name}เป็นปกติ ไม่พบรายการปัญหาคงค้างในรอบนี้</span>
+            </div>
+          `;
+        }
+      }
+
+      const btnJumpProbText = document.getElementById('btnMapJumpProblemsText');
+      if (btnJumpProbText) {
+        btnJumpProbText.textContent = b.probCount > 0 ? `ดูปัญหาสาขานี้ (${b.probCount})` : 'ดูหน้าติดตามปัญหา';
+      }
+
+      lucide.createIcons();
+    }
+
+    function jumpToBranchProblemsFromMap() {
+      const branches = getLiveBranchesWithStats();
+      const b = branches.find(x => x.id === selectedMapBranchId);
+      if (b) {
+        jumpToBranchProblems(b.name);
+      } else {
+        switchTab('tab-problems');
+      }
+    }
+
+    function jumpToBranchAccountingFromMap() {
+      const branches = getLiveBranchesWithStats();
+      const b = branches.find(x => x.id === selectedMapBranchId);
+      if (b) {
+        jumpToBranchAccounting(b.name);
+      } else {
+        switchTab('tab-accounting');
+      }
     }
 
     // Scroll smoothly to a specific branch card in the grid
     function jumpToBranchCard(branchId) {
+      if (!branchId) return;
       const card = document.getElementById(`branch-card-${branchId}`);
       if (card) {
         card.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -3870,7 +4281,8 @@
 
         const card = document.createElement('div');
         card.id = `branch-card-${b.id}`;
-        card.className = `branch-summary-card bg-white rounded-2xl p-4 border border-slate-200/90 shadow-2xs hover:shadow-md flex flex-col justify-between ${isSelected ? 'ring-2 ring-blue-500 bg-blue-50/10' : ''}`;
+        card.className = `branch-summary-card cursor-pointer bg-white rounded-2xl p-4 border border-slate-200/90 shadow-2xs hover:shadow-md flex flex-col justify-between ${isSelected ? 'ring-2 ring-blue-500 bg-blue-50/20' : ''}`;
+        card.onclick = () => selectMapBranch(b.id, { scrollToMap: true });
         
         card.innerHTML = `
           <div>
@@ -3948,18 +4360,17 @@
 
           <!-- Quick Action Buttons -->
           <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center space-x-2">
+            <button onclick="event.stopPropagation(); selectMapBranch('${b.id}', { scrollToMap: true })" class="flex-1 py-1.5 px-2 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xxs font-bold rounded-lg transition border border-blue-200 flex items-center justify-center space-x-1">
+              <i data-lucide="map-pin" class="w-3 h-3 text-blue-600"></i>
+              <span>ขยายดูข้างแผนที่</span>
+            </button>
             ${b.probCount > 0 ? `
-              <button onclick="jumpToBranchProblems('${b.name}')" class="flex-1 py-1.5 px-2 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xxs font-bold rounded-lg transition border border-rose-200 flex items-center justify-center space-x-1">
+              <button onclick="event.stopPropagation(); jumpToBranchProblems('${b.name}')" class="py-1.5 px-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xxs font-bold rounded-lg transition border border-rose-200 flex items-center space-x-1" title="ดูรายละเอียดปัญหาสาขานี้">
                 <i data-lucide="alert-triangle" class="w-3 h-3 text-rose-600"></i>
-                <span>ดูปัญหา (${b.probCount})</span>
+                <span>${b.probCount}</span>
               </button>
-            ` : `
-              <button onclick="selectMapBranch('${b.id}')" class="flex-1 py-1.5 px-2 bg-slate-50 hover:bg-slate-100 text-slate-600 text-xxs font-medium rounded-lg transition border border-slate-200 flex items-center justify-center space-x-1">
-                <i data-lucide="map-pin" class="w-3 h-3 text-slate-400"></i>
-                <span>พิกัดแผนที่</span>
-              </button>
-            `}
-            <button onclick="jumpToBranchAccounting('${b.name}')" class="py-1.5 px-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xxs font-semibold rounded-lg transition" title="ดูการเบิกจ่ายสาขานี้">
+            ` : ''}
+            <button onclick="event.stopPropagation(); jumpToBranchAccounting('${b.name}')" class="py-1.5 px-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xxs font-semibold rounded-lg transition" title="ดูการเบิกจ่ายสาขานี้">
               <i data-lucide="wallet" class="w-3 h-3"></i>
             </button>
           </div>
