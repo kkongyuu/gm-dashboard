@@ -43,8 +43,11 @@
 
   <style>
     body {
-      font-family: 'Prompt', sans-serif;
+      font-family: 'Prompt', 'Inter', sans-serif;
       background-color: #f8fafc;
+      color: #0f172a;
+      -webkit-font-smoothing: antialiased;
+      font-variant-numeric: tabular-nums;
     }
     .custom-scrollbar::-webkit-scrollbar {
       width: 6px;
@@ -157,13 +160,20 @@
       background: linear-gradient(90deg, #22c55e 0%, #3b82f6 100%);
     }
 
-    /* Interactive Card Micro-Interactions (Compositor Thread: transform & opacity) */
+    /* Interactive Card Micro-Interactions & Layout Containment */
     .branch-summary-card {
+      content-visibility: auto;
+      contain-intrinsic-size: auto 300px auto 340px;
       transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+    @supports not (content-visibility: auto) {
+      .branch-summary-card {
+        contain: layout style paint;
+      }
     }
     @media (prefers-reduced-motion: no-preference) {
       .branch-summary-card:hover {
-        transform: translateY(-3px);
+        transform: translateY(-2px);
       }
     }
 
@@ -207,10 +217,10 @@
     <div class="mt-8 text-center space-y-2 px-4 max-w-md">
       <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold">
         <span class="w-2 h-2 rounded-full bg-blue-400 animate-ping"></span>
-        <span id="loadingStatusBadge">กำลังเชื่อมต่อ Google Sheets สดๆ...</span>
+        <span id="loadingStatusBadge">กำลังซิงค์ข้อมูลระบบบริหารจัดการ...</span>
       </div>
-      <h3 class="text-xl font-bold text-white tracking-wide">กำลังประมวลผล GM Management Dashboard</h3>
-      <p class="text-xs text-slate-400" id="loadingStatusDetail">กำลังดึงข้อมูลการประชุม, ผลประกอบการ KPI, รายการปัญหา และการเบิกจ่ายบัญชี...</p>
+      <h3 class="text-xl font-bold text-white tracking-wide">GM & Branch Executive Portal</h3>
+      <p class="text-xs text-slate-400" id="loadingStatusDetail">กำลังประมวลผลข้อมูลการประชุม ผลประกอบการ KPI รายการปฏิบัติงานสาขา และการเบิกจ่ายงบประมาณ...</p>
     </div>
   </div>
 
@@ -230,12 +240,12 @@
           <div>
             <div class="flex items-center space-x-2">
               <h1 id="headerTitle" class="text-base sm:text-lg font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent transition-all duration-300">GM Monitor & Branch Portal</h1>
-              <span id="dataSourceBadge" class="inline-flex items-center px-2 py-0.5 rounded-full text-xxs sm:text-xs font-medium bg-emerald-100 text-emerald-800">
+              <span id="dataSourceBadge" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xxs sm:text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/80">
                 <span class="w-1.5 h-1.5 mr-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                Live Google Sheet 🟢
+                Real-Time Sync
               </span>
             </div>
-            <p id="headerSubtitle" class="text-xxs sm:text-xs text-slate-500 transition-all duration-300">ระบบรายงานผลประกอบการ ผู้จัดการ และการเงินสาขา</p>
+            <p id="headerSubtitle" class="text-xxs sm:text-xs text-slate-500 transition-all duration-300">Executive Operations & Financial Analytics</p>
           </div>
         </div>
 
@@ -269,7 +279,7 @@
       <nav class="flex space-x-1 sm:space-x-4 border-t border-slate-100 overflow-x-auto custom-scrollbar py-1">
         <button onclick="switchTab('tab-map')" id="nav-tab-map" class="tab-btn active px-3 py-2 text-xs sm:text-sm font-medium rounded-lg text-blue-600 bg-blue-50 flex items-center space-x-1.5 whitespace-nowrap">
           <i data-lucide="map" class="w-4 h-4"></i>
-          <span>🗺️ สรุปสาขา & แผนที่ประเทศไทย</span>
+          <span>สรุปสาขา & แผนที่เครือข่าย</span>
         </button>
 
         <button onclick="switchTab('tab-overview')" id="nav-tab-overview" class="tab-btn px-3 py-2 text-xs sm:text-sm font-medium rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 flex items-center space-x-1.5 whitespace-nowrap">
@@ -344,19 +354,19 @@
               <span>National Branch Network & Geographic Operations</span>
             </div>
             <h2 class="text-2xl sm:text-3xl font-black tracking-tight text-white flex items-center space-x-3">
-              <span>แผนที่และสรุปสาขาทั่วประเทศ</span>
+              <span>แผนที่และสรุปผลการดำเนินงานสาขาทั่วประเทศ</span>
             </h2>
             <p class="text-xs sm:text-sm text-slate-300 mt-1.5 max-w-2xl leading-relaxed">
-              ภาพรวมสาขาครอบคลุม 5 ภาค ดึงข้อมูลตรงจาก Google Sheets: <strong>ยอดขายเทียบเป้าหมาย, ยอดเบิกจ่ายบัญชี</strong> และ <strong>จำนวนปัญหาคงค้าง</strong>
+              ภาพรวมผลการดำเนินงานเครือข่ายสาขา 5 ภูมิภาค ติดตาม <strong>เป้าหมายรายได้ (Target Revenue), งบประมาณการเบิกจ่าย</strong> และ <strong>สถานะการปฏิบัติงาน</strong> แบบเรียลไทม์
             </p>
           </div>
 
           <!-- Quick Stat Capsules on Hero -->
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div class="bg-white/10 backdrop-blur-md rounded-2xl p-3 border border-white/10 text-center">
-              <span class="text-xxs text-slate-300 block font-medium">สาขาในระบบ</span>
+              <span class="text-xxs text-slate-300 block font-medium">สาขาในเครือข่าย</span>
               <span class="text-xl sm:text-2xl font-black text-white" id="mapHeroBranchCount">0 สาขา</span>
-              <span class="text-xxs text-slate-300 block mt-0.5" id="mapHeroBranchSub">ส่งยอดแล้ว 0 สาขา</span>
+              <span class="text-xxs text-slate-300 block mt-0.5" id="mapHeroBranchSub">รายงานผลแล้ว 0 สาขา</span>
             </div>
             <div class="bg-white/10 backdrop-blur-md rounded-2xl p-3 border border-white/10 text-center">
               <span class="text-xxs text-slate-300 block font-medium" id="mapHeroSalesLabel">🎯 ยอดสะสมเทียบเป้า</span>
@@ -366,12 +376,12 @@
             <div class="bg-white/10 backdrop-blur-md rounded-2xl p-3 border border-white/10 text-center">
               <span class="text-xxs text-slate-300 block font-medium">ยอดเบิกรวมเดือนนี้</span>
               <span class="text-xl sm:text-2xl font-black text-teal-300" id="mapHeroTotalWithdraw">฿0</span>
-              <span class="text-xxs text-slate-300 block mt-0.5" id="mapHeroWithdrawSub">จากชีทรายงานการเบิก</span>
+              <span class="text-xxs text-slate-300 block mt-0.5" id="mapHeroWithdrawSub">ยอดสะสมประจำเดือน</span>
             </div>
             <div class="bg-white/10 backdrop-blur-md rounded-2xl p-3 border border-white/10 text-center">
-              <span class="text-xxs text-slate-300 block font-medium">ปัญหาคงค้าง</span>
+              <span class="text-xxs text-slate-300 block font-medium">รายการติดตามหน้างาน</span>
               <span class="text-xl sm:text-2xl font-black text-rose-400" id="mapHeroTotalIssues">0 เคส</span>
-              <span class="text-xxs text-slate-300 block mt-0.5" id="mapHeroIssuesSub">จากชีท Problem List</span>
+              <span class="text-xxs text-slate-300 block mt-0.5" id="mapHeroIssuesSub">อยู่ระหว่างดำเนินการ</span>
             </div>
           </div>
         </div>
@@ -555,10 +565,11 @@
         <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-100 pb-5">
           <div>
             <h3 id="heading-tab-map" tabindex="-1" class="font-black text-slate-900 text-lg sm:text-xl tracking-tight flex items-center space-x-2 outline-none">
-              <span>📋 สรุปข้อมูลสาขาแจกแจงตามภูมิภาค</span>
+              <i data-lucide="building-2" class="w-5 h-5 text-blue-600"></i>
+              <span>สรุปผลการดำเนินงานสาขาแยกตามภูมิภาค</span>
               <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600" id="branchFilteredCountBadge">0 สาขา</span>
             </h3>
-            <p class="text-xs text-slate-500 mt-0.5">ตัวเลขสรุปจาก Google Sheets: ยอดขายเทียบเป้า, ผู้จัดการเขตที่รับผิดชอบ, ยอดเบิกบัญชี และจำนวนปัญหา</p>
+            <p class="text-xs text-slate-500 mt-0.5">ตัวชี้วัดผลการดำเนินงานรายสาขา: เป้าหมายรายได้, ผู้จัดการเขตรับผิดชอบ, งบประมาณเบิกจ่าย และสถานะการปฏิบัติงาน</p>
           </div>
 
           <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
@@ -695,7 +706,7 @@
               <span class="px-1.5 py-0.5 rounded bg-purple-100 text-purple-700" title="Overdue" id="cardProbPurple">🟣 0</span>
             </div>
           </div>
-          <p class="text-xs text-slate-500 mt-2">ยังไม่ปิดใน Problem List ทั้งหมด</p>
+          <p class="text-xs text-slate-500 mt-2">รายการที่อยู่ระหว่างดำเนินการทั้งหมด</p>
         </div>
 
         <!-- Card 4: ยอดเบิกจ่ายรวมเดือนนี้ -->
@@ -709,7 +720,7 @@
           <div class="mt-3 flex items-baseline justify-between">
             <div class="text-2xl font-bold text-indigo-700" id="cardTotalWithdrawal">0 ฿</div>
           </div>
-          <p class="text-xs text-slate-500 mt-3.5" id="cardWithdrawalSub">จากชีทรายงานการเบิกบัญชี</p>
+          <p class="text-xs text-slate-500 mt-3.5" id="cardWithdrawalSub">ยอดสะสมประจำเดือน</p>
         </div>
 
       </div>
@@ -776,7 +787,7 @@
           </div>
         </div>
 
-        <div class="overflow-x-auto">
+        <div class="overflow-x-auto custom-scrollbar" role="region" aria-label="ตารางสรุปผลงานรายบุคคล GM Monitor Matrix" tabindex="0">
           <table class="w-full text-left border-collapse text-xs sm:text-sm" id="managerMatrixTable">
             <thead>
               <tr class="bg-slate-50 border-b border-slate-200 text-slate-500 font-semibold uppercase text-xs">
@@ -823,7 +834,7 @@
               <option value="green">🟢 มีโอกาสเป็นไปตามเป้า</option>
               <option value="yellow">🟡 เสี่ยงต่ำกว่าเป้าหมาย</option>
               <option value="red">🔴 มีโอกาสไม่เป็นไปตามเป้า</option>
-              <option value="pending">⏳ รอสรุป / สาขาจาก Problem List</option>
+              <option value="pending">⏳ รอสรุปผลการประเมิน</option>
             </select>
           </div>
         </div>
@@ -857,10 +868,10 @@
             <div class="flex items-center space-x-2">
               <h2 class="text-lg sm:text-xl font-black text-slate-900 tracking-tight">ภาพรวมการบริหารปัญหาสาขา</h2>
               <span class="px-2.5 py-0.5 rounded-full text-xxs font-bold bg-slate-100 text-slate-600 border border-slate-200 hidden sm:inline">
-                Surveyed Branch Issues
+                Branch Issue Management
               </span>
             </div>
-            <p class="text-xs text-slate-500">ข้อมูลปัญหาจริงที่สำรวจจาก 12 เขตผู้จัดการ และสาขาหน้างาน</p>
+            <p class="text-xs text-slate-500">รายงานสถานะการบริหารจัดการปัญหาและข้อร้องเรียนจาก 12 เขตผู้จัดการสาขา</p>
           </div>
         </div>
 
@@ -927,7 +938,7 @@
                 <span class="text-2xl font-black text-slate-900" id="statProbTotal">0</span>
                 <span class="text-xxs text-slate-500 font-medium">เคส</span>
               </div>
-              <p class="text-xxs text-slate-400 mt-0.5">จากชีทสำรวจ</p>
+              <p class="text-xxs text-slate-400 mt-0.5">รายการในระบบ</p>
             </div>
 
             <!-- Critical (🔴) -->
@@ -1058,7 +1069,7 @@
                   <span class="text-xl font-black text-slate-900" id="statBranchesWithProblems">0</span>
                   <span class="text-xxs text-slate-500">สาขา</span>
                 </div>
-                <span class="text-xxxs text-slate-500 font-medium block mt-0.5" id="statBranchesTotalSub">จากข้อมูลชีทจริง</span>
+                <span class="text-xxxs text-slate-500 font-medium block mt-0.5" id="statBranchesTotalSub">จากฐานข้อมูลกลาง</span>
               </div>
             </div>
           </div>
@@ -1069,10 +1080,10 @@
           <div class="flex items-center justify-between pb-2 border-b border-slate-100">
             <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center space-x-1.5">
               <i data-lucide="pie-chart" class="w-4 h-4 text-indigo-600"></i>
-              <span>สัดส่วนสถานะปัญหา (มีตัวเลขในกราฟ)</span>
+              <span>สัดส่วนตามสถานะการดำเนินงาน</span>
             </h3>
             <span class="text-xxs px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-bold border border-emerald-200">
-              เลขชัดไม่ต้องชี้
+              Real-Time
             </span>
           </div>
 
@@ -1081,7 +1092,7 @@
             <canvas id="problemsDonutChart"></canvas>
             <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
               <span class="text-2xl font-black text-slate-900 tracking-tight" id="chartCenterCount">0</span>
-              <span class="text-xxs font-bold text-slate-500 uppercase tracking-wider">เคสสำรวจจริง</span>
+              <span class="text-xxs font-bold text-slate-500 uppercase tracking-wider">รายการทั้งหมด</span>
             </div>
           </div>
 
@@ -1121,7 +1132,7 @@
         </div>
 
         <!-- Desktop Table View (≥ 768px) -->
-        <div class="hidden md:block overflow-x-auto custom-scrollbar">
+        <div class="hidden md:block overflow-x-auto custom-scrollbar" role="region" aria-label="ตารางรายการปัญหาหน้างาน" tabindex="0">
           <table class="w-full text-left border-collapse text-xs">
             <thead>
               <tr class="bg-slate-100/80 border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider text-xxs">
@@ -1221,7 +1232,7 @@
             </div>
             <div class="mt-3 pt-2 border-t border-slate-100 text-xxs text-slate-400 flex items-center justify-between">
               <span>แหล่งที่มา</span>
-              <span class="font-medium text-slate-600">ชีท Problem List</span>
+              <span class="font-medium text-slate-600">ระบบรายงานสาขา</span>
             </div>
           </div>
 
@@ -1269,7 +1280,7 @@
                 <div>
                   <span class="text-slate-400 text-xxs font-bold block mb-1">สถานะต่อ GM</span>
                   <p class="text-xs font-semibold text-slate-700" id="detailGmStatusText">
-                    กำลังดึงข้อมูลจาก Google Sheets...
+                    กำลังซิงค์ข้อมูลสถานะ...
                   </p>
                 </div>
               </div>
@@ -1459,7 +1470,7 @@
           </div>
         </div>
 
-        <div class="overflow-x-auto max-h-96 custom-scrollbar">
+        <div class="overflow-x-auto max-h-96 custom-scrollbar" role="region" aria-label="ตารางรายการเบิกจ่ายแจกแจงรายละเอียด" tabindex="0">
           <table class="w-full text-left border-collapse text-xs sm:text-sm">
             <thead class="sticky top-0 bg-slate-50 border-b border-slate-200 text-slate-500 font-semibold uppercase text-xs z-10">
               <tr>
@@ -1490,7 +1501,7 @@
           <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
             <i data-lucide="settings" class="w-4 h-4"></i>
           </div>
-          <h3 class="font-bold text-slate-800 text-base">ตั้งค่าการเชื่อมต่อ Google Apps Script API</h3>
+          <h3 class="font-bold text-slate-800 text-base">ตั้งค่าการเชื่อมต่อระบบฐานข้อมูล (API Endpoint)</h3>
         </div>
         <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-slate-600">
           <i data-lucide="x" class="w-5 h-5"></i>
@@ -1501,24 +1512,23 @@
         <div class="p-3 rounded-xl border border-emerald-200 bg-emerald-50/70 flex items-center justify-between">
           <span class="text-xs font-bold text-emerald-900 flex items-center space-x-1.5">
             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span>โหมดการทำงาน: ดึงข้อมูลจริงจาก Google Sheet เท่านั้น (100% Live API)</span>
+            <span>โหมดการทำงาน: เชื่อมต่อระบบฐานข้อมูลกลางแบบเรียลไทม์ (100% Live API)</span>
           </span>
         </div>
 
         <div id="gasUrlContainer" class="space-y-1.5">
           <div class="flex items-center justify-between">
-            <label class="block text-xs font-semibold text-slate-700">Google Apps Script Web App URL:</label>
+            <label class="block text-xs font-semibold text-slate-700">Data API Endpoint URL:</label>
             <button type="button" onclick="resetDefaultApiUrl()" class="text-xxs font-semibold text-blue-600 hover:underline">รีเซ็ตค่าเริ่มต้น</button>
           </div>
-          <input type="url" id="gasApiUrlInput" value="https://script.google.com/macros/s/AKfycbw4qlxCBJYp_ALB4pApdnrW_t42KsnEH6BC9xn5YAKHjdbeYE7y_nnRYWqWvfpBvnzvdw/exec" placeholder="https://script.google.com/macros/s/.../exec" class="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
-          <p class="text-xxs text-slate-400">URL ที่ได้จากการ Deploy -&gt; New deployment -&gt; Web app ใน Google Apps Script</p>
+          <input type="url" id="gasApiUrlInput" value="https://script.google.com/macros/s/AKfycbw4qlxCBJYp_ALB4pApdnrW_t42KsnEH6BC9xn5YAKHjdbeYE7y_nnRYWqWvfpBvnzvdw/exec" placeholder="https://..." class="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
+          <p class="text-xxs text-slate-400">ระบุ URL ของ Web API Endpoint สำหรับซิงค์ข้อมูลระบบบริหารจัดการ</p>
         </div>
 
         <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 text-xxs text-slate-600 space-y-1">
-          <p class="font-semibold text-slate-700">💡 วิธีนำไปใช้งานจริง:</p>
-          <p>1. นำไฟล์ <code class="bg-slate-200 px-1 py-0.5 rounded">Code.gs</code> ไปใส่ในโปรเจกต์ Google Apps Script ของท่าน</p>
-          <p>2. กด Deploy &gt; Manage deployments &gt; New deployment &gt; Type: Web app</p>
-          <p>3. ตั้งค่า "Who has access" เป็น "Anyone" แล้วคัดลอก URL นำมาวางที่นี่</p>
+          <p class="font-semibold text-slate-700">ข้อมูลการเชื่อมต่อระบบ:</p>
+          <p>• ระบบซิงค์ข้อมูลอัตโนมัติแบบ Real-Time พร้อมระบบ Fast Cache ความเร็วสูง</p>
+          <p>• สามารถกดปุ่ม "รีเซ็ตค่าเริ่มต้น" เพื่อกลับไปใช้ Endpoint หลักขององค์กรได้ทันที</p>
         </div>
       </div>
 
@@ -1783,12 +1793,12 @@
       }
 
       if (!hasLocalCache) {
-        showGlobalLoader('กำลังเชื่อมต่อ Google Sheets...', 'ตรวจสอบประวัติการประชุมในเดือน และรายการปัญหาทุกสาขา...');
+        showGlobalLoader('กำลังซิงค์ข้อมูลระบบบริหารจัดการ...', 'ประมวลผลข้อมูลการประชุม ผลประกอบการ KPI และสถานะการปฏิบัติงานสาขา...');
       }
 
       try {
         // -------------------------------------------------------------
-        // กรณี A: เปิดใช้งานบน Google Apps Script Web App
+        // กรณี A: เปิดใช้งานผ่านระบบ Web App โดยตรง
         // -------------------------------------------------------------
         if (typeof google !== 'undefined' && google.script && google.script.run) {
           google.script.run
@@ -1802,9 +1812,9 @@
               hideGlobalLoader();
             })
             .withFailureHandler(function(err) {
-              console.error('GAS Error:', err);
+              console.error('Server Error:', err);
               if (!hasLocalCache) {
-                alert('ไม่สามารถดึงข้อมูลสดจาก Google Sheet ได้: ' + (err.message || err));
+                alert('ไม่สามารถซิงค์ข้อมูลจากระบบฐานข้อมูลได้: ' + (err.message || err));
               }
               if (refreshIcon) refreshIcon.classList.remove('animate-spin');
               hideGlobalLoader();
@@ -1814,7 +1824,7 @@
         }
 
         // -------------------------------------------------------------
-        // กรณี B: เชื่อมต่อผ่าน Google Apps Script Web App API URL (Live Only)
+        // กรณี B: เชื่อมต่อผ่าน API URL (Live Only)
         // -------------------------------------------------------------
         const activeApiUrl = dashboardState.apiUrl || DEFAULT_LIVE_API_URL;
         let fetchUrl = `${activeApiUrl}?action=api&period=${dashboardState.currentPeriodIndex}`;
@@ -1836,7 +1846,7 @@
       } catch (err) {
         console.error('Fetch Data Error:', err);
         if (!hasLocalCache) {
-          alert(`ไม่สามารถเชื่อมต่อดึงข้อมูลจาก Google Sheets ได้: ${err.message}\nกรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต หรือตั้งค่า URL ของ Google Apps Script API`);
+          alert(`ไม่สามารถเชื่อมต่อระบบฐานข้อมูลได้: ${err.message}\nกรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต หรือตรวจสอบการตั้งค่า API Endpoint`);
         }
       } finally {
         if (refreshIcon) setTimeout(() => refreshIcon.classList.remove('animate-spin'), 400);
@@ -1868,8 +1878,8 @@
       // Update Mode Badge
       const modeBadge = document.getElementById('dataSourceBadge');
       if (modeBadge) {
-        modeBadge.className = 'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800';
-        modeBadge.innerHTML = '<span class="w-1.5 h-1.5 mr-1.5 rounded-full bg-emerald-500 animate-pulse"></span>Live Google Sheet 🟢';
+        modeBadge.className = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xxs sm:text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/80';
+        modeBadge.innerHTML = '<span class="w-1.5 h-1.5 mr-1.5 rounded-full bg-emerald-500 animate-pulse"></span>Real-Time Sync';
       }
 
       // Render Tab 0 (Thailand Map & Branch Summary)
@@ -1925,7 +1935,7 @@
 
       // Accounting Card
       document.getElementById('cardTotalWithdrawal').textContent = (accounting.totalAmount || 0).toLocaleString() + ' ฿';
-      document.getElementById('cardWithdrawalSub').textContent = accounting.title || 'จากชีทรายงานการเบิกบัญชี';
+      document.getElementById('cardWithdrawalSub').textContent = accounting.title || 'ยอดสะสมประจำเดือน';
     }
 
     // 4.2 Render Charts (Chart.js พร้อมตัวเลขแสดงตรงบนกราฟ อ่านได้ทันทีไม่ต้องเอาเมาส์ชี้)
@@ -2949,11 +2959,11 @@
           }
         });
 
-        // สร้างแกนวันที่ 1 ถึง 31 ครบทุกวัน เรียงถูกต้องตามปฏิทิน
+        // สร้างแกนวันที่ 1 ถึง 31 เฉพาะตัวเลขวันล้วนๆ เพื่อไม่ให้ข้อความเบียดกัน
         const dailyLabels = [];
         const dailyAmounts = [];
         for (let day = 1; day <= 31; day++) {
-          dailyLabels.push(`วันที่ ${day}`);
+          dailyLabels.push(`${day}`);
           dailyAmounts.push(dailyMap[day] || 0);
         }
 
@@ -2983,22 +2993,25 @@
                 grid: { display: false },
                 ticks: {
                   maxRotation: 0,
-                  autoSkip: true,
-                  maxTicksLimit: 16,
-                  font: { size: 10 }
+                  minRotation: 0,
+                  autoSkip: false,
+                  font: { family: 'Inter, Prompt', size: 10, weight: '600' },
+                  color: '#64748b'
                 }
               },
               y: {
                 beginAtZero: true,
                 ticks: {
                   callback: val => val >= 1000 ? (val / 1000).toLocaleString() + 'k ฿' : val + ' ฿',
-                  font: { size: 10 }
+                  font: { family: 'Inter, Prompt', size: 10 },
+                  color: '#64748b'
                 }
               }
             },
             plugins: {
               tooltip: {
                 callbacks: {
+                  title: items => items.length ? `วันที่ ${items[0].label}` : '',
                   label: ctx => `ยอดเบิก: ${ctx.parsed.y.toLocaleString()} ฿`
                 }
               }
@@ -3851,7 +3864,7 @@
               <span>🎯 Target Revenue (ยอดสะสมเทียบเป้า)</span>
               <span>รอสรุปผล (-)</span>
             </div>
-            <p class="text-xxs text-slate-400 mt-1">ยังไม่มีการบันทึกตัวเลขยอดขายสะสมในรอบนี้บนชีท ReportGM</p>
+            <p class="text-xxs text-slate-400 mt-1">อยู่ระหว่างรอสรุปรายงานยอดขายสะสมประจำรอบ</p>
           </div>
         `;
 
@@ -4049,8 +4062,8 @@
         `📌 หมวดหมู่: ${item.category} | หัวข้อ: ${item.subject}`,
         `⚡ ความเร่งด่วน: ${item.urgency} | สถานะ: ${item.status}`,
         `🤝 การขอความช่วยเหลือ GM: ${item.needsGmHelp}`,
-        `📝 รายละเอียดปัญหา (Col H): ${item.problemDetail || '-'}`,
-        `🛠 แนวทางแก้ไขปัญหา (Col I): ${item.initialFix || '-'}`
+        `📝 รายละเอียดปัญหา: ${item.problemDetail || '-'}`,
+        `🛠 แนวทางแก้ไขปัญหา: ${item.initialFix || '-'}`
       ].join('\n');
 
       navigator.clipboard.writeText(text).then(() => {
