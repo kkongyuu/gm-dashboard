@@ -327,18 +327,22 @@
             <div class="bg-white/10 backdrop-blur-md rounded-2xl p-3 border border-white/10 text-center">
               <span class="text-xxs text-slate-300 block font-medium">สาขาในระบบ</span>
               <span class="text-xl sm:text-2xl font-black text-white" id="mapHeroBranchCount">0 สาขา</span>
+              <span class="text-xxs text-slate-300 block mt-0.5" id="mapHeroBranchSub">ส่งยอดแล้ว 0 สาขา</span>
             </div>
             <div class="bg-white/10 backdrop-blur-md rounded-2xl p-3 border border-white/10 text-center">
-              <span class="text-xxs text-slate-300 block font-medium">ยอดขายสะสมรอบนี้</span>
-              <span class="text-xl sm:text-2xl font-black text-emerald-400" id="mapHeroTotalSales">฿0</span>
+              <span class="text-xxs text-slate-300 block font-medium" id="mapHeroSalesLabel">🎯 ยอดสะสมเทียบเป้า</span>
+              <span class="text-lg sm:text-xl font-black text-emerald-400 block" id="mapHeroTotalSales">฿0</span>
+              <span class="text-xxs text-slate-200 font-semibold block mt-0.5" id="mapHeroSalesStatusSummary">🟢 0 | 🟡 0 | 🔴 0</span>
             </div>
             <div class="bg-white/10 backdrop-blur-md rounded-2xl p-3 border border-white/10 text-center">
               <span class="text-xxs text-slate-300 block font-medium">ยอดเบิกรวมเดือนนี้</span>
               <span class="text-xl sm:text-2xl font-black text-teal-300" id="mapHeroTotalWithdraw">฿0</span>
+              <span class="text-xxs text-slate-300 block mt-0.5" id="mapHeroWithdrawSub">จากชีทรายงานการเบิก</span>
             </div>
             <div class="bg-white/10 backdrop-blur-md rounded-2xl p-3 border border-white/10 text-center">
               <span class="text-xxs text-slate-300 block font-medium">ปัญหาคงค้าง</span>
               <span class="text-xl sm:text-2xl font-black text-rose-400" id="mapHeroTotalIssues">0 เคส</span>
+              <span class="text-xxs text-slate-300 block mt-0.5" id="mapHeroIssuesSub">จากชีท Problem List</span>
             </div>
           </div>
         </div>
@@ -474,15 +478,22 @@
               </div>
             </div>
 
-            <!-- 3 Quick Number Badges & Navigation Action -->
-            <div class="flex items-center gap-2 sm:gap-3 self-end md:self-center">
-              <div class="bg-slate-900/90 px-3.5 py-2 rounded-xl border border-slate-800 text-center min-w-[90px]">
-                <span class="text-xxs text-slate-400 block font-medium">ยอดขายสะสม</span>
-                <span class="text-xs sm:text-sm font-bold text-emerald-400" id="mapFloatSales">-</span>
+            <!-- 4 Quick Number Badges & Navigation Action (ดึงจาก ผลประกอบการสาขา & บัญชี) -->
+            <div class="flex flex-wrap items-center gap-2 sm:gap-2.5 self-end md:self-center">
+              <div class="bg-slate-900/90 px-3 py-2 rounded-xl border border-slate-800 text-center min-w-[115px]">
+                <span class="text-xxs text-slate-400 block font-medium">🎯 Target Revenue</span>
+                <span class="text-xs sm:text-sm font-bold text-emerald-400 block" id="mapFloatSales">-</span>
+                <span class="text-xxxs text-slate-400 block mt-0.5" id="mapFloatSalesSub">ยอดสะสมเทียบเป้า</span>
               </div>
-              <div class="bg-slate-900/90 px-3.5 py-2 rounded-xl border border-slate-800 text-center min-w-[80px]">
-                <span class="text-xxs text-slate-400 block font-medium">ยอดเบิกรวม</span>
-                <span class="text-xs sm:text-sm font-bold text-teal-300" id="mapFloatWithdraw">-</span>
+              <div class="bg-slate-900/90 px-3 py-2 rounded-xl border border-slate-800 text-center min-w-[100px]">
+                <span class="text-xxs text-slate-400 block font-medium">❤️ CRM ต่อเป้า</span>
+                <span class="text-xs sm:text-sm font-bold text-pink-400 block" id="mapFloatCrm">-</span>
+                <span class="text-xxxs text-slate-400 block mt-0.5" id="mapFloatNrm">👥 ลูกค้าใหม่: -</span>
+              </div>
+              <div class="bg-slate-900/90 px-3 py-2 rounded-xl border border-slate-800 text-center min-w-[85px]">
+                <span class="text-xxs text-slate-400 block font-medium">💰 ยอดเบิกรวม</span>
+                <span class="text-xs sm:text-sm font-bold text-teal-300 block" id="mapFloatWithdraw">-</span>
+                <span class="text-xxxs text-slate-400 block mt-0.5" id="mapFloatAppoint">📅 การนัด: -</span>
               </div>
               <button onclick="jumpToBranchCard(selectedMapBranchId)" class="px-3.5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition shadow-lg flex items-center space-x-1.5 whitespace-nowrap">
                 <span>ดูการ์ดสรุป</span>
@@ -1618,11 +1629,13 @@
           if (p.isNeedGm === undefined) {
             p.isNeedGm = p.needsGmHelp !== '-';
           }
-          // ดึงข้อมูลเนื้อหาปัญหา และการแก้ไขปัญหาจาก Google Sheets / API (ตรงตามหัวคอลัมน์ "เนื้อหา" และ "การแก้ไขปัญหา")
-          const realDetail = p['เนื้อหา'] || p.content || '';
-          const realFix = p['การแก้ไขปัญหา'] || p.solution || '';
-          p.problemDetail = String(realDetail).trim() || '-';
-          p.initialFix = String(realFix).trim() || '-';
+          // ดึงข้อมูลคอลัมน์ H (รายละเอียดปัญหา / เนื้อหา) และคอลัมน์ I (การแก้ไขปัญหา) จาก Google Sheets / API โดยตรง
+          const rawColH = p.colH ?? p['เนื้อหา'] ?? p['รายละเอียดปัญหา'] ?? p.content ?? p.problemDetail ?? p.detail ?? p.description ?? p.h;
+          const rawColI = p.colI ?? p['การแก้ไขปัญหา'] ?? p['การแก้ไขเบื้องต้น'] ?? p.solution ?? p.initialFix ?? p.fix ?? p.action ?? p.i;
+          p.hasColHFromApi = (rawColH !== undefined && rawColH !== null && String(rawColH).trim() !== '');
+          p.hasColIFromApi = (rawColI !== undefined && rawColI !== null && String(rawColI).trim() !== '');
+          p.problemDetail = p.hasColHFromApi ? String(rawColH).trim() : '-';
+          p.initialFix = p.hasColIFromApi ? String(rawColI).trim() : '-';
         });
 
         // สรุปยอดปัญหาตามระดับความเร่งด่วนจริง
@@ -1653,7 +1666,7 @@
       if (refreshIcon) refreshIcon.classList.add('animate-spin');
 
       // Clear any older cache versions
-      const CACHE_PREFIX = 'gm_dash_cache_v7_live_p';
+      const CACHE_PREFIX = 'gm_dash_cache_v8_live_p';
       try {
         Object.keys(localStorage)
           .filter(k => k.startsWith('gm_dash_cache') && !k.startsWith(CACHE_PREFIX))
@@ -3057,11 +3070,11 @@
 
     function parseTargetRevenueValue(valStr) {
       if (!valStr || typeof valStr !== 'string') {
-        return { actualSales: 0, salesPct: null, hasSales: false, rawText: '-' };
+        return { actualSales: 0, salesPct: null, estimatedTarget: null, hasSales: false, rawText: '-' };
       }
       const trimmed = valStr.trim();
       if (trimmed === '-' || trimmed === '') {
-        return { actualSales: 0, salesPct: null, hasSales: false, rawText: '-' };
+        return { actualSales: 0, salesPct: null, estimatedTarget: null, hasSales: false, rawText: '-' };
       }
       // รูปแบบจริงจาก Google Sheet เช่น "461,588 (30.77%)" หรือ "493088 (82%)" หรือ "268186(15.%)"
       const pctMatch = trimmed.match(/\(([\d.]+)\s*%?\)/);
@@ -3069,12 +3082,32 @@
       const beforeParen = trimmed.split('(')[0].replace(/,/g, '').trim();
       const numMatch = beforeParen.match(/[\d.]+/);
       const actualSales = numMatch ? parseFloat(numMatch[0]) : 0;
+      const validSales = !isNaN(actualSales) && actualSales > 0;
+      const validPct = salesPct !== null && !isNaN(salesPct) && salesPct > 0;
+      const estimatedTarget = (validSales && validPct)
+        ? Math.round(actualSales / (salesPct / 100))
+        : null;
       return {
-        actualSales: isNaN(actualSales) ? 0 : actualSales,
-        salesPct: (salesPct !== null && !isNaN(salesPct)) ? salesPct : null,
-        hasSales: !isNaN(actualSales) && actualSales > 0,
+        actualSales: validSales ? actualSales : 0,
+        salesPct: validPct ? salesPct : null,
+        estimatedTarget,
+        hasSales: validSales,
         rawText: trimmed
       };
+    }
+
+    function formatAppointmentPercent(rawVal) {
+      if (rawVal === undefined || rawVal === null) return '-';
+      const s = String(rawVal).trim();
+      if (s === '' || s === '-') return '-';
+      if (s.includes('%')) return s;
+      const num = parseFloat(s.replace(/,/g, ''));
+      if (isNaN(num)) return s;
+      // หากเป็นทศนิยม <= 1 เช่น 0.61 แปลงเป็น 61%
+      if (num > 0 && num <= 1) {
+        return `${Math.round(num * 10000) / 100}%`;
+      }
+      return `${num}%`;
     }
 
     // สร้างข้อมูลสรุปสาขาจากข้อมูลจริงใน Google Sheets 100% (gmReport.managers + gmReport.problemsList + accounting)
@@ -3106,11 +3139,27 @@
             callX: geo.callX,
             callY: geo.callY,
             managersSet: new Set(),
+            // 1. 🎯 Target Revenue (ยอดสะสมเทียบเป้า)
             actualSales: 0,
             salesPct: null,
+            estimatedTarget: null,
             hasSales: false,
             salesRawText: '-',
+            salesSubTitle: 'ยอดสะสมเทียบเป้า 10 วัน',
+            salesCriteria: '',
             salesStatus: 'pending',
+            // 2. ❤️ CRM Performance (% CRM ต่อเป้า)
+            crmValue: '-',
+            crmSubTitle: '% CRM ต่อเป้า',
+            crmStatus: 'pending',
+            // 3. 👥 NRM / New Case Management (จำนวนลูกค้าใหม่)
+            nrmValue: '-',
+            nrmSubTitle: 'จำนวนลูกค้าใหม่',
+            nrmStatus: 'pending',
+            // 4. 📅 การนัด (เปอร์เซ็นการนัด)
+            appointValue: '-',
+            appointSubTitle: 'เปอร์เซ็นการนัด',
+            // 5. การเบิกบัญชี & ปัญหา
             withdrawAmount: 0,
             withdrawCount: 0,
             problems: []
@@ -3119,7 +3168,7 @@
         return branchMap.get(key);
       }
 
-      // 1. รวบรวมสาขาและยอดขายจริง (Target Revenue) จากชีท GM Report
+      // 1. รวบรวมสาขาและแยกแยะ KPI ผลประกอบการสาขาทั้ง 4 มิติจากชีท GM Report
       managers.forEach(m => {
         (m.branches || []).forEach(b => {
           const entry = ensureBranchEntry(b.name);
@@ -3129,17 +3178,60 @@
           }
           if (m.manager) entry.managersSet.add(m.manager);
 
-          const revKpi = (b.kpis || []).find(k => k.title === 'Target Revenue' || k.rawTitle === 'Target Revenue');
-          if (revKpi && revKpi.value) {
+          const kpis = Array.isArray(b.kpis) ? b.kpis : [];
+
+          // 1.1 🎯 Target Revenue (ยอดสะสมเทียบเป้า)
+          const revKpi = kpis.find(k =>
+            String(k.title || '').includes('Target Revenue') ||
+            String(k.rawTitle || '').includes('Target Revenue')
+          );
+          if (revKpi && revKpi.value && String(revKpi.value).trim() !== '-') {
             const parsed = parseTargetRevenueValue(revKpi.value);
-            if (parsed.hasSales && !entry.hasSales) {
+            if (parsed.hasSales && (!entry.hasSales || (parsed.salesPct || 0) > (entry.salesPct || 0))) {
               entry.actualSales = parsed.actualSales;
               entry.salesPct = parsed.salesPct;
+              entry.estimatedTarget = parsed.estimatedTarget;
               entry.hasSales = true;
               entry.salesRawText = parsed.rawText;
+              entry.salesSubTitle = revKpi.subTitle || 'ยอดสะสมเทียบเป้า 10 วัน';
+              entry.salesCriteria = String(revKpi.criteria || '').replace(/\s+/g, ' ').trim();
               entry.salesStatus = revKpi.status || b.status || 'pending';
             }
           }
+
+          // 1.2 ❤️ CRM Performance (% CRM ต่อเป้า)
+          const crmKpi = kpis.find(k =>
+            String(k.title || '').includes('CRM') ||
+            String(k.rawTitle || '').includes('CRM')
+          );
+          if (crmKpi && crmKpi.value && String(crmKpi.value).trim() !== '-' && entry.crmValue === '-') {
+            entry.crmValue = String(crmKpi.value).trim();
+            entry.crmSubTitle = crmKpi.subTitle || '% CRM ต่อเป้า';
+            entry.crmStatus = crmKpi.status || 'pending';
+          }
+
+          // 1.3 👥 NRM / New Case Management (จำนวนลูกค้าใหม่)
+          const nrmKpi = kpis.find(k =>
+            String(k.title || '').includes('NRM') ||
+            String(k.rawTitle || '').includes('NCM') ||
+            String(k.rawTitle || '').includes('New Case')
+          );
+          if (nrmKpi && nrmKpi.value && String(nrmKpi.value).trim() !== '-' && entry.nrmValue === '-') {
+            entry.nrmValue = String(nrmKpi.value).trim();
+            entry.nrmSubTitle = nrmKpi.subTitle || 'จำนวนลูกค้าใหม่';
+            entry.nrmStatus = nrmKpi.status || 'pending';
+          }
+
+          // 1.4 📅 การนัด (เปอร์เซ็นการนัด)
+          const appKpi = kpis.find(k =>
+            String(k.title || '').includes('การนัด') ||
+            String(k.rawTitle || '').includes('การนัด')
+          );
+          if (appKpi && appKpi.value && String(appKpi.value).trim() !== '-' && entry.appointValue === '-') {
+            entry.appointValue = formatAppointmentPercent(appKpi.value);
+            entry.appointSubTitle = appKpi.subTitle || 'เปอร์เซ็นการนัด';
+          }
+
           if (entry.salesStatus === 'pending' && b.status && b.status !== 'pending') {
             entry.salesStatus = b.status;
           }
@@ -3244,19 +3336,38 @@
 
       // 1. Calculate Totals for Map Hero Capsules strictly from Google Sheets data
       const totalBranches = branchesWithStats.length;
-      const totalSales = branchesWithStats.reduce((sum, b) => sum + (b.actualSales || 0), 0);
+      const reportedSalesBranches = branchesWithStats.filter(b => b.hasSales);
+      const totalSales = reportedSalesBranches.reduce((sum, b) => sum + (b.actualSales || 0), 0);
+      const greenSalesCount = branchesWithStats.filter(b => b.salesStatus === 'green').length;
+      const yellowSalesCount = branchesWithStats.filter(b => b.salesStatus === 'yellow').length;
+      const redSalesCount = branchesWithStats.filter(b => b.salesStatus === 'red').length;
+
       const totalWithdraw = (data && data.accounting && typeof data.accounting.totalAmount === 'number')
         ? data.accounting.totalAmount
         : branchesWithStats.reduce((sum, b) => sum + (b.withdrawAmount || 0), 0);
+      const withdrawBranchesCount = (data && data.accounting && data.accounting.branchesCount)
+        ? data.accounting.branchesCount
+        : branchesWithStats.filter(b => b.withdrawAmount > 0).length;
+
       const totalIssues = (data && data.gmReport && Array.isArray(data.gmReport.problemsList))
         ? data.gmReport.problemsList.length
         : branchesWithStats.reduce((sum, b) => sum + b.probCount, 0);
+      const issueBranchesCount = branchesWithStats.filter(b => b.probCount > 0).length;
+
+      const sampleSubTitle = (reportedSalesBranches[0] && reportedSalesBranches[0].salesSubTitle)
+        ? reportedSalesBranches[0].salesSubTitle
+        : 'ยอดสะสมเทียบเป้า 10 วัน';
 
       const setEl = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
       setEl('mapHeroBranchCount', `${totalBranches} สาขา`);
-      setEl('mapHeroTotalSales', `฿${totalSales.toLocaleString()}`);
-      setEl('mapHeroTotalWithdraw', `฿${totalWithdraw.toLocaleString()}`);
+      setEl('mapHeroBranchSub', `ส่งยอดขายแล้ว ${reportedSalesBranches.length} สาขา`);
+      setEl('mapHeroSalesLabel', `🎯 ${sampleSubTitle}`);
+      setEl('mapHeroTotalSales', `฿${Math.round(totalSales).toLocaleString()}`);
+      setEl('mapHeroSalesStatusSummary', `🟢 ${greenSalesCount} | 🟡 ${yellowSalesCount} | 🔴 ${redSalesCount} สาขา`);
+      setEl('mapHeroTotalWithdraw', `฿${Math.round(totalWithdraw).toLocaleString()}`);
+      setEl('mapHeroWithdrawSub', `มีการเบิก ${withdrawBranchesCount} สาขา`);
       setEl('mapHeroTotalIssues', `${totalIssues} เคส`);
+      setEl('mapHeroIssuesSub', `พบใน ${issueBranchesCount} สาขา`);
 
       // Update Region Filter Pill Counts dynamically from live branches
       const countBkk = branchesWithStats.filter(b => b.region === 'BKK').length;
@@ -3384,7 +3495,17 @@
         ? `฿${b.actualSales.toLocaleString()}${b.salesPct !== null ? ` (${b.salesPct}%)` : ''}`
         : 'รอสรุปผล (-)';
       setVal('mapFloatSales', salesDisplay);
+
+      let statusLabel = b.salesSubTitle || 'ยอดสะสมเทียบเป้า';
+      if (b.salesStatus === 'green') statusLabel = '🟢 ตามเกณฑ์เป้าหมาย';
+      else if (b.salesStatus === 'yellow') statusLabel = '🟡 เสี่ยงต่ำกว่าเป้าหมาย';
+      else if (b.salesStatus === 'red') statusLabel = '🔴 ต่ำกว่าเกณฑ์เป้าหมาย';
+      setVal('mapFloatSalesSub', statusLabel);
+
+      setVal('mapFloatCrm', b.crmValue !== '-' ? b.crmValue : 'รอสรุป (-)');
+      setVal('mapFloatNrm', `👥 ลูกค้าใหม่: ${b.nrmValue !== '-' ? `${b.nrmValue} ราย` : '-'}`);
       setVal('mapFloatWithdraw', `฿${b.withdrawAmount.toLocaleString()}`);
+      setVal('mapFloatAppoint', `📅 การนัด: ${b.appointValue}`);
 
       const snippet = document.getElementById('mapFloatIssuesSnippet');
       if (snippet) {
@@ -3434,7 +3555,7 @@
       renderBranchSummaryCardsGrid(branchesWithStats);
     }
 
-    // Render Concise Branch Summary Cards Grid (ข้อมูลจริงจาก Google Sheet 100%)
+    // Render Concise Branch Summary Cards Grid (แยกแยะข้อมูลจาก ผลประกอบการสาขา 🎯 Target Revenue + KPI ครบถ้วน)
     function renderBranchSummaryCardsGrid(allBranches) {
       const container = document.getElementById('mapBranchCardsGrid');
       const searchInput = document.getElementById('mapBranchSearchInput');
@@ -3479,6 +3600,7 @@
       filtered.forEach(b => {
         const isSelected = b.id === selectedMapBranchId;
         
+        // 1. ป้ายสถานะปัญหา
         let pBadge = '<span class="text-xxs px-2 py-0.5 rounded-full font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">✅ ปกติ</span>';
         if (b.probSeverity === 'CRITICAL') {
           pBadge = `<span class="text-xxs px-2 py-0.5 rounded-full font-bold bg-rose-100 text-rose-800 border border-rose-200">🔴 ${b.probCount} ปัญหา</span>`;
@@ -3490,10 +3612,56 @@
           pBadge = `<span class="text-xxs px-2 py-0.5 rounded-full font-bold bg-blue-100 text-blue-800 border border-blue-200">🟡 ${b.probCount} ปัญหา</span>`;
         }
 
-        const salesHtml = b.hasSales
-          ? `<span class="font-extrabold text-slate-900 text-xs">฿${b.actualSales.toLocaleString()}</span>
-             ${b.salesPct !== null ? `<span class="text-xxs font-bold ml-1 ${b.salesStatus === 'green' ? 'text-emerald-600' : (b.salesStatus === 'yellow' ? 'text-amber-600' : 'text-rose-600')}">(${b.salesPct}%)</span>` : ''}`
-          : `<span class="font-semibold text-slate-400 text-xs">รอสรุปผล (-)</span>`;
+        // 2. ป้ายสถานะ 🎯 Target Revenue
+        let kpiBadge = '<span class="text-xxs px-2 py-0.5 rounded-full font-bold bg-slate-100 text-slate-500 border border-slate-200">⏳ รอส่งยอด</span>';
+        let kpiBoxCls = 'bg-slate-50 border-slate-200';
+        let kpiBarCls = 'bg-slate-400';
+        let kpiPctCls = 'text-slate-600';
+        if (b.salesStatus === 'green') {
+          kpiBadge = '<span class="text-xxs px-2 py-0.5 rounded-full font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">🟢 ตามเป้า</span>';
+          kpiBoxCls = 'bg-emerald-50/60 border-emerald-200/80';
+          kpiBarCls = 'bg-emerald-500';
+          kpiPctCls = 'text-emerald-700';
+        } else if (b.salesStatus === 'yellow') {
+          kpiBadge = '<span class="text-xxs px-2 py-0.5 rounded-full font-bold bg-amber-50 text-amber-700 border border-amber-200">🟡 เสี่ยงต่ำกว่าเป้า</span>';
+          kpiBoxCls = 'bg-amber-50/60 border-amber-200/80';
+          kpiBarCls = 'bg-amber-500';
+          kpiPctCls = 'text-amber-700';
+        } else if (b.salesStatus === 'red') {
+          kpiBadge = '<span class="text-xxs px-2 py-0.5 rounded-full font-bold bg-rose-50 text-rose-700 border border-rose-200">🔴 ต่ำกว่าเป้า</span>';
+          kpiBoxCls = 'bg-rose-50/60 border-rose-200/80';
+          kpiBarCls = 'bg-rose-500';
+          kpiPctCls = 'text-rose-700';
+        }
+
+        const pctWidth = b.salesPct !== null ? Math.min(Math.max(b.salesPct, 4), 100) : 0;
+
+        const targetRevenueBlockHtml = b.hasSales ? `
+          <div class="rounded-xl p-2.5 border ${kpiBoxCls} mb-2.5">
+            <div class="flex items-center justify-between text-xxs text-slate-500 font-semibold mb-1">
+              <span>🎯 ${b.salesSubTitle || 'ยอดสะสมเทียบเป้า 10 วัน'}</span>
+              ${b.salesPct !== null ? `<span class="font-extrabold ${kpiPctCls}">${b.salesPct}% ของเป้า</span>` : ''}
+            </div>
+            <div class="flex items-baseline justify-between">
+              <span class="text-sm font-black text-slate-900">฿${b.actualSales.toLocaleString()}</span>
+              ${b.estimatedTarget ? `<span class="text-xxs text-slate-500">เป้า ~฿${b.estimatedTarget.toLocaleString()}</span>` : `<span class="text-xxs text-slate-500">${b.salesRawText}</span>`}
+            </div>
+            ${b.salesPct !== null ? `
+              <div class="w-full bg-white/80 rounded-full h-1.5 mt-1.5 overflow-hidden border border-slate-200/60">
+                <div class="${kpiBarCls} h-1.5 rounded-full" style="width: ${pctWidth}%"></div>
+              </div>
+            ` : ''}
+            ${b.salesCriteria ? `<p class="text-xxxs text-slate-600 mt-1.5 leading-snug font-medium">${b.salesCriteria}</p>` : ''}
+          </div>
+        ` : `
+          <div class="rounded-xl p-2.5 border bg-slate-50 border-slate-200/80 mb-2.5">
+            <div class="flex items-center justify-between text-xxs text-slate-400 font-semibold">
+              <span>🎯 Target Revenue (ยอดสะสมเทียบเป้า)</span>
+              <span>รอสรุปผล (-)</span>
+            </div>
+            <p class="text-xxs text-slate-400 mt-1">ยังไม่มีการบันทึกตัวเลขยอดขายสะสมในรอบนี้บนชีท ReportGM</p>
+          </div>
+        `;
 
         const card = document.createElement('div');
         card.id = `branch-card-${b.id}`;
@@ -3502,49 +3670,55 @@
         card.innerHTML = `
           <div>
             <!-- Card Header: สาขา & ภูมิภาค -->
-            <div class="flex items-start justify-between gap-2 border-b border-slate-100 pb-2.5 mb-3">
+            <div class="flex items-start justify-between gap-2 border-b border-slate-100 pb-2.5 mb-2.5">
               <div>
                 <h4 class="font-black text-slate-900 text-sm tracking-tight flex items-center space-x-1">
                   <span>${b.name}</span>
                 </h4>
-                <div class="flex items-center space-x-2 text-xxs text-slate-500 mt-0.5">
+                <div class="flex flex-wrap items-center gap-1.5 text-xxs text-slate-500 mt-1">
                   <span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 font-semibold">${b.regionName}</span>
                   <span>ผจก: <strong class="text-slate-700">${b.manager}</strong></span>
                 </div>
               </div>
-              <div>${pBadge}</div>
+              <div class="flex flex-col items-end gap-1 flex-shrink-0">
+                ${kpiBadge}
+                ${pBadge}
+              </div>
             </div>
 
-            <!-- Key Concise Numbers (ข้อมูลจริงจาก Google Sheet 100%) -->
-            <div class="space-y-2 text-xs">
+            <!-- กล่องไฮไลต์ 1: 🎯 Target Revenue (ยอดสะสมเทียบเป้า 10 วัน) -->
+            ${targetRevenueBlockHtml}
+
+            <!-- รายละเอียด KPI เสริมจากผลประกอบการสาขา + บัญชี & ปัญหา -->
+            <div class="space-y-1.5 text-xs">
               
-              <!-- 1. ผู้จัดการเขตที่รับผิดชอบ -->
+              <!-- ❤️ CRM Performance (% CRM ต่อเป้า) -->
               <div class="flex justify-between items-center py-1 border-b border-slate-50">
-                <span class="text-slate-400 text-xxs font-medium flex items-center space-x-1">
-                  <i data-lucide="user" class="w-3.5 h-3.5 text-blue-500"></i>
-                  <span>ผู้จัดการเขต:</span>
+                <span class="text-slate-500 text-xxs font-medium flex items-center space-x-1">
+                  <span>❤️ CRM ต่อเป้า:</span>
                 </span>
-                <span class="font-bold text-slate-800 text-xs">
-                  ${b.manager !== '-' ? `ผจก. ${b.manager}` : '-'}
+                <span class="font-bold text-xs ${b.crmStatus === 'green' ? 'text-emerald-700' : (b.crmStatus === 'yellow' ? 'text-amber-700' : (b.crmStatus === 'red' ? 'text-rose-700' : 'text-slate-700'))}">
+                  ${b.crmValue}
                 </span>
               </div>
 
-              <!-- 2. ยอดขาย (Target Revenue จากชีท) -->
-              <div class="flex justify-between items-center py-1 border-b border-slate-50">
-                <span class="text-slate-400 text-xxs font-medium flex items-center space-x-1">
-                  <i data-lucide="trending-up" class="w-3.5 h-3.5 text-emerald-500"></i>
-                  <span>ยอดขาย (Sheet):</span>
-                </span>
-                <div class="text-right">
-                  ${salesHtml}
+              <!-- 👥 NRM ลูกค้าใหม่ & 📅 การนัด -->
+              <div class="grid grid-cols-2 gap-1.5 py-1 border-b border-slate-50">
+                <div class="bg-slate-50/80 rounded-lg px-2 py-1 border border-slate-100">
+                  <span class="text-xxxs text-slate-400 block font-medium">👥 ลูกค้าใหม่ (NCM)</span>
+                  <span class="font-bold text-slate-800 text-xs">${b.nrmValue !== '-' ? `${b.nrmValue} ราย` : '-'}</span>
+                </div>
+                <div class="bg-slate-50/80 rounded-lg px-2 py-1 border border-slate-100">
+                  <span class="text-xxxs text-slate-400 block font-medium">📅 เปอร์เซ็นต์การนัด</span>
+                  <span class="font-bold text-indigo-700 text-xs">${b.appointValue}</span>
                 </div>
               </div>
 
-              <!-- 3. ยอดการเบิกบัญชี -->
+              <!-- 💰 ยอดการเบิกบัญชี -->
               <div class="flex justify-between items-center py-1 border-b border-slate-50">
-                <span class="text-slate-400 text-xxs font-medium flex items-center space-x-1">
+                <span class="text-slate-500 text-xxs font-medium flex items-center space-x-1">
                   <i data-lucide="wallet" class="w-3.5 h-3.5 text-teal-500"></i>
-                  <span>การเบิก:</span>
+                  <span>การเบิกบัญชี:</span>
                 </span>
                 <span class="font-bold text-teal-700 text-xs">
                   ฿${b.withdrawAmount.toLocaleString()}
@@ -3552,14 +3726,14 @@
                 </span>
               </div>
 
-              <!-- 4. จำนวนปัญหา -->
+              <!-- ⚠️ จำนวนปัญหาคงค้าง -->
               <div class="flex justify-between items-center py-1">
-                <span class="text-slate-400 text-xxs font-medium flex items-center space-x-1">
+                <span class="text-slate-500 text-xxs font-medium flex items-center space-x-1">
                   <i data-lucide="alert-circle" class="w-3.5 h-3.5 text-rose-500"></i>
-                  <span>จำนวนปัญหา:</span>
+                  <span>ปัญหาคงค้าง:</span>
                 </span>
                 <span class="font-black text-xs ${b.probCount > 0 ? 'text-rose-600' : 'text-emerald-600'}">
-                  ${b.probCount > 0 ? `${b.probCount} รายการ` : 'ไม่มีปัญหา'}
+                  ${b.probCount > 0 ? `${b.probCount} เคส` : 'ไม่มีปัญหา'}
                 </span>
               </div>
 
