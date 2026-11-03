@@ -205,9 +205,9 @@
           <div>
             <div class="flex items-center space-x-2">
               <h1 id="headerTitle" class="text-base sm:text-lg font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent transition-all duration-300">GM Monitor & Branch Portal</h1>
-              <span id="dataSourceBadge" class="inline-flex items-center px-2 py-0.5 rounded-full text-xxs sm:text-xs font-medium bg-amber-100 text-amber-800">
-                <span class="w-1.5 h-1.5 mr-1 rounded-full bg-amber-500 animate-pulse"></span>
-                Demo Data
+              <span id="dataSourceBadge" class="inline-flex items-center px-2 py-0.5 rounded-full text-xxs sm:text-xs font-medium bg-emerald-100 text-emerald-800">
+                <span class="w-1.5 h-1.5 mr-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                Live Google Sheet 🟢
               </span>
             </div>
             <p id="headerSubtitle" class="text-xxs sm:text-xs text-slate-500 transition-all duration-300">ระบบรายงานผลประกอบการ ผู้จัดการ และการเงินสาขา</p>
@@ -270,19 +270,6 @@
     </div>
   </header>
 
-  <!-- DEMO NOTICE / LIVE CONNECT BANNER -->
-  <div id="demoNoticeBanner" class="bg-amber-500/10 border-b border-amber-500/20 px-4 py-2.5 text-xs text-amber-900 transition flex items-center justify-between">
-    <div class="max-w-7xl mx-auto w-full flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-      <div class="flex items-center space-x-2">
-        <span class="flex h-2 w-2 rounded-full bg-amber-500 animate-ping"></span>
-        <span><strong>สถานะปัจจุบัน:</strong> ตอนนี้หน้าเว็บเปิดในโหมด <strong>ข้อมูลจำลอง (Demo)</strong> เพื่อให้เห็นรูปแบบหน้าตา Dashboard</span>
-      </div>
-      <button onclick="openSettingsModal()" class="underline font-bold text-blue-700 hover:text-blue-900 text-left sm:text-right">
-        👉 คลิกตรงนี้เพื่อใส่ URL เชื่อมต่อ Google Sheets ออนไลน์สดๆ 🟢
-      </button>
-    </div>
-  </div>
-
   <!-- MAIN CONTENT CONTAINER -->
   <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
@@ -331,22 +318,22 @@
               <span>แผนที่และสรุปสาขาทั่วประเทศ</span>
             </h2>
             <p class="text-xs sm:text-sm text-slate-300 mt-1.5 max-w-2xl leading-relaxed">
-              ภาพรวมสาขาครอบคลุม 5 ภาค พร้อมตัวเลขสำคัญ: <strong>ยอดขายเทียบเป้าหมาย, ยอดเบิกจ่ายบัญชี</strong> และ <strong>จำนวนปัญหาคงค้าง</strong>
+              ภาพรวมสาขาครอบคลุม 5 ภาค ดึงข้อมูลตรงจาก Google Sheets: <strong>ยอดขายเทียบเป้าหมาย, ยอดเบิกจ่ายบัญชี</strong> และ <strong>จำนวนปัญหาคงค้าง</strong>
             </p>
           </div>
 
           <!-- Quick Stat Capsules on Hero -->
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div class="bg-white/10 backdrop-blur-md rounded-2xl p-3 border border-white/10 text-center">
-              <span class="text-xxs text-slate-300 block font-medium">สาขาทั่วไทย</span>
-              <span class="text-xl sm:text-2xl font-black text-white" id="mapHeroBranchCount">19 สาขา</span>
+              <span class="text-xxs text-slate-300 block font-medium">สาขาในระบบ</span>
+              <span class="text-xl sm:text-2xl font-black text-white" id="mapHeroBranchCount">0 สาขา</span>
             </div>
             <div class="bg-white/10 backdrop-blur-md rounded-2xl p-3 border border-white/10 text-center">
-              <span class="text-xxs text-slate-300 block font-medium">ยอดขายรวม</span>
+              <span class="text-xxs text-slate-300 block font-medium">ยอดขายสะสมรอบนี้</span>
               <span class="text-xl sm:text-2xl font-black text-emerald-400" id="mapHeroTotalSales">฿0</span>
             </div>
             <div class="bg-white/10 backdrop-blur-md rounded-2xl p-3 border border-white/10 text-center">
-              <span class="text-xxs text-slate-300 block font-medium">ยอดเบิกรวม</span>
+              <span class="text-xxs text-slate-300 block font-medium">ยอดเบิกรวมเดือนนี้</span>
               <span class="text-xl sm:text-2xl font-black text-teal-300" id="mapHeroTotalWithdraw">฿0</span>
             </div>
             <div class="bg-white/10 backdrop-blur-md rounded-2xl p-3 border border-white/10 text-center">
@@ -469,18 +456,18 @@
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div class="flex items-center space-x-3.5">
               <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-600/40 to-indigo-600/40 text-blue-400 border border-blue-500/40 flex items-center justify-center font-black text-base shadow-inner flex-shrink-0" id="mapFloatInitial">
-                ร
+                -
               </div>
               <div>
                 <div class="flex flex-wrap items-center gap-2">
-                  <h4 class="font-bold text-white text-base sm:text-lg" id="mapFloatTitle">สาขารัตนาธิเบศร์</h4>
-                  <span class="text-xxs px-2.5 py-0.5 rounded-full font-bold bg-blue-500/20 text-blue-300 border border-blue-400/30" id="mapFloatRegion">กทม. & ปริมณฑล</span>
-                  <span class="text-xxs px-2.5 py-0.5 rounded-full font-bold bg-rose-500/20 text-rose-300 border border-rose-400/30" id="mapFloatProblemBadge">⚠️ มีปัญหา 2 เคส</span>
+                  <h4 class="font-bold text-white text-base sm:text-lg" id="mapFloatTitle">กำลังโหลดข้อมูลสาขา...</h4>
+                  <span class="text-xxs px-2.5 py-0.5 rounded-full font-bold bg-blue-500/20 text-blue-300 border border-blue-400/30" id="mapFloatRegion">-</span>
+                  <span class="text-xxs px-2.5 py-0.5 rounded-full font-bold bg-slate-700 text-slate-300 border border-slate-600" id="mapFloatProblemBadge">-</span>
                 </div>
                 <div class="flex flex-wrap items-center gap-2 sm:gap-3 text-xs text-slate-300 mt-1">
-                  <span>ผู้จัดการเขต: <span id="mapFloatManager" class="text-white font-semibold">ผจก. กาญจน์</span></span>
+                  <span>ผู้จัดการเขต: <span id="mapFloatManager" class="text-white font-semibold">-</span></span>
                   <span class="text-slate-600 hidden sm:inline">|</span>
-                  <span id="mapFloatIssuesSnippet" class="text-rose-400 font-bold">พบปัญหา: 2 เคส</span>
+                  <span id="mapFloatIssuesSnippet" class="text-slate-400 font-medium">-</span>
                   <span class="text-slate-600 hidden sm:inline">|</span>
                   <span class="text-slate-400 text-xxs hidden md:inline">แตะที่จุดสาขาบนแผนที่เพื่อดูข้อมูลสาขาอื่น</span>
                 </div>
@@ -490,12 +477,12 @@
             <!-- 3 Quick Number Badges & Navigation Action -->
             <div class="flex items-center gap-2 sm:gap-3 self-end md:self-center">
               <div class="bg-slate-900/90 px-3.5 py-2 rounded-xl border border-slate-800 text-center min-w-[90px]">
-                <span class="text-xxs text-slate-400 block font-medium">ยอดขายจริง</span>
-                <span class="text-xs sm:text-sm font-bold text-emerald-400" id="mapFloatSales">฿1,580,000</span>
+                <span class="text-xxs text-slate-400 block font-medium">ยอดขายสะสม</span>
+                <span class="text-xs sm:text-sm font-bold text-emerald-400" id="mapFloatSales">-</span>
               </div>
               <div class="bg-slate-900/90 px-3.5 py-2 rounded-xl border border-slate-800 text-center min-w-[80px]">
                 <span class="text-xxs text-slate-400 block font-medium">ยอดเบิกรวม</span>
-                <span class="text-xs sm:text-sm font-bold text-teal-300" id="mapFloatWithdraw">฿24,500</span>
+                <span class="text-xs sm:text-sm font-bold text-teal-300" id="mapFloatWithdraw">-</span>
               </div>
               <button onclick="jumpToBranchCard(selectedMapBranchId)" class="px-3.5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition shadow-lg flex items-center space-x-1.5 whitespace-nowrap">
                 <span>ดูการ์ดสรุป</span>
@@ -514,9 +501,9 @@
           <div>
             <h3 class="font-black text-slate-900 text-lg sm:text-xl tracking-tight flex items-center space-x-2">
               <span>📋 สรุปข้อมูลสาขาแจกแจงตามภูมิภาค</span>
-              <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600" id="branchFilteredCountBadge">19 สาขา</span>
+              <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600" id="branchFilteredCountBadge">0 สาขา</span>
             </h3>
-            <p class="text-xs text-slate-500 mt-0.5">ตัวเลขสรุปสังเขป: ยอดขายเทียบเป้า, ผู้จัดการเขตที่รับผิดชอบ, ยอดเบิกบัญชี และจำนวนปัญหา</p>
+            <p class="text-xs text-slate-500 mt-0.5">ตัวเลขสรุปจาก Google Sheets: ยอดขายเทียบเป้า, ผู้จัดการเขตที่รับผิดชอบ, ยอดเบิกบัญชี และจำนวนปัญหา</p>
           </div>
 
           <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
@@ -537,25 +524,25 @@
         <!-- Region Filter Pills -->
         <div class="flex flex-wrap items-center gap-1.5 sm:gap-2" id="mapRegionPillsContainer">
           <button onclick="setMapRegionFilter('ALL')" id="pill-region-ALL" class="region-pill active px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-900 text-white shadow-xs transition">
-            ทั้งหมด (19)
+            ทั้งหมด (0)
           </button>
           <button onclick="setMapRegionFilter('BKK')" id="pill-region-BKK" class="region-pill px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 transition">
-            กทม. & ปริมณฑล (8)
+            กทม. & ปริมณฑล (0)
           </button>
           <button onclick="setMapRegionFilter('EAST')" id="pill-region-EAST" class="region-pill px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 transition">
-            ภาคตะวันออก (3)
+            ภาคตะวันออก (0)
           </button>
           <button onclick="setMapRegionFilter('ISAN')" id="pill-region-ISAN" class="region-pill px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 transition">
-            ภาคอีสาน (2)
+            ภาคอีสาน (0)
           </button>
           <button onclick="setMapRegionFilter('SOUTH')" id="pill-region-SOUTH" class="region-pill px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 transition">
-            ภาคใต้ (3)
+            ภาคใต้ (0)
           </button>
           <button onclick="setMapRegionFilter('NORTH')" id="pill-region-NORTH" class="region-pill px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 transition">
-            ภาคเหนือ (3)
+            ภาคเหนือ (0)
           </button>
           <button onclick="setMapRegionFilter('HAS_PROBLEMS')" id="pill-region-HAS_PROBLEMS" class="region-pill px-3 py-1.5 rounded-xl text-xs font-medium bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 transition">
-            🚨 เฉพาะสาขาที่มีปัญหา (8)
+            🚨 เฉพาะสาขาที่มีปัญหา (0)
           </button>
         </div>
 
@@ -803,10 +790,10 @@
           <!-- ช่วงเวลา -->
           <div class="flex items-center bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2">
             <span class="text-xxs font-bold text-slate-400 mr-1.5 whitespace-nowrap">รอบ:</span>
-            <select id="probFilterPeriod" onchange="applyProblemFilters()" class="bg-transparent text-xs font-semibold text-slate-800 outline-none w-full cursor-pointer">
-              <option value="0">รอบ 1-10 ต.ค.</option>
-              <option value="1">รอบ 11-20 ต.ค.</option>
-              <option value="2">รอบ 21-31 ต.ค.</option>
+            <select id="probFilterPeriod" onchange="onPeriodChange(this.value)" class="bg-transparent text-xs font-semibold text-slate-800 outline-none w-full cursor-pointer">
+              <option value="0">รอบ 1-10</option>
+              <option value="1">รอบ 11-20</option>
+              <option value="2">รอบ 21-31</option>
             </select>
           </div>
 
@@ -858,7 +845,7 @@
                 </div>
               </div>
               <div class="mt-2 flex items-baseline space-x-1">
-                <span class="text-2xl font-black text-slate-900" id="statProbTotal">17</span>
+                <span class="text-2xl font-black text-slate-900" id="statProbTotal">0</span>
                 <span class="text-xxs text-slate-500 font-medium">เคส</span>
               </div>
               <p class="text-xxs text-slate-400 mt-0.5">จากชีทสำรวจ</p>
@@ -873,7 +860,7 @@
                 </div>
               </div>
               <div class="mt-2 flex items-baseline space-x-1">
-                <span class="text-2xl font-black text-rose-700" id="statProbCritical">1</span>
+                <span class="text-2xl font-black text-rose-700" id="statProbCritical">0</span>
                 <span class="text-xxs text-rose-600 font-medium">เคส</span>
               </div>
               <p class="text-xxs text-rose-500 mt-0.5">วิกฤตด่วน</p>
@@ -888,7 +875,7 @@
                 </div>
               </div>
               <div class="mt-2 flex items-baseline space-x-1">
-                <span class="text-2xl font-black text-amber-700" id="statProbHigh">10</span>
+                <span class="text-2xl font-black text-amber-700" id="statProbHigh">0</span>
                 <span class="text-xxs text-amber-600 font-medium">เคส</span>
               </div>
               <p class="text-xxs text-amber-600 mt-0.5">เร่งด่วนสูง</p>
@@ -903,7 +890,7 @@
                 </div>
               </div>
               <div class="mt-2 flex items-baseline space-x-1">
-                <span class="text-2xl font-black text-purple-700" id="statProbOverdue">2</span>
+                <span class="text-2xl font-black text-purple-700" id="statProbOverdue">0</span>
                 <span class="text-xxs text-purple-600 font-medium">เคส</span>
               </div>
               <p class="text-xxs text-purple-500 mt-0.5">เกินกำหนด</p>
@@ -918,7 +905,7 @@
                 </div>
               </div>
               <div class="mt-2 flex items-baseline space-x-1">
-                <span class="text-2xl font-black text-emerald-700" id="statProbNormal">4</span>
+                <span class="text-2xl font-black text-emerald-700" id="statProbNormal">0</span>
                 <span class="text-xxs text-emerald-600 font-medium">เคส</span>
               </div>
               <p class="text-xxs text-emerald-600 mt-0.5">ปกติ</p>
@@ -944,10 +931,10 @@
                   </span>
                 </div>
                 <div class="mt-2 flex items-baseline justify-center sm:justify-start space-x-1">
-                  <span class="text-xl font-black text-amber-900" id="statStatusTracking">14</span>
+                  <span class="text-xl font-black text-amber-900" id="statStatusTracking">0</span>
                   <span class="text-xxs text-amber-600">เคส</span>
                 </div>
-                <span class="text-xxxs text-amber-600/90 font-medium block mt-0.5">82% ของปัญหา</span>
+                <span class="text-xxxs text-amber-600/90 font-medium block mt-0.5" id="statStatusTrackingPct">0% ของปัญหา</span>
               </div>
 
               <!-- กำลังดำเนินการ -->
@@ -959,10 +946,10 @@
                   </span>
                 </div>
                 <div class="mt-2 flex items-baseline justify-center sm:justify-start space-x-1">
-                  <span class="text-xl font-black text-blue-900" id="statStatusAction">3</span>
+                  <span class="text-xl font-black text-blue-900" id="statStatusAction">0</span>
                   <span class="text-xxs text-blue-600">เคส</span>
                 </div>
-                <span class="text-xxxs text-blue-600/90 font-medium block mt-0.5">18% ของปัญหา</span>
+                <span class="text-xxxs text-blue-600/90 font-medium block mt-0.5" id="statStatusActionPct">0% ของปัญหา</span>
               </div>
 
               <!-- ต้องการ GM ช่วยเหลือ -->
@@ -974,7 +961,7 @@
                   </span>
                 </div>
                 <div class="mt-2 flex items-baseline justify-center sm:justify-start space-x-1">
-                  <span class="text-xl font-black text-rose-900" id="statNeedsGm">16</span>
+                  <span class="text-xl font-black text-rose-900" id="statNeedsGm">0</span>
                   <span class="text-xxs text-rose-600">เคส</span>
                 </div>
                 <span class="text-xxxs text-rose-600/90 font-medium block mt-0.5">ขอเข้า Support / อนุมัติ / แจ้ง</span>
@@ -989,10 +976,10 @@
                   </span>
                 </div>
                 <div class="mt-2 flex items-baseline justify-center sm:justify-start space-x-1">
-                  <span class="text-xl font-black text-slate-900" id="statBranchesWithProblems">9</span>
+                  <span class="text-xl font-black text-slate-900" id="statBranchesWithProblems">0</span>
                   <span class="text-xxs text-slate-500">สาขา</span>
                 </div>
-                <span class="text-xxxs text-slate-500 font-medium block mt-0.5">จาก 16 สาขาจริง</span>
+                <span class="text-xxxs text-slate-500 font-medium block mt-0.5" id="statBranchesTotalSub">จากข้อมูลชีทจริง</span>
               </div>
             </div>
           </div>
@@ -1014,7 +1001,7 @@
           <div class="relative flex items-center justify-center my-2" style="height: 165px;">
             <canvas id="problemsDonutChart"></canvas>
             <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-              <span class="text-2xl font-black text-slate-900 tracking-tight" id="chartCenterCount">17</span>
+              <span class="text-2xl font-black text-slate-900 tracking-tight" id="chartCenterCount">0</span>
               <span class="text-xxs font-bold text-slate-500 uppercase tracking-wider">เคสสำรวจจริง</span>
             </div>
           </div>
@@ -1034,7 +1021,7 @@
         <div class="p-4 border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-3 bg-slate-50/50">
           <div class="flex items-center space-x-2">
             <h3 class="text-sm sm:text-base font-bold text-slate-900">
-              รายการปัญหาหน้างาน (<span id="statCasesCount">17</span> เคส)
+              รายการปัญหาหน้างาน (<span id="statCasesCount">0</span> เคส)
             </h3>
             <span id="activeFilterBadge" class="hidden text-xxs px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 font-semibold cursor-pointer"></span>
           </div>
@@ -1099,13 +1086,13 @@
             </div>
             <div class="flex items-center space-x-2">
               <span class="text-sm sm:text-base font-black text-slate-900">รายละเอียดปัญหาเคส :</span>
-              <span class="text-sm sm:text-base font-black text-blue-700 font-mono tracking-wide" id="detailCaseCode">PR-01</span>
+              <span class="text-sm sm:text-base font-black text-blue-700 font-mono tracking-wide" id="detailCaseCode">-</span>
             </div>
-            <span id="detailRiskBadge" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-800">
-              🔴 Critical
+            <span id="detailRiskBadge" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-600">
+              รอข้อมูล
             </span>
-            <span id="detailStatusBadge" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800">
-              กำลังติดตาม
+            <span id="detailStatusBadge" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-600">
+              -
             </span>
           </div>
 
@@ -1129,15 +1116,15 @@
               <div class="space-y-2.5 text-xs">
                 <div class="flex justify-between items-center py-1 border-b border-slate-50">
                   <span class="text-slate-400 text-xxs font-medium">สาขาที่เกิดเหตุ</span>
-                  <span class="font-bold text-slate-900" id="detailBranch">สาขารัตนาธิเบศร์</span>
+                  <span class="font-bold text-slate-900" id="detailBranch">-</span>
                 </div>
                 <div class="flex justify-between items-center py-1 border-b border-slate-50">
                   <span class="text-slate-400 text-xxs font-medium">ผู้จัดการเขต (ผจก)</span>
-                  <span class="font-bold text-slate-800" id="detailManager">กาญจน์</span>
+                  <span class="font-bold text-slate-800" id="detailManager">-</span>
                 </div>
                 <div class="flex justify-between items-center py-1 border-b border-slate-50">
                   <span class="text-slate-400 text-xxs font-medium">หมวดหมู่ปัญหา</span>
-                  <span class="font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded text-xxs" id="detailCategory">บัญชี</span>
+                  <span class="font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded text-xxs" id="detailCategory">-</span>
                 </div>
               </div>
             </div>
@@ -1157,13 +1144,13 @@
               <div class="space-y-2 text-xs">
                 <span class="text-slate-400 text-xxs font-bold block">ประเด็นปัญหา (Subject)</span>
                 <div class="bg-white p-3 rounded-xl border border-slate-200/90 shadow-2xs">
-                  <p class="font-bold text-slate-900 text-sm leading-snug" id="detailSubject">งานระบบ</p>
+                  <p class="font-bold text-slate-900 text-sm leading-snug" id="detailSubject">-</p>
                 </div>
                 <div class="pt-2">
                   <span class="text-slate-400 text-xxs font-bold block mb-1">ระดับความเร่งด่วน</span>
                   <div id="detailUrgencyBadgeContainer">
-                    <span class="inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-rose-100 text-rose-800">
-                      <span>🔴 Critical</span>
+                    <span class="inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 text-slate-600">
+                      <span>รอข้อมูล</span>
                     </span>
                   </div>
                 </div>
@@ -1184,14 +1171,14 @@
                   <div class="p-2.5 rounded-xl bg-amber-50/80 border border-amber-200">
                     <p class="font-bold text-amber-900 text-xs flex items-center space-x-1.5" id="detailNeedsGmHelp">
                       <i data-lucide="bell" class="w-4 h-4 text-amber-600"></i>
-                      <span>แจ้งให้ทราบ</span>
+                      <span>-</span>
                     </p>
                   </div>
                 </div>
                 <div>
                   <span class="text-slate-400 text-xxs font-bold block mb-1">สถานะต่อ GM</span>
                   <p class="text-xs font-semibold text-slate-700" id="detailGmStatusText">
-                    🚨 มีการส่งเรื่องถึง GM เพื่อรับทราบ/สนับสนุน
+                    กำลังดึงข้อมูลจาก Google Sheets...
                   </p>
                 </div>
               </div>
@@ -1213,9 +1200,9 @@
                 <!-- Status Box -->
                 <div class="flex items-center justify-between p-2.5 bg-slate-50 rounded-xl border border-slate-100">
                   <span class="text-xxs font-bold text-slate-500">สถานะปัจจุบัน:</span>
-                  <div class="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 font-bold text-xs" id="detailCurrentStatusContainer">
+                  <div class="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 font-bold text-xs" id="detailCurrentStatusContainer">
                     <i data-lucide="hourglass" class="w-3 h-3"></i>
-                    <span id="detailCurrentStatusText">กำลังติดตาม</span>
+                    <span id="detailCurrentStatusText">-</span>
                   </div>
                 </div>
 
@@ -1223,10 +1210,10 @@
                 <div class="bg-amber-50/70 rounded-xl p-2.5 border border-amber-200/80">
                   <span class="text-amber-900 text-xxs font-bold block mb-1 flex items-center space-x-1">
                     <i data-lucide="alert-triangle" class="w-3 h-3 text-amber-600"></i>
-                    <span>ผลกระทบด้าน <span id="detailCategoryNameLabel">งานระบบ</span></span>
+                    <span>ผลกระทบด้าน <span id="detailCategoryNameLabel">-</span></span>
                   </span>
                   <p class="text-amber-950 text-xxs leading-relaxed font-medium" id="detailCategoryImpactText">
-                    ส่งผลต่อความพร้อมในการให้บริการของสาขา ต้องติดตามแก้ไขเพื่อไม่ให้กระทบมาตรฐาน
+                    -
                   </p>
                 </div>
 
@@ -1234,14 +1221,14 @@
                 <div class="bg-slate-50 rounded-xl p-2.5 border border-slate-200/70">
                   <span class="text-slate-500 text-xxs font-bold block mb-1">ภาพรวมปัญหาในสาขานี้:</span>
                   <p class="text-slate-800 text-xxs leading-snug font-medium" id="detailBranchContextText">
-                    สาขารัตนาธิเบศร์ พบทั้งหมด 2 ปัญหาในรอบปัจจุบัน
+                    -
                   </p>
                 </div>
               </div>
             </div>
             <div class="mt-3 pt-2 border-t border-slate-100 flex justify-between items-center text-xs">
               <span class="text-slate-400 text-xxs font-medium">ผู้ดูแลในเขต:</span>
-              <span class="font-bold text-slate-900 text-xxs sm:text-xs" id="detailAssignee">ผจก. กาญจน์</span>
+              <span class="font-bold text-slate-900 text-xxs sm:text-xs" id="detailAssignee">-</span>
             </div>
           </div>
 
@@ -1403,7 +1390,7 @@
   </main>
 
   <!-- ===================================================================== -->
-  <!-- SETTINGS & API CONNECTION MODAL -->
+  <!-- SETTINGS & API CONNECTION MODAL (LIVE GOOGLE SHEETS ONLY) -->
   <!-- ===================================================================== -->
   <div id="settingsModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 relative">
@@ -1420,22 +1407,20 @@
       </div>
 
       <div class="mt-4 space-y-4">
-        <div>
-          <label class="block text-xs font-semibold text-slate-700 mb-1">โหมดการทำงาน (Data Mode)</label>
-          <div class="grid grid-cols-2 gap-3">
-            <button onclick="setDataSourceMode('mock')" id="btnModeMock" class="px-3 py-2 text-xs font-medium rounded-xl border border-blue-500 bg-blue-50 text-blue-700">
-              🎯 ข้อมูลจำลอง (Demo Mode)
-            </button>
-            <button onclick="setDataSourceMode('live')" id="btnModeLive" class="px-3 py-2 text-xs font-medium rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50">
-              🌐 Google Sheet API (Live)
-            </button>
-          </div>
+        <div class="p-3 rounded-xl border border-emerald-200 bg-emerald-50/70 flex items-center justify-between">
+          <span class="text-xs font-bold text-emerald-900 flex items-center space-x-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>โหมดการทำงาน: ดึงข้อมูลจริงจาก Google Sheet เท่านั้น (100% Live API)</span>
+          </span>
         </div>
 
-        <div id="gasUrlContainer" class="space-y-1">
-          <label class="block text-xs font-semibold text-slate-700">Google Apps Script Web App URL:</label>
+        <div id="gasUrlContainer" class="space-y-1.5">
+          <div class="flex items-center justify-between">
+            <label class="block text-xs font-semibold text-slate-700">Google Apps Script Web App URL:</label>
+            <button type="button" onclick="resetDefaultApiUrl()" class="text-xxs font-semibold text-blue-600 hover:underline">รีเซ็ตค่าเริ่มต้น</button>
+          </div>
           <input type="url" id="gasApiUrlInput" value="https://script.google.com/macros/s/AKfycbw4qlxCBJYp_ALB4pApdnrW_t42KsnEH6BC9xn5YAKHjdbeYE7y_nnRYWqWvfpBvnzvdw/exec" placeholder="https://script.google.com/macros/s/.../exec" class="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
-          <p class="text-xxs text-slate-400">URL ที่ได้จากการ Deploy -> New deployment -> Web app ใน Google Apps Script</p>
+          <p class="text-xxs text-slate-400">URL ที่ได้จากการ Deploy -&gt; New deployment -&gt; Web app ใน Google Apps Script</p>
         </div>
 
         <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 text-xxs text-slate-600 space-y-1">
@@ -1475,130 +1460,6 @@
     </div>
   </div>
 
-  <!-- CREATE PROBLEM REPORT MODAL -->
-  <div id="createProblemModal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 hidden">
-    <div class="bg-white rounded-3xl max-w-xl w-full p-5 sm:p-6 shadow-2xl border border-slate-200 max-h-[92vh] overflow-y-auto custom-scrollbar">
-      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-        <div class="flex items-center space-x-2.5">
-          <div class="w-9 h-9 rounded-xl bg-slate-900 text-sky-400 flex items-center justify-center font-bold">
-            <i data-lucide="plus-circle" class="w-5 h-5"></i>
-          </div>
-          <div>
-            <h3 class="font-bold text-slate-900 text-base">สร้าง Problem Report</h3>
-            <p class="text-xxs text-slate-500">รายงานปัญหาใหม่เพื่อบันทึกและติดตามผลในระบบ</p>
-          </div>
-        </div>
-        <button onclick="closeCreateProblemModal()" class="text-slate-400 hover:text-slate-600 p-1">
-          <i data-lucide="x" class="w-5 h-5"></i>
-        </button>
-      </div>
-
-      <form onsubmit="handleCreateProblemSubmit(event)" class="mt-4 space-y-3.5 text-xs">
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label class="block font-bold text-slate-700 mb-1">สาขาที่เกิดเหตุ *</label>
-            <select id="newProbBranch" required class="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none">
-              <!-- Populated dynamically -->
-            </select>
-          </div>
-          <div>
-            <label class="block font-bold text-slate-700 mb-1">ผู้จัดการผู้ดูแล *</label>
-            <select id="newProbManager" required class="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none">
-              <!-- Populated dynamically -->
-            </select>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label class="block font-bold text-slate-700 mb-1">ระดับความเสี่ยง (Risk) *</label>
-            <select id="newProbRisk" required class="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none font-semibold">
-              <option value="Critical">🔴 Critical (วิกฤติ/เร่งด่วนที่สุด)</option>
-              <option value="Moderate" selected>🟡 Moderate (ปานกลาง)</option>
-              <option value="Low">🟢 Low (ต่ำ/ทั่วไป)</option>
-            </select>
-          </div>
-          <div>
-            <label class="block font-bold text-slate-700 mb-1">สถานะเริ่มต้น *</label>
-            <select id="newProbStatus" required class="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none font-semibold">
-              <option value="Open">Open (เปิดเคสใหม่)</option>
-              <option value="In Progress" selected>In Progress (กำลังดำเนินการ)</option>
-              <option value="Pending">Pending (รอติดตาม)</option>
-            </select>
-          </div>
-        </div>
-
-        <div>
-          <label class="block font-bold text-slate-700 mb-1">หัวเรื่อง/ปัญหาโดยสรุป *</label>
-          <input type="text" id="newProbSubject" required placeholder="ระบุอาการหรือหัวเรื่องปัญหา เช่น เครื่องมือแพทย์ขัดข้อง, ลูกค้าร้องเรียน..." class="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none">
-        </div>
-
-        <div>
-          <label class="block font-bold text-slate-700 mb-1">ผลกระทบที่เกิดขึ้น (Impact)</label>
-          <textarea id="newProbImpact" rows="2" placeholder="เช่น กระทบต่อระยะเวลารอคอย หรือความพึงพอใจของลูกค้า..." class="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none"></textarea>
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label class="block font-bold text-slate-700 mb-1">Immediate Action (ทำแล้ว)</label>
-            <textarea id="newProbImmediate" rows="2" placeholder="ระบุการช่วยเหลือเบื้องต้นทันที..." class="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none"></textarea>
-          </div>
-          <div>
-            <label class="block font-bold text-slate-700 mb-1">Next Action (แผนถัดไป)</label>
-            <textarea id="newProbNext" rows="2" placeholder="ระบุแผนการติดตามผลหรือแก้ไขระยะยาว..." class="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none"></textarea>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label class="block font-bold text-slate-700 mb-1">กำหนดปิดเคส (Due Date) *</label>
-            <input type="text" id="newProbDueDate" required value="15 พ.ย. 67" placeholder="เช่น 15 พ.ย. 67" class="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none font-semibold">
-          </div>
-          <div>
-            <label class="block font-bold text-slate-700 mb-1">ต้องการ GM ช่วยเหลือหรือไม่</label>
-            <select id="newProbNeedsGm" class="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none">
-              <option value="-">ไม่ต้องการ (สาขาจัดการได้)</option>
-              <option value="ต้องการ">🚨 ต้องการ GM ช่วยเหลือ</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="mt-5 flex items-center justify-end space-x-2 pt-3 border-t border-slate-100">
-          <button type="button" onclick="closeCreateProblemModal()" class="px-4 py-2 font-medium text-slate-600 hover:text-slate-800 bg-slate-100 rounded-xl">ยกเลิก</button>
-          <button type="submit" class="px-5 py-2 font-bold text-white bg-slate-900 hover:bg-slate-800 active:scale-95 rounded-xl shadow-md">บันทึกรายงานปัญหา</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- PROBLEM HISTORY MODAL -->
-  <div id="problemHistoryModal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 hidden">
-    <div class="bg-white rounded-3xl max-w-lg w-full p-5 sm:p-6 shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto custom-scrollbar">
-      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-        <div class="flex items-center space-x-2.5">
-          <div class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
-            <i data-lucide="history" class="w-5 h-5"></i>
-          </div>
-          <div>
-            <h3 class="font-bold text-slate-900 text-base">ประวัติการอัปเดตเคส</h3>
-            <p class="text-xxs text-slate-500" id="histModalCaseSubtitle">รหัสเคส: PR-0068</p>
-          </div>
-        </div>
-        <button onclick="closeProblemHistoryModal()" class="text-slate-400 hover:text-slate-600 p-1">
-          <i data-lucide="x" class="w-5 h-5"></i>
-        </button>
-      </div>
-
-      <div class="mt-4 space-y-3" id="problemHistoryList">
-        <!-- Rendered dynamically -->
-      </div>
-
-      <div class="mt-5 pt-3 border-t border-slate-100 flex justify-end">
-        <button onclick="closeProblemHistoryModal()" class="px-4 py-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl">ปิด</button>
-      </div>
-    </div>
-  </div>
-
   <!-- ===================================================================== -->
   <!-- 📱 MOBILE BOTTOM SHEET DRAWER (เลื่อนขึ้นจากล่างจอทันทีที่แตะเคส) -->
   <!-- ===================================================================== -->
@@ -1610,9 +1471,9 @@
       <div class="w-12 h-1.5 bg-slate-300 rounded-full mb-2"></div>
       <div class="w-full flex items-center justify-between">
         <div class="flex items-center space-x-2">
-          <span class="font-mono font-black text-sm text-blue-700" id="drawerCaseCode">PR-0068</span>
-          <span id="drawerRiskBadge" class="px-2.5 py-0.5 rounded-full text-xxs font-bold bg-rose-100 text-rose-800">🔴 Critical</span>
-          <span id="drawerStatusBadge" class="px-2.5 py-0.5 rounded-full text-xxs font-bold bg-amber-100 text-amber-800">Pending</span>
+          <span class="font-mono font-black text-sm text-blue-700" id="drawerCaseCode">-</span>
+          <span id="drawerRiskBadge" class="px-2.5 py-0.5 rounded-full text-xxs font-bold bg-slate-100 text-slate-600">-</span>
+          <span id="drawerStatusBadge" class="px-2.5 py-0.5 rounded-full text-xxs font-bold bg-slate-100 text-slate-600">-</span>
         </div>
         <button onclick="closeCaseBottomSheet()" class="p-1.5 rounded-full bg-slate-200/70 text-slate-600 hover:text-slate-900 transition">
           <i data-lucide="x" class="w-4 h-4"></i>
@@ -1620,18 +1481,14 @@
       </div>
     </div>
 
-    <!-- Scrollable Content: 4 Block Columns + Timeline inside the Bottom Sheet -->
+    <!-- Scrollable Content: 4 Block Columns inside the Bottom Sheet -->
     <div class="overflow-y-auto p-4 space-y-4 custom-scrollbar flex-1 bg-slate-50/40" id="drawerContent">
-      <!-- Cloned or rendered dynamically -->
+      <!-- Rendered dynamically from live Google Sheets data -->
     </div>
 
     <!-- Bottom Actions Bar -->
-    <div class="p-3 bg-white border-t border-slate-200 flex items-center justify-between gap-2.5 flex-shrink-0">
-      <button onclick="openProblemHistoryModal()" class="flex-1 py-2.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition flex items-center justify-center space-x-1.5">
-        <i data-lucide="history" class="w-3.5 h-3.5 text-blue-600"></i>
-        <span>ประวัติการอัปเดต</span>
-      </button>
-      <button onclick="closeCaseBottomSheet()" class="flex-1 py-2.5 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 active:scale-95 rounded-xl transition shadow">
+    <div class="p-3 bg-white border-t border-slate-200 flex items-center justify-end gap-2.5 flex-shrink-0">
+      <button onclick="closeCaseBottomSheet()" class="w-full py-2.5 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 active:scale-95 rounded-xl transition shadow">
         ปิดหน้าต่างนี้
       </button>
     </div>
@@ -1640,12 +1497,12 @@
   <!-- JAVASCRIPT LOGIC -->
   <script>
     // =========================================================================
-    // 1. STATE & STORAGE
+    // 1. STATE & STORAGE (100% LIVE GOOGLE SHEETS ONLY - NO MOCK DATA)
     // =========================================================================
     const DEFAULT_LIVE_API_URL = 'https://script.google.com/macros/s/AKfycbw4qlxCBJYp_ALB4pApdnrW_t42KsnEH6BC9xn5YAKHjdbeYE7y_nnRYWqWvfpBvnzvdw/exec';
     let storedUrl = localStorage.getItem('gm_gas_api_url') || DEFAULT_LIVE_API_URL;
     localStorage.setItem('gm_gas_api_url', storedUrl);
-    localStorage.setItem('gm_dashboard_mode', 'live');
+    localStorage.removeItem('gm_dashboard_mode');
 
     // Chart.js DataLabels Plugin Setup
     if (typeof ChartDataLabels !== 'undefined') {
@@ -1655,7 +1512,6 @@
     }
 
     let dashboardState = {
-      mode: 'live', // Default to live online mode
       apiUrl: storedUrl,
       currentPeriodIndex: 0,
       data: null,
@@ -1671,204 +1527,14 @@
       problemFilterBranch: 'ALL',
       problemFilterManager: 'ALL',
       problemFilterCategory: 'ALL',
-      selectedProblemCode: 'PR-01',
-      problemNeedsGmOnly: false,
+      selectedProblemCode: null,
       problemNeedsGmOnly: false
     };
 
-    // 12 รายชื่อผู้จัดการตามโค้ดเดิม
-    const MANAGERS = ["กาญจน์", "นัท", "ซอฟ", "ลูกกุ้ง", "อัจ", "รัตน์", "อี้", "หมิว", "จาเน่", "โชว์", "เปีย", "ส้มโอ"];
-
     // =========================================================================
-    // 2. MOCK DATA GENERATOR (สมจริงตามโครงสร้าง Google Sheet ของผู้ใช้)
+    // 2. DATA SANITIZATION (กรองเฉพาะข้อมูลจริงจาก Google Sheets 100% ไม่มี Mockup)
     // =========================================================================
-    function generateMockData(periodIndex) {
-      const titles = ["1-10", "11-20", "21-31"];
-      const thaiMonths = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
-      const currentMonth = 9; // ตุลาคม
-      const yearTh = 2567;
-
-      const sampleBranches = [
-        "สาขา สยามสแควร์", "สาขา เซ็นทรัลลาดพร้าว", "สาขา พระราม 9", "สาขา เมกาบางนา", 
-        "สาขา ฟิวเจอร์พาร์ค", "สาขา ขอนแก่น", "สาขา เชียงใหม่", "สาขา ภูเก็ต",
-        "สาขา พัทยา", "สาขา โคราช", "สาขา บางแค", "สาขา รังสิต"
-      ];
-
-      let managersList = [];
-      let allProblems = [];
-      let totalMeetings = 0;
-      let totalBranches = 0;
-      let kpiGreen = 0, kpiYellow = 0, kpiRed = 0;
-
-      MANAGERS.forEach((name, idx) => {
-        // Meeting (เป้า 8)
-        const meetingsCount = Math.floor(Math.random() * 5) + 5; // 5-9 ครั้ง
-        totalMeetings += meetingsCount;
-        const compliance = Math.round((meetingsCount / 8) * 100);
-        const meetingDates = [];
-        for (let i = 1; i <= meetingsCount; i++) {
-          meetingDates.push(`10/${String(i * 3).padStart(2, '0')}/${yearTh}`);
-        }
-
-        // Branches for this manager
-        const bCount = Math.floor(Math.random() * 2) + 1; // 1-2 สาขา
-        let branches = [];
-        let pRed = 0, pYellow = 0, pPurple = 0;
-
-        for (let b = 0; b < bCount; b++) {
-          totalBranches++;
-          const branchName = sampleBranches[(idx * 2 + b) % sampleBranches.length];
-          
-          // KPIs
-          const targetRevVal = (Math.floor(Math.random() * 50) + 100) * 10000;
-          const actualRevVal = Math.round(targetRevVal * (0.85 + Math.random() * 0.3));
-          let revStatus = "green";
-          let revCriteria = "มีโอกาสเป็นไปตามเป้า";
-          if (actualRevVal < targetRevVal * 0.9) {
-            revStatus = "red";
-            revCriteria = "มีโอกาสเป็นไม่เป็นไปตามเป้า";
-            kpiRed++;
-          } else if (actualRevVal < targetRevVal * 0.98) {
-            revStatus = "yellow";
-            revCriteria = "เสี่ยงต่ำกว่าเป้าหมาย";
-            kpiYellow++;
-          } else {
-            kpiGreen++;
-          }
-
-          const kpis = [
-            { title: "Target Revenue", rawTitle: "Target Revenue", subTitle: "เป้ายอดขาย", value: actualRevVal.toLocaleString() + " ฿", criteria: revCriteria, status: revStatus },
-            { title: "NRM", rawTitle: "New Case Management", subTitle: "ลูกค้าใหม่", value: String(Math.floor(Math.random() * 40) + 20), criteria: "-", status: "pending" },
-            { title: "CRM", rawTitle: "CRM Follow up", subTitle: "ติดตามลูกค้า", value: String(Math.floor(Math.random() * 80) + 50), criteria: revCriteria, status: revStatus }
-          ];
-
-          // Problems for branch
-          const hasProb = Math.random() > 0.4;
-          let probObj = { red: 0, yellow: 0, purple: 0 };
-          if (hasProb) {
-            const urgencies = ["Critical", "High", "Overdue"];
-            const chosenUrgency = urgencies[Math.floor(Math.random() * urgencies.length)];
-            const needsGm = Math.random() > 0.5 ? "ต้องการ" : "-";
-            const subjects = ["สต็อกสินค้าไม่พอส่งเสริมการขาย", "ระบบ POS ขัดข้องช่วงชั่วโมงเร่งด่วน", "พนักงานลาออกกะทันหัน", "ยอดขายตกจากฝนตกหนัก"];
-            const subj = subjects[Math.floor(Math.random() * subjects.length)];
-            
-            if (chosenUrgency === 'Critical') { pRed++; probObj.red++; }
-            if (chosenUrgency === 'High') { pYellow++; probObj.yellow++; }
-            if (chosenUrgency === 'Overdue') { pPurple++; probObj.purple++; }
-
-            allProblems.push({
-              manager: name,
-              branch: branchName,
-              urgency: chosenUrgency,
-              urgencyType: chosenUrgency.toLowerCase(),
-              needsGmHelp: needsGm,
-              status: "กำลังประสานงาน",
-              category: "Operations",
-              subject: subj
-            });
-          }
-
-          branches.push({
-            name: branchName,
-            manager: name,
-            kpis: kpis,
-            status: revStatus,
-            problems: probObj
-          });
-        }
-
-        managersList.push({
-          manager: name,
-          actualMeetings: meetingsCount,
-          expectedMeetings: 8,
-          meetingDates: meetingDates,
-          compliance: compliance,
-          meetingStatus: meetingsCount >= 8 ? "green" : "red",
-          branches: branches,
-          allBranchNames: branches.map(b => b.name),
-          busStatus: branches.some(b => b.status === 'red') ? 'red' : (branches.some(b => b.status === 'yellow') ? 'yellow' : 'green'),
-          totalProblems: { red: pRed, yellow: pYellow, purple: pPurple, total: pRed + pYellow + pPurple }
-        });
-      });
-
-                  allProblems = [];
-
-      // Mock Accounting Data
-      let accountingBranches = [
-        { branch: "สาขา สยามสแควร์", totalAmount: 48500 },
-        { branch: "สาขา พระราม 9", totalAmount: 39200 },
-        { branch: "สาขา เมกาบางนา", totalAmount: 31000 },
-        { branch: "สาขา เชียงใหม่", totalAmount: 24800 },
-        { branch: "สาขา ฟิวเจอร์พาร์ค", totalAmount: 18500 }
-      ];
-      let totalWd = accountingBranches.reduce((sum, b) => sum + b.totalAmount, 0);
-
-      let dailyWithdrawals = [];
-      for (let day = 1; day <= 28; day += 2) {
-        const dStr = `${String(day).padStart(2, '0')}/10/${yearTh}`;
-        dailyWithdrawals.push({
-          date: dStr,
-          totalAmount: Math.floor(Math.random() * 8000) + 1500,
-          count: Math.floor(Math.random() * 3) + 1
-        });
-      }
-
-      let accountingDetails = [
-        { id: 1, date: `02/10/${yearTh}`, branch: "สาขา สยามสแควร์", name: "อุปกรณ์ทำความสะอาด & ถุงขยะ", amount: 2400 },
-        { id: 2, date: `05/10/${yearTh}`, branch: "สาขา พระราม 9", name: "ซ่อมบำรุงเครื่องปรับอากาศ", amount: 8500 },
-        { id: 3, date: `08/10/${yearTh}`, branch: "สาขา เมกาบางนา", name: "ค่าส่งพัสดุด่วนเอกสารบัญชี", amount: 450 },
-        { id: 4, date: `12/10/${yearTh}`, branch: "สาขา เชียงใหม่", name: "อุปกรณ์สำนักงาน กระดาษ A4 หมึกพิมพ์", amount: 3200 },
-        { id: 5, date: `15/10/${yearTh}`, branch: "สาขา สยามสแควร์", name: "เปลี่ยนหลอดไฟและสปอตไลท์หน้าร้าน", amount: 4200 },
-        { id: 6, date: `18/10/${yearTh}`, branch: "สาขา ฟิวเจอร์พาร์ค", name: "ค่าน้ำดื่มรับรองลูกค้า", amount: 1500 }
-      ];
-
-      return {
-        periodInfo: {
-          index: periodIndex,
-          title: titles[periodIndex],
-          month: currentMonth,
-          monthName: thaiMonths[currentMonth],
-          yearTh: yearTh,
-          displayText: `${thaiMonths[currentMonth]} ${yearTh} (รอบ ${titles[periodIndex]})`
-        },
-        gmReport: {
-          summary: {
-            totalManagers: MANAGERS.length,
-            totalBranches: totalBranches,
-            totalMeetingsDone: totalMeetings,
-            totalMeetingsExpected: MANAGERS.length * 8,
-            meetingComplianceAvg: Math.round((totalMeetings / (MANAGERS.length * 8)) * 100),
-            problems: {
-              critical: allProblems.filter(p => p.urgencyType === 'critical').length,
-              high: allProblems.filter(p => p.urgencyType === 'high').length,
-              overdue: allProblems.filter(p => p.urgencyType === 'overdue').length,
-              total: allProblems.length
-            },
-            kpiStatusCount: { green: kpiGreen, yellow: kpiYellow, red: kpiRed, pending: 0 }
-          },
-          managers: managersList,
-          problemsList: allProblems
-        },
-        accounting: {
-          title: `รายงานการเบิก ประจำเดือน ${thaiMonths[currentMonth]} ${yearTh}`,
-          totalAmount: totalWd,
-          branchesCount: accountingBranches.length,
-          branchList: accountingBranches,
-          dailyList: dailyWithdrawals,
-          details: accountingDetails
-        }
-      };
-    }
-
-    // =========================================================================
-    // 3. FETCH & LOAD DATA
-        // =========================================================================
-    // 3. FETCH & LOAD DATA (⚡ INSTANT STALE-WHILE-REVALIDATE: โหลดทันที 0.01 วิ)
-    // =========================================================================
-        // =========================================================================
-    // 1.5 DATA SANITIZATION (กรองเฉพาะข้อมูลจริงจาก Google Sheets 100% ไม่มี Mockup)
-    // =========================================================================
-function isInvalidBranchName(name) {
+    function isInvalidBranchName(name) {
       if (!name || typeof name !== 'string') return true;
       const t = name.trim();
       if (t === '' || t === '-' || t.toLowerCase() === 'undefined') return true;
@@ -1888,7 +1554,7 @@ function isInvalidBranchName(name) {
     function sanitizeDashboardData(data) {
       if (!data || !data.gmReport) return data;
 
-      // 1. ลบสาขาผีที่เป็นวันที่ (Sat Jan 10 2026...) ออกจากทุกผู้จัดการ
+      // 1. ลบสาขาผีที่เป็นวันที่ (Sat Jan 10 2026...) และตัวเลขหัวคอลัมน์วันที่ (เช่น 46032) ออกจากทุกผู้จัดการ
       let validBranchesCount = 0;
       let kpiGreen = 0, kpiYellow = 0, kpiRed = 0, kpiPending = 0;
 
@@ -1900,6 +1566,9 @@ function isInvalidBranchName(name) {
             validBranchesCount += m.branches.length;
 
             m.branches.forEach(b => {
+              if (Array.isArray(b.kpis)) {
+                b.kpis = b.kpis.filter(k => k && k.title && !/^\d+$/.test(String(k.title).trim()));
+              }
               if (b.status === 'green') kpiGreen++;
               else if (b.status === 'yellow') kpiYellow++;
               else if (b.status === 'red') kpiRed++;
@@ -1919,7 +1588,7 @@ function isInvalidBranchName(name) {
         };
       }
 
-      // 2. จัดระเบียบข้อมูลปัญหาสำรวจจริง (17 เคส) ให้มีรหัส PR-01, PR-02 ชัดเจน
+      // 2. จัดระเบียบข้อมูลปัญหาสำรวจจริงจาก Google Sheet ให้มีรหัส PR-01, PR-02 ชัดเจน
       if (Array.isArray(data.gmReport.problemsList)) {
         data.gmReport.problemsList = data.gmReport.problemsList.filter(p => p && (p.branch || p.subject));
         data.gmReport.problemsList.forEach((p, idx) => {
@@ -1950,8 +1619,6 @@ function isInvalidBranchName(name) {
             p.isNeedGm = p.needsGmHelp !== '-';
           }
           // ดึงข้อมูลเนื้อหาปัญหา และการแก้ไขปัญหาจาก Google Sheets / API (ตรงตามหัวคอลัมน์ "เนื้อหา" และ "การแก้ไขปัญหา")
-          // ใช้เฉพาะฟิลด์ที่ Google Sheet ส่งมาจริงเท่านั้น (คอลัมน์ H = เนื้อหา, คอลัมน์ I = การแก้ไขปัญหา)
-          // ไม่อ่าน p.problemDetail / p.initialFix เดิม เพื่อไม่ให้ข้อมูลเก่าในแคชย้อนกลับมาแสดง
           const realDetail = p['เนื้อหา'] || p.content || '';
           const realFix = p['การแก้ไขปัญหา'] || p.solution || '';
           p.problemDetail = String(realDetail).trim() || '-';
@@ -1978,12 +1645,15 @@ function isInvalidBranchName(name) {
       return data;
     }
 
+    // =========================================================================
+    // 3. FETCH & LOAD DATA (100% LIVE GOOGLE SHEETS ONLY)
+    // =========================================================================
     async function fetchDashboardData(isForcedRefresh = false) {
       const refreshIcon = document.getElementById('refreshIcon');
       if (refreshIcon) refreshIcon.classList.add('animate-spin');
 
-      // Clear old caches with legacy mock data
-      const CACHE_PREFIX = 'gm_dash_cache_v6_real_p';
+      // Clear any older cache versions
+      const CACHE_PREFIX = 'gm_dash_cache_v7_live_p';
       try {
         Object.keys(localStorage)
           .filter(k => k.startsWith('gm_dash_cache') && !k.startsWith(CACHE_PREFIX))
@@ -1992,7 +1662,7 @@ function isInvalidBranchName(name) {
       const cacheKey = CACHE_PREFIX + dashboardState.currentPeriodIndex;
       let hasLocalCache = false;
 
-      // ⚡ ขั้นตอนที่ 1: ตรวจสอบแคชในเบราว์เซอร์ ถ้ามี แสดงผลทันทีใน 0.01 วินาที! ไม่ต้องรอ!
+      // ⚡ ขั้นตอนที่ 1: ตรวจสอบแคชข้อมูลจริงจาก Google Sheet ในเบราว์เซอร์
       if (!isForcedRefresh) {
         try {
           const cachedStr = localStorage.getItem(cacheKey);
@@ -2001,7 +1671,7 @@ function isInvalidBranchName(name) {
             if (parsed && parsed.gmReport) {
               dashboardState.data = sanitizeDashboardData(parsed);
               renderDashboard();
-              hideGlobalLoader(); // ปิดหน้าจอโหลดทันที ผู้ใช้เห็นข้อมูลเลย!
+              hideGlobalLoader();
               hasLocalCache = true;
             }
           }
@@ -2010,7 +1680,6 @@ function isInvalidBranchName(name) {
         }
       }
 
-      // ถ้ายังไม่เคยมีแคชเลย (เปิดเว็บครั้งแรกสุด) ให้แสดงหน้า Loading
       if (!hasLocalCache) {
         showGlobalLoader('กำลังเชื่อมต่อ Google Sheets...', 'ตรวจสอบประวัติการประชุมในเดือน และรายการปัญหาทุกสาขา...');
       }
@@ -2020,7 +1689,6 @@ function isInvalidBranchName(name) {
         // กรณี A: เปิดใช้งานบน Google Apps Script Web App
         // -------------------------------------------------------------
         if (typeof google !== 'undefined' && google.script && google.script.run) {
-          dashboardState.mode = 'live';
           google.script.run
             .withSuccessHandler(function(serverData) {
               if (serverData) {
@@ -2044,36 +1712,29 @@ function isInvalidBranchName(name) {
         }
 
         // -------------------------------------------------------------
-        // กรณี B: เปิดไฟล์บนคอมพิวเตอร์ / เบราว์เซอร์ เชื่อมต่อผ่าน API
+        // กรณี B: เชื่อมต่อผ่าน Google Apps Script Web App API URL (Live Only)
         // -------------------------------------------------------------
-        if (dashboardState.mode === 'live' && dashboardState.apiUrl) {
-          let fetchUrl = `${dashboardState.apiUrl}?action=api&period=${dashboardState.currentPeriodIndex}`;
-          if (isForcedRefresh) fetchUrl += '&refresh=true';
+        const activeApiUrl = dashboardState.apiUrl || DEFAULT_LIVE_API_URL;
+        let fetchUrl = `${activeApiUrl}?action=api&period=${dashboardState.currentPeriodIndex}`;
+        if (isForcedRefresh) fetchUrl += '&refresh=true';
 
-          const response = await fetch(fetchUrl);
-          const result = await response.json();
-          if (result.status === 'success') {
-            dashboardState.data = sanitizeDashboardData(result.data);
-            localStorage.setItem(cacheKey, JSON.stringify(dashboardState.data));
-            renderDashboard();
-          } else {
-            throw new Error(result.message || 'API Error');
-          }
-        } else {
-          // -------------------------------------------------------------
-          // กรณี C: Demo Mode
-          // -------------------------------------------------------------
-          await new Promise(r => setTimeout(r, 100));
-          dashboardState.data = sanitizeDashboardData(generateMockData(dashboardState.currentPeriodIndex));
+        const response = await fetch(fetchUrl);
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        const result = await response.json();
+        if (result.status === 'success' && result.data) {
+          dashboardState.data = sanitizeDashboardData(result.data);
+          localStorage.setItem(cacheKey, JSON.stringify(dashboardState.data));
           renderDashboard();
+        } else {
+          throw new Error(result.message || 'API Error');
         }
 
       } catch (err) {
         console.error('Fetch Data Error:', err);
         if (!hasLocalCache) {
-          alert(`เกิดข้อผิดพลาดในการเชื่อมต่อ Google Sheets: ${err.message}\nระบบจะแสดงข้อมูลตัวอย่างชั่วคราว`);
-          dashboardState.data = sanitizeDashboardData(generateMockData(dashboardState.currentPeriodIndex));
-          renderDashboard();
+          alert(`ไม่สามารถเชื่อมต่อดึงข้อมูลจาก Google Sheets ได้: ${err.message}\nกรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต หรือตั้งค่า URL ของ Google Apps Script API`);
         }
       } finally {
         if (refreshIcon) setTimeout(() => refreshIcon.classList.remove('animate-spin'), 400);
@@ -2085,22 +1746,28 @@ function isInvalidBranchName(name) {
       const data = dashboardState.data;
       if (!data) return;
 
-      // Update Period Banner
+      // Update Period Banner & Sync Period Dropdowns
       document.getElementById('heroPeriodText').textContent = `รายงานผลการดำเนินงาน ${data.periodInfo.displayText}`;
       document.getElementById('lastUpdatedText').textContent = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ' น.';
-      document.getElementById('periodSelect').value = data.periodInfo.index;
+      const periodSelect = document.getElementById('periodSelect');
+      if (periodSelect) periodSelect.value = data.periodInfo.index;
 
-      // Update Mode Badge & Banner
+      const probPeriodSelect = document.getElementById('probFilterPeriod');
+      if (probPeriodSelect) {
+        probPeriodSelect.value = data.periodInfo.index;
+        const mLabel = data.periodInfo.monthName && data.periodInfo.yearTh
+          ? ` (${data.periodInfo.monthName} ${data.periodInfo.yearTh})`
+          : '';
+        if (probPeriodSelect.options[0]) probPeriodSelect.options[0].textContent = `รอบ 1-10${mLabel}`;
+        if (probPeriodSelect.options[1]) probPeriodSelect.options[1].textContent = `รอบ 11-20${mLabel}`;
+        if (probPeriodSelect.options[2]) probPeriodSelect.options[2].textContent = `รอบ 21-31${mLabel}`;
+      }
+
+      // Update Mode Badge
       const modeBadge = document.getElementById('dataSourceBadge');
-      const demoBanner = document.getElementById('demoNoticeBanner');
-      if (dashboardState.mode === 'live') {
+      if (modeBadge) {
         modeBadge.className = 'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800';
         modeBadge.innerHTML = '<span class="w-1.5 h-1.5 mr-1.5 rounded-full bg-emerald-500 animate-pulse"></span>Live Google Sheet 🟢';
-        if (demoBanner) demoBanner.classList.add('hidden');
-      } else {
-        modeBadge.className = 'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800';
-        modeBadge.innerHTML = '<span class="w-1.5 h-1.5 mr-1.5 rounded-full bg-amber-500 animate-pulse"></span>Demo Data';
-        if (demoBanner) demoBanner.classList.remove('hidden');
       }
 
       // Render Tab 0 (Thailand Map & Branch Summary)
@@ -2385,9 +2052,11 @@ function isInvalidBranchName(name) {
       }
 
       filtered.forEach(b => {
-        let statusBadge = `<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">🟢 ตามเป้า</span>`;
+        let statusBadge = `<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-600">⏳ รอสรุป</span>`;
         let cardBorder = 'border-slate-200';
-        if (b.status === 'yellow') {
+        if (b.status === 'green') {
+          statusBadge = `<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">🟢 ตามเป้า</span>`;
+        } else if (b.status === 'yellow') {
           statusBadge = `<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">🟡 เสี่ยงต่ำ</span>`;
           cardBorder = 'border-amber-200';
         } else if (b.status === 'red') {
@@ -2467,6 +2136,10 @@ function isInvalidBranchName(name) {
       const needsGmCount = allProbs.filter(p => p.isNeedGm).length;
       const uniqueBranches = new Set(allProbs.map(p => p.branch)).size;
 
+      const pctTracking = total > 0 ? Math.round((trackingCount / total) * 100) : 0;
+      const pctAction = total > 0 ? Math.round((inProgCount / total) * 100) : 0;
+      const totalBranchesInSystem = getLiveBranchesWithStats().length;
+
       // Update Metric Numbers in Bento Cards
       const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
       setEl('statProbTotal', total);
@@ -2476,9 +2149,12 @@ function isInvalidBranchName(name) {
       setEl('statProbNormal', normal);
 
       setEl('statStatusTracking', trackingCount);
+      setEl('statStatusTrackingPct', `${pctTracking}% ของปัญหา`);
       setEl('statStatusAction', inProgCount);
+      setEl('statStatusActionPct', `${pctAction}% ของปัญหา`);
       setEl('statNeedsGm', needsGmCount);
       setEl('statBranchesWithProblems', uniqueBranches);
+      setEl('statBranchesTotalSub', `จาก ${totalBranchesInSystem} สาขาในระบบ`);
 
       setEl('chartCenterCount', total);
       setEl('statCasesCount', total);
@@ -2493,7 +2169,7 @@ function isInvalidBranchName(name) {
       renderProblemsTable();
 
       // Render Selected Case Detail Card
-      if (!dashboardState.selectedProblemCode && allProbs.length > 0) {
+      if ((!dashboardState.selectedProblemCode || !allProbs.some(p => p.code === dashboardState.selectedProblemCode)) && allProbs.length > 0) {
         dashboardState.selectedProblemCode = allProbs[0].code;
       }
       renderProblemDetail(dashboardState.selectedProblemCode);
@@ -3111,21 +2787,6 @@ function isInvalidBranchName(name) {
       renderProblemsTable();
     }
 
-    function resetProblemFilters() {
-      dashboardState.problemFilterRisk = 'ALL';
-      dashboardState.problemFilterStatus = 'ALL';
-      dashboardState.problemFilterBranch = 'ALL';
-      dashboardState.problemFilterManager = 'ALL';
-      const bSel = document.getElementById('probFilterBranch');
-      const mSel = document.getElementById('probFilterManager');
-      const qInput = document.getElementById('problemSearchInput');
-      if (bSel) bSel.value = 'ALL';
-      if (mSel) mSel.value = 'ALL';
-      if (qInput) qInput.value = '';
-      highlightActiveFilters();
-      renderProblemsTable();
-    }
-
     function highlightActiveFilters() {
       const rCrit = document.getElementById('cardRiskCritical');
       const rMod = document.getElementById('cardRiskModerate');
@@ -3151,120 +2812,6 @@ function isInvalidBranchName(name) {
       Object.keys(statusMap).forEach(k => {
         applyRing(statusMap[k], dashboardState.problemFilterStatus === k);
       });
-    }
-
-    // Modal: Create Problem Report Handlers
-    function openCreateProblemModal() {
-      const modal = document.getElementById('createProblemModal');
-      if (modal) modal.classList.remove('hidden');
-    }
-
-    function closeCreateProblemModal() {
-      const modal = document.getElementById('createProblemModal');
-      if (modal) modal.classList.add('hidden');
-    }
-
-    function handleCreateProblemSubmit(e) {
-      e.preventDefault();
-      const allProblems = (dashboardState.data && dashboardState.data.gmReport) ? dashboardState.data.gmReport.problemsList : [];
-
-      const branch = document.getElementById('newProbBranch').value;
-      const manager = document.getElementById('newProbManager').value;
-      const risk = document.getElementById('newProbRisk').value;
-      const status = document.getElementById('newProbStatus').value;
-      const subject = document.getElementById('newProbSubject').value;
-      const impact = document.getElementById('newProbImpact').value;
-      const immediate = document.getElementById('newProbImmediate').value;
-      const nextPlan = document.getElementById('newProbNext').value;
-      const dueDate = document.getElementById('newProbDueDate').value;
-      const needsGm = document.getElementById('newProbNeedsGm').value;
-
-      // Auto generate code
-      const nextNum = allProblems.length + 69;
-      const newCode = `PR-${String(nextNum).padStart(4, '0')}`;
-
-      const now = new Date();
-      const timeStr = `${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')} น.`;
-
-      const newCase = {
-        code: newCode,
-        branch: branch,
-        manager: manager,
-        subject: subject,
-        risk: risk,
-        urgency: risk,
-        status: status,
-        dueDate: dueDate,
-        overdueText: '-',
-        isOverdue: false,
-        incidentDate: `วันนี้ เวลา ${timeStr}`,
-        ackDate: `วันนี้ เวลา ${timeStr}`,
-        firstActionDate: `วันนี้ เวลา ${timeStr}`,
-        reportDate: `วันนี้ เวลา ${timeStr}`,
-        impact: impact || 'ยังไม่มีการระบุผลกระทบ',
-        riskReason: `สร้างโดยผู้ดูแลสาขา (${risk})`,
-        immediateActions: immediate ? [immediate] : ['เริ่มดำเนินการตรวจสอบเบื้องต้น'],
-        nextActions: nextPlan ? [nextPlan] : ['รอสรุปผลแนวทางแก้ไข'],
-        pendingReason: status === 'Pending' ? 'อยู่ระหว่างรอการดำเนินการ' : '-',
-        nextFollowUp: dueDate,
-        assignee: `ผจก. สาขา (${manager})`,
-        timelineStep: status === 'Closed' ? 7 : (status === 'Resolved' ? 6 : (status === 'Pending' ? 5 : 3)),
-        updatedAt: `วันนี้ เวลา ${timeStr}`,
-        needsGmHelp: needsGm
-      };
-
-      allProblems.unshift(newCase);
-      dashboardState.selectedProblemCode = newCode;
-      closeCreateProblemModal();
-
-      // Refresh Section
-      renderProblemsSection(allProblems, dashboardState.data.gmReport.summary.problems);
-      
-      alert(`✅ บันทึกรายงานปัญหาเรียบร้อยแล้ว: ${newCode} (${subject})`);
-    }
-
-    // Modal: Problem History Handlers
-    function openProblemHistoryModal() {
-      const modal = document.getElementById('problemHistoryModal');
-      const list = document.getElementById('problemHistoryList');
-      if (!modal || !list) return;
-
-      const allProblems = (dashboardState.data && dashboardState.data.gmReport) ? dashboardState.data.gmReport.problemsList : [];
-      const item = allProblems.find(p => p.code === dashboardState.selectedProblemCode) || allProblems[0];
-
-      if (item) {
-        list.innerHTML = `
-          <div class="border-l-2 border-emerald-500 pl-3 py-1 space-y-0.5">
-            <div class="flex items-center justify-between text-xs">
-              <span class="font-bold text-slate-800">สร้างเคสเข้าระบบ (${item.code})</span>
-              <span class="text-xxs text-slate-400">${item.reportDate}</span>
-            </div>
-            <p class="text-xxs text-slate-600">บันทึกโดย ${item.manager} • ระดับความเสี่ยง ${item.risk}</p>
-          </div>
-          <div class="border-l-2 border-blue-500 pl-3 py-1 space-y-0.5">
-            <div class="flex items-center justify-between text-xs">
-              <span class="font-bold text-slate-800">เริ่มการจัดการ (First Action)</span>
-              <span class="text-xxs text-slate-400">${item.firstActionDate}</span>
-            </div>
-            <p class="text-xxs text-slate-600">ดำเนินการ Immediate Action: ${item.immediateActions ? item.immediateActions[0] : '-'}</p>
-          </div>
-          <div class="border-l-2 border-amber-500 pl-3 py-1 space-y-0.5">
-            <div class="flex items-center justify-between text-xs">
-              <span class="font-bold text-slate-800">อัปเดตสถานะล่าสุด: ${item.status}</span>
-              <span class="text-xxs text-slate-400">${item.updatedAt}</span>
-            </div>
-            <p class="text-xxs text-slate-600">กำหนดติดตามครั้งถัดไป: ${item.nextFollowUp || item.dueDate}</p>
-          </div>
-        `;
-      }
-
-      modal.classList.remove('hidden');
-      lucide.createIcons();
-    }
-
-    function closeProblemHistoryModal() {
-      const modal = document.getElementById('problemHistoryModal');
-      if (modal) modal.classList.add('hidden');
     }
 
     // Scroll Listener for Modern Shrinking Header (Mobile-First)
@@ -3444,139 +2991,292 @@ function isInvalidBranchName(name) {
 
 
     // =========================================================================
-    // 0. THAILAND MAP & BRANCH SUMMARY LOGIC (หน้าแรก: แผนที่ประเทศไทย & สรุปสาขา)
+    // 0. THAILAND MAP & BRANCH SUMMARY LOGIC (ดึงข้อมูลจริงจาก Google Sheet 100%)
     // =========================================================================
-    const BRANCH_METADATA = [
-      // ภาคเหนือ (พิกัดตามแผนที่จริง GeoJSON)
-      { id: 'b_cr', name: 'สาขาเชียงราย', region: 'NORTH', regionName: 'ภาคเหนือ', manager: 'หมิว', mapX: 254, mapY: 76, callX: 110, callY: 76, targetSales: 1250000, actualSales: 1210000 },
-      { id: 'b_cm', name: 'สาขาเชียงใหม่', region: 'NORTH', regionName: 'ภาคเหนือ', manager: 'หมิว', mapX: 211, mapY: 136, callX: 110, callY: 136, targetSales: 1950000, actualSales: 2100000 },
-      { id: 'b_pl', name: 'สาขาพิษณุโลก', region: 'NORTH', regionName: 'ภาคเหนือ', manager: 'นัท', mapX: 276, mapY: 240, callX: 110, callY: 240, targetSales: 1350000, actualSales: 1380000 },
+    // ตารางพิกัดแผนที่ SVG สำหรับวางหมุดสาขาบนแผนที่ประเทศไทยเท่านั้น (ไม่มีตัวเลขยอดขายหรือผู้จัดการจำลอง)
+    const BRANCH_GEO_COORDS = [
+      // ภาคเหนือ
+      { id: 'b_cr', matchKeys: ['เชียงราย'], defaultName: 'สาขาเชียงราย', region: 'NORTH', regionName: 'ภาคเหนือ', mapX: 254, mapY: 76, callX: 110, callY: 76 },
+      { id: 'b_cm', matchKeys: ['เชียงใหม่'], defaultName: 'สาขาเชียงใหม่', region: 'NORTH', regionName: 'ภาคเหนือ', mapX: 211, mapY: 136, callX: 110, callY: 136 },
+      { id: 'b_pl', matchKeys: ['พิษณุโลก'], defaultName: 'สาขาพิษณุโลก', region: 'NORTH', regionName: 'ภาคเหนือ', mapX: 276, mapY: 240, callX: 110, callY: 240 },
 
-      // ภาคอีสาน (พิกัดตามแผนที่จริง GeoJSON)
-      { id: 'b_kk', name: 'สาขาขอนแก่น', region: 'ISAN', regionName: 'ภาคอีสาน', manager: 'จาเน่', mapX: 407, mapY: 261, callX: 570, callY: 250, targetSales: 1800000, actualSales: 1750000 },
-      { id: 'b_ub', name: 'สาขาอุบล', region: 'ISAN', regionName: 'ภาคอีสาน', manager: 'โชว์', mapX: 511, mapY: 324, callX: 570, callY: 330, targetSales: 1400000, actualSales: 1340000 },
+      // ภาคอีสาน
+      { id: 'b_kk', matchKeys: ['ขอนแก่น'], defaultName: 'สาขาขอนแก่น', region: 'ISAN', regionName: 'ภาคอีสาน', mapX: 407, mapY: 261, callX: 570, callY: 250 },
+      { id: 'b_ub', matchKeys: ['อุบลราชธานี', 'อุบล'], defaultName: 'สาขาอุบลราชธานี', region: 'ISAN', regionName: 'ภาคอีสาน', mapX: 511, mapY: 324, callX: 570, callY: 330 },
 
-      // ภาคกลาง & กทม./ปริมณฑล (พิกัดตามแผนที่จริง GeoJSON)
-      { id: 'b_dm', name: 'สาขาดอนเมือง', region: 'BKK', regionName: 'กทม. & ปริมณฑล', manager: 'ลูกกุ้ง', mapX: 294, mapY: 395, callX: 110, callY: 315, targetSales: 1350000, actualSales: 1320000 },
-      { id: 'b_rt', name: 'สาขารัตนาธิเบศร์', region: 'BKK', regionName: 'กทม. & ปริมณฑล', manager: 'กาญจน์', mapX: 289, mapY: 397, callX: 110, callY: 360, targetSales: 1500000, actualSales: 1580000 },
-      { id: 'b_np', name: 'สาขานครปฐม', region: 'BKK', regionName: 'กทม. & ปริมณฑล', manager: 'กาญจน์', mapX: 266, mapY: 400, callX: 110, callY: 405, targetSales: 1400000, actualSales: 1290000 },
-      { id: 'b_pk', name: 'สาขาเพชรเกษม 81', region: 'BKK', regionName: 'กทม. & ปริมณฑล', manager: 'โชว์', mapX: 280, mapY: 406, callX: 110, callY: 450, targetSales: 1200000, actualSales: 1150000 },
-      { id: 'b_rm', name: 'สาขาพระราม 9', region: 'BKK', regionName: 'กทม. & ปริมณฑล', manager: 'นัท', mapX: 292, mapY: 403, callX: 110, callY: 495, targetSales: 2300000, actualSales: 2450000 },
-      { id: 'b_bn', name: 'สาขาบางนา', region: 'BKK', regionName: 'กทม. & ปริมณฑล', manager: 'ซอฟ', mapX: 297, mapY: 408, callX: 110, callY: 540, targetSales: 2000000, actualSales: 2150000 },
-      { id: 'b_mt', name: 'สาขามิสทีน', region: 'BKK', regionName: 'กทม. & ปริมณฑล', manager: 'ส้มโอ', mapX: 299, mapY: 402, callX: 570, callY: 395, targetSales: 1500000, actualSales: 1410000 },
-      { id: 'b_nc', name: 'สาขาหนองจอก', region: 'BKK', regionName: 'กทม. & ปริมณฑล', manager: 'หมิว', mapX: 307, mapY: 398, callX: 570, callY: 440, targetSales: 1100000, actualSales: 980000 },
+      // กทม. & ปริมณฑล
+      { id: 'b_dm', matchKeys: ['ดอนเมือง'], defaultName: 'สาขาดอนเมือง', region: 'BKK', regionName: 'กทม. & ปริมณฑล', mapX: 294, mapY: 395, callX: 110, callY: 315 },
+      { id: 'b_rt', matchKeys: ['รัตนาธิเบศร์'], defaultName: 'สาขารัตนาธิเบศร์', region: 'BKK', regionName: 'กทม. & ปริมณฑล', mapX: 289, mapY: 397, callX: 110, callY: 360 },
+      { id: 'b_np', matchKeys: ['นครปฐม'], defaultName: 'สาขานครปฐม', region: 'BKK', regionName: 'กทม. & ปริมณฑล', mapX: 266, mapY: 400, callX: 110, callY: 405 },
+      { id: 'b_pk', matchKeys: ['เพชรเกษม81', 'เพชรเกษม 81', 'เพชรเกษม'], defaultName: 'สาขาเพชรเกษม 81', region: 'BKK', regionName: 'กทม. & ปริมณฑล', mapX: 280, mapY: 406, callX: 110, callY: 450 },
+      { id: 'b_rm', matchKeys: ['พระราม9', 'พระราม 9'], defaultName: 'สาขาพระราม 9', region: 'BKK', regionName: 'กทม. & ปริมณฑล', mapX: 292, mapY: 403, callX: 110, callY: 495 },
+      { id: 'b_bn', matchKeys: ['บางนา'], defaultName: 'สาขาบางนา', region: 'BKK', regionName: 'กทม. & ปริมณฑล', mapX: 297, mapY: 408, callX: 110, callY: 540 },
+      { id: 'b_mt', matchKeys: ['มิสทีน'], defaultName: 'สาขามิสทีน', region: 'BKK', regionName: 'กทม. & ปริมณฑล', mapX: 299, mapY: 402, callX: 570, callY: 395 },
+      { id: 'b_nc', matchKeys: ['หนองจอก'], defaultName: 'สาขาหนองจอก', region: 'BKK', regionName: 'กทม. & ปริมณฑล', mapX: 307, mapY: 398, callX: 570, callY: 440 },
 
-      // ภาคตะวันออก (พิกัดตามแผนที่จริง GeoJSON)
-      { id: 'b_cb', name: 'สาขาชลบุรี', region: 'EAST', regionName: 'ภาคตะวันออก', manager: 'ซอฟ', mapX: 313, mapY: 424, callX: 570, callY: 490, targetSales: 1600000, actualSales: 1680000 },
-      { id: 'b_pt', name: 'สาขาพัทยา', region: 'EAST', regionName: 'ภาคตะวันออก', manager: 'นัท', mapX: 308, mapY: 447, callX: 570, callY: 535, targetSales: 2100000, actualSales: 2280000 },
-      { id: 'b_ry', name: 'สาขาระยอง', region: 'EAST', regionName: 'ภาคตะวันออก', manager: 'เปีย', mapX: 329, mapY: 460, callX: 570, callY: 580, targetSales: 1550000, actualSales: 1520000 },
+      // ภาคตะวันออก
+      { id: 'b_cb', matchKeys: ['ชลบุรี'], defaultName: 'สาขาชลบุรี', region: 'EAST', regionName: 'ภาคตะวันออก', mapX: 313, mapY: 424, callX: 570, callY: 490 },
+      { id: 'b_ry', matchKeys: ['ระยอง'], defaultName: 'สาขาระยอง', region: 'EAST', regionName: 'ภาคตะวันออก', mapX: 329, mapY: 460, callX: 570, callY: 550 },
 
-      // ภาคใต้ (พิกัดตามแผนที่จริง GeoJSON)
-      { id: 'b_sr', name: 'สาขาสุราษ', region: 'SOUTH', regionName: 'ภาคใต้', manager: 'อัจ', mapX: 229, mapY: 647, callX: 110, callY: 645, targetSales: 1400000, actualSales: 1450000 },
-      { id: 'b_hy', name: 'สาขาหาดใหญ่', region: 'SOUTH', regionName: 'ภาคใต้', manager: 'อัจ', mapX: 287, mapY: 760, callX: 110, callY: 745, targetSales: 1800000, actualSales: 1890000 },
-      { id: 'b_yl', name: 'สาขายะลา', region: 'SOUTH', regionName: 'ภาคใต้', manager: 'ลูกกุ้ง', mapX: 329, mapY: 785, callX: 110, callY: 805, targetSales: 1000000, actualSales: 920000 }
+      // ภาคใต้
+      { id: 'b_sr', matchKeys: ['สุราษฎ์ธานี', 'สุราษฎร์ธานี', 'สุราษ'], defaultName: 'สาขาสุราษฎ์ธานี', region: 'SOUTH', regionName: 'ภาคใต้', mapX: 229, mapY: 647, callX: 110, callY: 645 },
+      { id: 'b_hy', matchKeys: ['หาดใหญ่'], defaultName: 'สาขาหาดใหญ่', region: 'SOUTH', regionName: 'ภาคใต้', mapX: 287, mapY: 760, callX: 110, callY: 745 },
+      { id: 'b_yl', matchKeys: ['ยะลา'], defaultName: 'สาขายะลา', region: 'SOUTH', regionName: 'ภาคใต้', mapX: 329, mapY: 785, callX: 110, callY: 805 }
     ];
 
     let selectedMapBranchId = 'b_rt';
     let mapCurrentRegionFilter = 'ALL';
 
-    function getBranchStats(branchMeta) {
-      const data = dashboardState.data;
-      const allProblems = (data && data.gmReport && Array.isArray(data.gmReport.problemsList)) ? data.gmReport.problemsList : [];
-      const cleanBranch = branchMeta.name.replace('สาขา', '').trim();
-      
-      // Match problems
-      const problems = allProblems.filter(p => {
-        if (!p || !p.branch) return false;
-        const pClean = p.branch.replace('สาขา', '').trim();
-        return pClean.includes(cleanBranch) || cleanBranch.includes(pClean);
-      });
+    function normalizeBranchKey(name) {
+      if (!name) return '';
+      let s = String(name).replace(/^สาขา\s*/, '').replace(/\s+/g, '').trim();
+      if (s === 'สุราษ' || s === 'สุราษฎร์ธานี') return 'สุราษฎ์ธานี';
+      if (s === 'อุบล') return 'อุบลราชธานี';
+      return s;
+    }
 
-      // Match accounting withdrawals
-      let withdrawAmount = 0;
-      let withdrawCount = 0;
-      if (data && data.accounting && Array.isArray(data.accounting.details)) {
-        const wItems = data.accounting.details.filter(d => d.branch && (d.branch.includes(cleanBranch) || cleanBranch.includes(d.branch.replace('สาขา', '').trim())));
-        withdrawAmount = wItems.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
-        withdrawCount = wItems.length;
+    function findGeoCoordForBranch(rawName, fallbackIdx = 0) {
+      const norm = normalizeBranchKey(rawName);
+      for (const geo of BRANCH_GEO_COORDS) {
+        if (geo.matchKeys.some(k => normalizeBranchKey(k) === norm || norm.includes(normalizeBranchKey(k)) || normalizeBranchKey(k).includes(norm))) {
+          return geo;
+        }
       }
-      if (withdrawAmount === 0) {
-        // Fallback realistic withdrawal based on sales volume
-        withdrawAmount = Math.round((branchMeta.actualSales * 0.015) / 100) * 100 + 4500;
-        withdrawCount = Math.floor(Math.random() * 3) + 2;
-      }
-
-      // Sales & Target
-      const actualSales = branchMeta.actualSales;
-      const targetSales = branchMeta.targetSales;
-      const salesPct = Math.round((actualSales / targetSales) * 100);
-      let salesStatus = 'green';
-      if (salesPct < 90) salesStatus = 'red';
-      else if (salesPct < 98) salesStatus = 'yellow';
-
-      // Problems Severity
-      let hasCrit = problems.some(p => p.urgency === 'Critical');
-      let hasOverdue = problems.some(p => p.urgency === 'Overdue');
-      let hasHigh = problems.some(p => p.urgency === 'High');
-      let probSeverity = 'NORMAL';
-      let pinColor = '#10b981'; // Emerald
-      let arrowMarker = 'url(#mapArrowEmerald)';
-      let boxStroke = '#059669';
-
-      if (hasCrit) {
-        probSeverity = 'CRITICAL';
-        pinColor = '#f43f5e'; // Rose
-        arrowMarker = 'url(#mapArrowRose)';
-        boxStroke = '#e11d48';
-      } else if (hasOverdue) {
-        probSeverity = 'OVERDUE';
-        pinColor = '#a855f7'; // Purple
-        arrowMarker = 'url(#mapArrowSky)';
-        boxStroke = '#9333ea';
-      } else if (hasHigh) {
-        probSeverity = 'HIGH';
-        pinColor = '#f59e0b'; // Amber
-        arrowMarker = 'url(#mapArrowSky)';
-        boxStroke = '#d97706';
-      } else if (problems.length > 0) {
-        probSeverity = 'NORMAL_ISSUE';
-        pinColor = '#38bdf8'; // Sky
-        arrowMarker = 'url(#mapArrowSky)';
-        boxStroke = '#0284c7';
-      }
-
       return {
-        ...branchMeta,
-        problems,
-        probCount: problems.length,
-        probSeverity,
-        pinColor,
-        arrowMarker,
-        boxStroke,
-        actualSales,
-        targetSales,
-        salesPct,
-        salesStatus,
-        withdrawAmount,
-        withdrawCount
+        id: `b_dyn_${fallbackIdx}`,
+        matchKeys: [norm],
+        defaultName: rawName.startsWith('สาขา') ? rawName : `สาขา${rawName}`,
+        region: 'BKK',
+        regionName: 'สาขาในระบบ',
+        mapX: 300,
+        mapY: 400,
+        callX: 570,
+        callY: 600 + (fallbackIdx * 32)
       };
     }
 
-    // Render Tab 0: Map & Branch Summary
-    function renderMapAndBranchSummary() {
-      const branchesWithStats = BRANCH_METADATA.map(b => getBranchStats(b));
+    function parseTargetRevenueValue(valStr) {
+      if (!valStr || typeof valStr !== 'string') {
+        return { actualSales: 0, salesPct: null, hasSales: false, rawText: '-' };
+      }
+      const trimmed = valStr.trim();
+      if (trimmed === '-' || trimmed === '') {
+        return { actualSales: 0, salesPct: null, hasSales: false, rawText: '-' };
+      }
+      // รูปแบบจริงจาก Google Sheet เช่น "461,588 (30.77%)" หรือ "493088 (82%)" หรือ "268186(15.%)"
+      const pctMatch = trimmed.match(/\(([\d.]+)\s*%?\)/);
+      const salesPct = pctMatch ? parseFloat(pctMatch[1]) : null;
+      const beforeParen = trimmed.split('(')[0].replace(/,/g, '').trim();
+      const numMatch = beforeParen.match(/[\d.]+/);
+      const actualSales = numMatch ? parseFloat(numMatch[0]) : 0;
+      return {
+        actualSales: isNaN(actualSales) ? 0 : actualSales,
+        salesPct: (salesPct !== null && !isNaN(salesPct)) ? salesPct : null,
+        hasSales: !isNaN(actualSales) && actualSales > 0,
+        rawText: trimmed
+      };
+    }
 
-      // 1. Calculate Totals for Map Hero Capsules
+    // สร้างข้อมูลสรุปสาขาจากข้อมูลจริงใน Google Sheets 100% (gmReport.managers + gmReport.problemsList + accounting)
+    function getLiveBranchesWithStats() {
+      const data = dashboardState.data;
+      if (!data) return [];
+
+      const managers = (data.gmReport && Array.isArray(data.gmReport.managers)) ? data.gmReport.managers : [];
+      const allProblems = (data.gmReport && Array.isArray(data.gmReport.problemsList)) ? data.gmReport.problemsList : [];
+      const acctBranchList = (data.accounting && Array.isArray(data.accounting.branchList)) ? data.accounting.branchList : [];
+      const acctDetails = (data.accounting && Array.isArray(data.accounting.details)) ? data.accounting.details : [];
+
+      const branchMap = new Map();
+
+      function ensureBranchEntry(rawName) {
+        if (isInvalidBranchName(rawName)) return null;
+        const key = normalizeBranchKey(rawName);
+        if (!key) return null;
+        if (!branchMap.has(key)) {
+          const geo = findGeoCoordForBranch(rawName, branchMap.size + 1);
+          branchMap.set(key, {
+            key,
+            id: geo.id,
+            name: geo.defaultName || (String(rawName).startsWith('สาขา') ? String(rawName).trim() : `สาขา${String(rawName).trim()}`),
+            region: geo.region,
+            regionName: geo.regionName,
+            mapX: geo.mapX,
+            mapY: geo.mapY,
+            callX: geo.callX,
+            callY: geo.callY,
+            managersSet: new Set(),
+            actualSales: 0,
+            salesPct: null,
+            hasSales: false,
+            salesRawText: '-',
+            salesStatus: 'pending',
+            withdrawAmount: 0,
+            withdrawCount: 0,
+            problems: []
+          });
+        }
+        return branchMap.get(key);
+      }
+
+      // 1. รวบรวมสาขาและยอดขายจริง (Target Revenue) จากชีท GM Report
+      managers.forEach(m => {
+        (m.branches || []).forEach(b => {
+          const entry = ensureBranchEntry(b.name);
+          if (!entry) return;
+          if (b.name && String(b.name).trim().startsWith('สาขา')) {
+            entry.name = String(b.name).trim();
+          }
+          if (m.manager) entry.managersSet.add(m.manager);
+
+          const revKpi = (b.kpis || []).find(k => k.title === 'Target Revenue' || k.rawTitle === 'Target Revenue');
+          if (revKpi && revKpi.value) {
+            const parsed = parseTargetRevenueValue(revKpi.value);
+            if (parsed.hasSales && !entry.hasSales) {
+              entry.actualSales = parsed.actualSales;
+              entry.salesPct = parsed.salesPct;
+              entry.hasSales = true;
+              entry.salesRawText = parsed.rawText;
+              entry.salesStatus = revKpi.status || b.status || 'pending';
+            }
+          }
+          if (entry.salesStatus === 'pending' && b.status && b.status !== 'pending') {
+            entry.salesStatus = b.status;
+          }
+        });
+      });
+
+      // 2. รวบรวมปัญหาจริงจากชีท Problem List
+      allProblems.forEach(p => {
+        if (!p || !p.branch) return;
+        const entry = ensureBranchEntry(p.branch);
+        if (!entry) return;
+        if (p.manager) entry.managersSet.add(p.manager);
+        entry.problems.push(p);
+      });
+
+      // 3. รวบรวมยอดเบิกจ่ายจริงจากชีทรายงานการเบิก (ไม่สร้างตัวเลขสมมติเด็ดขาด)
+      acctBranchList.forEach(ab => {
+        if (!ab || !ab.branch) return;
+        const entry = ensureBranchEntry(ab.branch);
+        if (!entry) return;
+        entry.withdrawAmount = Number(ab.totalAmount) || 0;
+        entry.withdrawCount = Number(ab.itemsCount) || 0;
+      });
+
+      // หาก branchList ไม่มี itemsCount ให้คำนวณจาก details จริง
+      if (acctDetails.length > 0) {
+        const countByBranch = {};
+        const sumByBranch = {};
+        acctDetails.forEach(d => {
+          if (!d || !d.branch) return;
+          const k = normalizeBranchKey(d.branch);
+          if (!k) return;
+          ensureBranchEntry(d.branch);
+          countByBranch[k] = (countByBranch[k] || 0) + 1;
+          sumByBranch[k] = (sumByBranch[k] || 0) + (Number(d.amount) || 0);
+        });
+        branchMap.forEach((entry, k) => {
+          if (!entry.withdrawAmount && sumByBranch[k]) entry.withdrawAmount = sumByBranch[k];
+          if (!entry.withdrawCount && countByBranch[k]) entry.withdrawCount = countByBranch[k];
+        });
+      }
+
+      // 4. จัดลำดับตามพิกัดภูมิภาคและประมวลผลสีหมุดตามระดับความเร่งด่วนของปัญหาจริง
+      const orderIndex = new Map(BRANCH_GEO_COORDS.map((g, i) => [g.id, i]));
+      const result = Array.from(branchMap.values()).sort((a, b) => {
+        const ia = orderIndex.has(a.id) ? orderIndex.get(a.id) : 999;
+        const ib = orderIndex.has(b.id) ? orderIndex.get(b.id) : 999;
+        return ia - ib;
+      });
+
+      return result.map(entry => {
+        const problems = entry.problems;
+        const hasCrit = problems.some(p => p.urgency === 'Critical');
+        const hasOverdue = problems.some(p => p.urgency === 'Overdue');
+        const hasHigh = problems.some(p => p.urgency === 'High');
+
+        let probSeverity = 'NORMAL';
+        let pinColor = '#10b981'; // Emerald
+        let arrowMarker = 'url(#mapArrowEmerald)';
+        let boxStroke = '#059669';
+
+        if (hasCrit) {
+          probSeverity = 'CRITICAL';
+          pinColor = '#f43f5e'; // Rose
+          arrowMarker = 'url(#mapArrowRose)';
+          boxStroke = '#e11d48';
+        } else if (hasOverdue) {
+          probSeverity = 'OVERDUE';
+          pinColor = '#a855f7'; // Purple
+          arrowMarker = 'url(#mapArrowSky)';
+          boxStroke = '#9333ea';
+        } else if (hasHigh) {
+          probSeverity = 'HIGH';
+          pinColor = '#f59e0b'; // Amber
+          arrowMarker = 'url(#mapArrowSky)';
+          boxStroke = '#d97706';
+        } else if (problems.length > 0) {
+          probSeverity = 'NORMAL_ISSUE';
+          pinColor = '#38bdf8'; // Sky
+          arrowMarker = 'url(#mapArrowSky)';
+          boxStroke = '#0284c7';
+        }
+
+        const managerNames = Array.from(entry.managersSet).join(', ') || '-';
+
+        return {
+          ...entry,
+          manager: managerNames,
+          probCount: problems.length,
+          probSeverity,
+          pinColor,
+          arrowMarker,
+          boxStroke
+        };
+      });
+    }
+
+    // Render Tab 0: Map & Branch Summary (ข้อมูลจริงจาก Google Sheet 100%)
+    function renderMapAndBranchSummary() {
+      const branchesWithStats = getLiveBranchesWithStats();
+      const data = dashboardState.data;
+
+      // 1. Calculate Totals for Map Hero Capsules strictly from Google Sheets data
       const totalBranches = branchesWithStats.length;
-      const totalSales = branchesWithStats.reduce((sum, b) => sum + b.actualSales, 0);
-      const totalWithdraw = branchesWithStats.reduce((sum, b) => sum + b.withdrawAmount, 0);
-      const totalIssues = branchesWithStats.reduce((sum, b) => sum + b.probCount, 0);
+      const totalSales = branchesWithStats.reduce((sum, b) => sum + (b.actualSales || 0), 0);
+      const totalWithdraw = (data && data.accounting && typeof data.accounting.totalAmount === 'number')
+        ? data.accounting.totalAmount
+        : branchesWithStats.reduce((sum, b) => sum + (b.withdrawAmount || 0), 0);
+      const totalIssues = (data && data.gmReport && Array.isArray(data.gmReport.problemsList))
+        ? data.gmReport.problemsList.length
+        : branchesWithStats.reduce((sum, b) => sum + b.probCount, 0);
 
       const setEl = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
       setEl('mapHeroBranchCount', `${totalBranches} สาขา`);
       setEl('mapHeroTotalSales', `฿${totalSales.toLocaleString()}`);
       setEl('mapHeroTotalWithdraw', `฿${totalWithdraw.toLocaleString()}`);
       setEl('mapHeroTotalIssues', `${totalIssues} เคส`);
+
+      // Update Region Filter Pill Counts dynamically from live branches
+      const countBkk = branchesWithStats.filter(b => b.region === 'BKK').length;
+      const countEast = branchesWithStats.filter(b => b.region === 'EAST').length;
+      const countIsan = branchesWithStats.filter(b => b.region === 'ISAN').length;
+      const countSouth = branchesWithStats.filter(b => b.region === 'SOUTH').length;
+      const countNorth = branchesWithStats.filter(b => b.region === 'NORTH').length;
+      const countHasProbs = branchesWithStats.filter(b => b.probCount > 0).length;
+
+      setEl('pill-region-ALL', `ทั้งหมด (${totalBranches})`);
+      setEl('pill-region-BKK', `กทม. & ปริมณฑล (${countBkk})`);
+      setEl('pill-region-EAST', `ตะวันออก (${countEast})`);
+      setEl('pill-region-ISAN', `อีสาน (${countIsan})`);
+      setEl('pill-region-SOUTH', `ใต้ (${countSouth})`);
+      setEl('pill-region-NORTH', `เหนือ (${countNorth})`);
+      setEl('pill-region-HAS_PROBLEMS', `🔴 สาขาที่มีปัญหา (${countHasProbs})`);
+
+      if (branchesWithStats.length > 0 && !branchesWithStats.some(b => b.id === selectedMapBranchId)) {
+        selectedMapBranchId = branchesWithStats[0].id;
+      }
 
       // 2. Render SVG Pointer Lines with Arrowheads pointing to branch coordinates
       renderMapSvgPointersAndPins(branchesWithStats);
@@ -3616,7 +3316,7 @@ function isInvalidBranchName(name) {
                 marker-end="${b.arrowMarker}" class="transition-opacity duration-300 opacity-70" />
         `;
 
-        // Branch Coordinate Pin on Map (Clean Static Pin, No pulsating/flickering animation)
+        // Branch Coordinate Pin on Map
         const isSelected = b.id === selectedMapBranchId;
         pinsHtml += `
           <g id="map-pin-${b.id}" class="cursor-pointer" onclick="selectMapBranch('${b.id}')">
@@ -3635,7 +3335,7 @@ function isInvalidBranchName(name) {
         calloutsHtml += `
           <g id="map-callout-${b.id}" class="cursor-pointer group" onclick="selectMapBranch('${b.id}')">
             <rect x="${b.callX - 66}" y="${b.callY - 13}" width="132" height="26" rx="8" 
-                  fill="${isSelected ? '#1e293b' : '#0f172a'}" 
+                   fill="${isSelected ? '#1e293b' : '#0f172a'}" 
                   stroke="${isSelected ? '#38bdf8' : b.boxStroke}" stroke-width="${isSelected ? 2 : 1.2}" 
                   class="transition-all duration-200 group-hover:fill-slate-800" />
             <text x="${b.callX - 58}" y="${b.callY + 4}" fill="#f8fafc" font-size="9.5" font-weight="600">
@@ -3656,7 +3356,7 @@ function isInvalidBranchName(name) {
     // Select Branch on Map
     function selectMapBranch(branchId) {
       selectedMapBranchId = branchId;
-      const branchesWithStats = BRANCH_METADATA.map(b => getBranchStats(b));
+      const branchesWithStats = getLiveBranchesWithStats();
       renderMapSvgPointersAndPins(branchesWithStats);
       updateFloatingMapCard(branchId, branchesWithStats);
 
@@ -3668,18 +3368,22 @@ function isInvalidBranchName(name) {
       }
     }
 
-    // Update Floating Inspector Card on Map (ไม่มีเบอร์โทรศัพท์หลอก)
+    // Update Floating Inspector Card on Map (แสดงเฉพาะข้อมูลจริงจาก Google Sheet)
     function updateFloatingMapCard(branchId, branches) {
       const b = branches.find(x => x.id === branchId) || branches[0];
       if (!b) return;
 
       const setVal = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
 
-      setVal('mapFloatInitial', b.name.replace('สาขา', '').substring(0, 1));
+      setVal('mapFloatInitial', b.name.replace('สาขา', '').trim().substring(0, 1) || '-');
       setVal('mapFloatTitle', b.name);
       setVal('mapFloatRegion', b.regionName);
-      setVal('mapFloatManager', `ผจก. ${b.manager}`);
-      setVal('mapFloatSales', `฿${b.actualSales.toLocaleString()} (${b.salesPct}%)`);
+      setVal('mapFloatManager', b.manager !== '-' ? `ผจก. ${b.manager}` : 'ผจก. -');
+
+      const salesDisplay = b.hasSales
+        ? `฿${b.actualSales.toLocaleString()}${b.salesPct !== null ? ` (${b.salesPct}%)` : ''}`
+        : 'รอสรุปผล (-)';
+      setVal('mapFloatSales', salesDisplay);
       setVal('mapFloatWithdraw', `฿${b.withdrawAmount.toLocaleString()}`);
 
       const snippet = document.getElementById('mapFloatIssuesSnippet');
@@ -3726,11 +3430,11 @@ function isInvalidBranchName(name) {
     }
 
     function filterBranchSummaryCards() {
-      const branchesWithStats = BRANCH_METADATA.map(b => getBranchStats(b));
+      const branchesWithStats = getLiveBranchesWithStats();
       renderBranchSummaryCardsGrid(branchesWithStats);
     }
 
-    // Render Concise Branch Summary Cards Grid (สั้นๆ พอสังเขปตามคำขอผู้ใช้)
+    // Render Concise Branch Summary Cards Grid (ข้อมูลจริงจาก Google Sheet 100%)
     function renderBranchSummaryCardsGrid(allBranches) {
       const container = document.getElementById('mapBranchCardsGrid');
       const searchInput = document.getElementById('mapBranchSearchInput');
@@ -3748,11 +3452,10 @@ function isInvalidBranchName(name) {
         }
 
         if (query) {
-          const matchName = b.name.toLowerCase().includes(query);
-          const matchPhone = b.phone.includes(query);
-          const matchMgr = b.manager.toLowerCase().includes(query);
-          const matchRegion = b.regionName.toLowerCase().includes(query);
-          return matchName || matchPhone || matchMgr || matchRegion;
+          const matchName = (b.name || '').toLowerCase().includes(query);
+          const matchMgr = (b.manager || '').toLowerCase().includes(query);
+          const matchRegion = (b.regionName || '').toLowerCase().includes(query);
+          return matchName || matchMgr || matchRegion;
         }
         return true;
       });
@@ -3787,6 +3490,11 @@ function isInvalidBranchName(name) {
           pBadge = `<span class="text-xxs px-2 py-0.5 rounded-full font-bold bg-blue-100 text-blue-800 border border-blue-200">🟡 ${b.probCount} ปัญหา</span>`;
         }
 
+        const salesHtml = b.hasSales
+          ? `<span class="font-extrabold text-slate-900 text-xs">฿${b.actualSales.toLocaleString()}</span>
+             ${b.salesPct !== null ? `<span class="text-xxs font-bold ml-1 ${b.salesStatus === 'green' ? 'text-emerald-600' : (b.salesStatus === 'yellow' ? 'text-amber-600' : 'text-rose-600')}">(${b.salesPct}%)</span>` : ''}`
+          : `<span class="font-semibold text-slate-400 text-xs">รอสรุปผล (-)</span>`;
+
         const card = document.createElement('div');
         card.id = `branch-card-${b.id}`;
         card.className = `branch-summary-card bg-white rounded-2xl p-4 border border-slate-200/90 shadow-2xs hover:shadow-md transition flex flex-col justify-between ${isSelected ? 'ring-2 ring-blue-500 bg-blue-50/10' : ''}`;
@@ -3807,7 +3515,7 @@ function isInvalidBranchName(name) {
               <div>${pBadge}</div>
             </div>
 
-            <!-- Key Concise Numbers (ตัวเลขพอสังเขป สั้นๆ กระชับ) -->
+            <!-- Key Concise Numbers (ข้อมูลจริงจาก Google Sheet 100%) -->
             <div class="space-y-2 text-xs">
               
               <!-- 1. ผู้จัดการเขตที่รับผิดชอบ -->
@@ -3817,21 +3525,18 @@ function isInvalidBranchName(name) {
                   <span>ผู้จัดการเขต:</span>
                 </span>
                 <span class="font-bold text-slate-800 text-xs">
-                  ผจก. ${b.manager}
+                  ${b.manager !== '-' ? `ผจก. ${b.manager}` : '-'}
                 </span>
               </div>
 
-              <!-- 2. ยอดขาย (เทียบเป้า) -->
+              <!-- 2. ยอดขาย (Target Revenue จากชีท) -->
               <div class="flex justify-between items-center py-1 border-b border-slate-50">
                 <span class="text-slate-400 text-xxs font-medium flex items-center space-x-1">
                   <i data-lucide="trending-up" class="w-3.5 h-3.5 text-emerald-500"></i>
-                  <span>ยอดขาย:</span>
+                  <span>ยอดขาย (Sheet):</span>
                 </span>
                 <div class="text-right">
-                  <span class="font-extrabold text-slate-900 text-xs">฿${(b.actualSales / 1000000).toFixed(2)}M</span>
-                  <span class="text-xxs font-bold ml-1 ${b.salesStatus === 'green' ? 'text-emerald-600' : (b.salesStatus === 'yellow' ? 'text-amber-600' : 'text-rose-600')}">
-                    (${b.salesPct}%)
-                  </span>
+                  ${salesHtml}
                 </div>
               </div>
 
@@ -3889,9 +3594,16 @@ function isInvalidBranchName(name) {
     // Direct Jump Functions to Other Tabs
     function jumpToBranchProblems(branchName) {
       switchTab('tab-problems');
-      dashboardState.problemFilterBranch = branchName;
+      const allProbs = (dashboardState.data && dashboardState.data.gmReport && Array.isArray(dashboardState.data.gmReport.problemsList))
+        ? dashboardState.data.gmReport.problemsList
+        : [];
+      const targetKey = normalizeBranchKey(branchName);
+      const matchedProb = allProbs.find(p => normalizeBranchKey(p.branch) === targetKey);
+      const filterVal = matchedProb ? matchedProb.branch : branchName;
+
+      dashboardState.problemFilterBranch = filterVal;
       const bSel = document.getElementById('probFilterBranch');
-      if (bSel) bSel.value = branchName;
+      if (bSel) bSel.value = filterVal;
       applyProblemFilters();
     }
 
@@ -3924,7 +3636,11 @@ function isInvalidBranchName(name) {
     }
 
     function onPeriodChange(val) {
-      dashboardState.currentPeriodIndex = parseInt(val);
+      dashboardState.currentPeriodIndex = parseInt(val, 10) || 0;
+      const pTop = document.getElementById('periodSelect');
+      const pProb = document.getElementById('probFilterPeriod');
+      if (pTop) pTop.value = dashboardState.currentPeriodIndex;
+      if (pProb) pProb.value = dashboardState.currentPeriodIndex;
       fetchDashboardData();
     }
 
@@ -3943,11 +3659,16 @@ function isInvalidBranchName(name) {
         : '<p class="text-xs text-slate-400">ไม่มีบันทึกวันที่ประชุม</p>';
 
       let branchesHtml = mgr.branches.map(b => {
+        let statusLabel = '⏳ รอสรุป';
+        if (b.status === 'green') statusLabel = '🟢 ตามเป้า';
+        else if (b.status === 'yellow') statusLabel = '🟡 เสี่ยง';
+        else if (b.status === 'red') statusLabel = '🔴 ต่ำเป้า';
+
         return `
           <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
             <div class="flex items-center justify-between font-bold text-slate-800 text-xs mb-1">
               <span>🏢 ${b.name}</span>
-              <span>สถานะ: ${b.status === 'green' ? '🟢 ตามเป้า' : (b.status === 'yellow' ? '🟡 เสี่ยง' : '🔴 ต่ำเป้า')}</span>
+              <span>สถานะ: ${statusLabel}</span>
             </div>
             <div class="text-xxs text-slate-500">
               ${b.kpis.map(k => `${k.title}: ${k.value}`).join(' | ')}
@@ -3974,10 +3695,9 @@ function isInvalidBranchName(name) {
       document.getElementById('managerModal').classList.add('hidden');
     }
 
-    // Settings Modal
+    // Settings Modal (Live Google Sheets API URL Only)
     function openSettingsModal() {
-      document.getElementById('gasApiUrlInput').value = dashboardState.apiUrl;
-      setDataSourceMode(dashboardState.mode, false);
+      document.getElementById('gasApiUrlInput').value = dashboardState.apiUrl || DEFAULT_LIVE_API_URL;
       document.getElementById('settingsModal').classList.remove('hidden');
     }
 
@@ -3985,28 +3705,18 @@ function isInvalidBranchName(name) {
       document.getElementById('settingsModal').classList.add('hidden');
     }
 
-    function setDataSourceMode(mode, updateState = true) {
-      if (updateState) dashboardState.mode = mode;
-      const btnMock = document.getElementById('btnModeMock');
-      const btnLive = document.getElementById('btnModeLive');
-
-      if (mode === 'mock') {
-        btnMock.className = 'px-3 py-2 text-xs font-medium rounded-xl border border-blue-500 bg-blue-50 text-blue-700 font-bold';
-        btnLive.className = 'px-3 py-2 text-xs font-medium rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50';
-      } else {
-        btnLive.className = 'px-3 py-2 text-xs font-medium rounded-xl border border-emerald-500 bg-emerald-50 text-emerald-700 font-bold';
-        btnMock.className = 'px-3 py-2 text-xs font-medium rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50';
-      }
+    function resetDefaultApiUrl() {
+      const input = document.getElementById('gasApiUrlInput');
+      if (input) input.value = DEFAULT_LIVE_API_URL;
     }
 
     function saveSettings() {
-      const url = document.getElementById('gasApiUrlInput').value.trim();
+      const url = document.getElementById('gasApiUrlInput').value.trim() || DEFAULT_LIVE_API_URL;
       dashboardState.apiUrl = url;
       localStorage.setItem('gm_gas_api_url', url);
-      localStorage.setItem('gm_dashboard_mode', dashboardState.mode);
 
       closeSettingsModal();
-      fetchDashboardData();
+      fetchDashboardData(true);
     }
 
     // Export CSV
@@ -4030,17 +3740,6 @@ function isInvalidBranchName(name) {
     }
 
     // =========================================================================
-    
-    function showGlobalLoader(title, detail) {
-      const loader = document.getElementById('globalLoadingScreen');
-      if (loader) {
-        loader.classList.remove('hidden', 'opacity-0');
-        loader.classList.add('opacity-100');
-        if (title) document.getElementById('loadingStatusBadge').textContent = title;
-        if (detail) document.getElementById('loadingStatusDetail').textContent = detail;
-      }
-    }
-
     let loaderStartTime = Date.now();
 
     function showGlobalLoader(title, detail) {
