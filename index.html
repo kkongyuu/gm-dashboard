@@ -3692,7 +3692,11 @@
       const liveBranches = typeof getLiveBranchesWithStats === 'function' ? getLiveBranchesWithStats() : [];
       const findBranchMeta = (bName) => {
         const key = normalizeBranchKey(bName);
-        return liveBranches.find(x => normalizeBranchKey(x.name) === key || x.matchKeys.some(k => key.includes(normalizeBranchKey(k))));
+        if (!key) return null;
+        return liveBranches.find(x => {
+          const xKey = normalizeBranchKey(x && x.name ? x.name : '');
+          return xKey && (xKey === key || xKey.includes(key) || key.includes(xKey));
+        });
       };
 
       const listWrap = document.getElementById('accountingBranchLeaderboardWrap');
