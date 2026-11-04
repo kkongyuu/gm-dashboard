@@ -1664,19 +1664,31 @@
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3.5">
               <div>
                 <div class="flex items-center space-x-2">
-                  <span class="w-2.5 h-2.5 rounded-full bg-teal-500"></span>
-                  <h3 class="font-black text-slate-900 text-base">มุมมองรายวัน (Daily Spend & Calendar)</h3>
+                  <span id="accountingDailyCardDot" class="w-2.5 h-2.5 rounded-full bg-teal-500"></span>
+                  <h3 id="accountingDailyCardTitle" class="font-black text-slate-900 text-base">มุมมองรายวัน (Daily Spend & Calendar)</h3>
                 </div>
-                <p class="text-xs text-slate-500 mt-0.5">คลิกที่แท่งกราฟ หรือคลิกที่ช่องวันที่ 1–31 ด้านล่าง เพื่อดูรายการเบิกเฉพาะวันนั้น</p>
+                <p id="accountingDailyCardSub" class="text-xs text-slate-500 mt-0.5">คลิกที่แท่งกราฟ หรือคลิกที่ช่องวันที่ 1–31 ด้านล่าง เพื่อแปลงกราฟดูยอดเบิกแต่ละสาขาของวันนั้น</p>
               </div>
-              <div class="flex items-center space-x-1.5 text-xxs font-semibold text-slate-500">
-                <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-600" id="accountingActiveDaysBadge">มีการเบิก 0 วัน</span>
+              <div class="flex flex-wrap items-center gap-1.5 text-xxs font-semibold text-slate-500">
+                <button type="button" onclick="selectAccountingDay(null)" id="btnBackToAllDaysChart" class="hidden px-2.5 py-1 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 font-extrabold transition flex items-center space-x-1 shadow-2xs">
+                  <i data-lucide="arrow-left" class="w-3.5 h-3.5 text-amber-700"></i>
+                  <span>กลับดูรายวัน 1–31</span>
+                </button>
+                <span class="px-2.5 py-1 rounded-xl bg-slate-100 text-slate-700 font-bold" id="accountingActiveDaysBadge">มีการเบิก 0 วัน</span>
               </div>
             </div>
 
-            <!-- Daily Trend Chart (Clickable Bars/Points) -->
-            <div class="h-52 relative mt-4">
+            <!-- Daily Trend Chart OR Selected Day's Branch Breakdown Chart -->
+            <div class="h-56 relative mt-4">
               <canvas id="accountingDailyChart"></canvas>
+              <div id="accountingDailyEmptyOverlay" class="hidden absolute inset-0 bg-slate-50/95 rounded-2xl border border-dashed border-slate-200 flex flex-col items-center justify-center text-center p-4">
+                <i data-lucide="calendar-x" class="w-8 h-8 text-slate-400 mb-1.5"></i>
+                <p class="text-sm font-bold text-slate-700" id="accountingDailyEmptyTitle">ไม่มีรายการเบิกจ่ายในวันที่เลือก</p>
+                <p class="text-xs text-slate-400 mt-0.5">คลิกเลือกช่องวันที่ที่มีสีด้านล่าง หรือกลับไปดูภาพรวมรายวัน 1–31</p>
+                <button type="button" onclick="selectAccountingDay(null)" class="mt-3 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition">
+                  ← กลับไปดูกราฟรายวันทั้งเดือน (1–31)
+                </button>
+              </div>
             </div>
           </div>
 
@@ -3510,123 +3522,277 @@
       }
     }
 
-    // 2. Render Interactive Daily Bar/Line Chart & 31-Day Calendar Heatmap Strip
+    // 2. Render Interactive Daily Bar Chart (OR Selected Day's Branch Breakdown Chart) & 31-Day Calendar Heatmap Strip
     function renderAccountingDailyChartAndCalendar(acct) {
       const details = Array.isArray(acct.details) ? acct.details : [];
       const dailyStats = {};
       for (let d = 1; d <= 31; d++) {
-        dailyStats[d] = { day: d, amount: 0, count: 0, branches: new Set(), dateStr: '' };
+        dailyStats[d] = { day: d, amount: 0, count: 0, branches: new Set(), dateStr: '', byBranch: {} };
       }
 
+      // Compute calendar heatmap stats (respecting branch filter if active, so calendar always shows all 31 days)
       details.forEach(item => {
-        // If filtering by branch, show daily pattern for that branch (or all branches if 'ALL')
-        if (accountingFilterState.branch !== 'ALL' && item.branch !== accountingFilterState.branch) return;
         const dayNum = extractAccountingDayNum(item.date, item.sortableDate);
-        if (dayNum && dailyStats[dayNum]) {
-          dailyStats[dayNum].amount += (Number(item.amount) || 0);
-          dailyStats[dayNum].count++;
-          if (item.branch) dailyStats[dayNum].branches.add(item.branch);
-          if (!dailyStats[dayNum].dateStr && item.date) dailyStats[dayNum].dateStr = item.date;
+        if (!dayNum || !dailyStats[dayNum]) return;
+
+        const amt = Number(item.amount) || 0;
+        const bName = item.branch || 'ไม่ระบุสาขา';
+
+        // Always record per-branch breakdown for each day so clicking a day can show all branches on that day
+        if (!dailyStats[dayNum].byBranch[bName]) {
+          dailyStats[dayNum].byBranch[bName] = { branch: bName, amount: 0, count: 0, items: [] };
         }
+        dailyStats[dayNum].byBranch[bName].amount += amt;
+        dailyStats[dayNum].byBranch[bName].count++;
+        dailyStats[dayNum].byBranch[bName].items.push(item);
+
+        if (accountingFilterState.branch !== 'ALL' && item.branch !== accountingFilterState.branch) return;
+        dailyStats[dayNum].amount += amt;
+        dailyStats[dayNum].count++;
+        if (item.branch) dailyStats[dayNum].branches.add(item.branch);
+        if (!dailyStats[dayNum].dateStr && item.date) dailyStats[dayNum].dateStr = item.date;
       });
 
       const activeDaysCount = Object.values(dailyStats).filter(x => x.amount > 0).length;
       const maxDayAmount = Math.max(...Object.values(dailyStats).map(x => x.amount), 1);
 
+      const selectedDay = accountingFilterState.day;
+      const titleEl = document.getElementById('accountingDailyCardTitle');
+      const subEl = document.getElementById('accountingDailyCardSub');
+      const dotEl = document.getElementById('accountingDailyCardDot');
+      const backBtn = document.getElementById('btnBackToAllDaysChart');
       const activeBadge = document.getElementById('accountingActiveDaysBadge');
-      if (activeBadge) {
-        activeBadge.textContent = accountingFilterState.branch !== 'ALL'
-          ? `${accountingFilterState.branch}: เบิก ${activeDaysCount} วัน`
-          : `มีการเบิก ${activeDaysCount} วันในเดือนนี้`;
-      }
-
-      const dailyLabels = [];
-      const dailyAmounts = [];
-      const barBgColors = [];
-
-      for (let day = 1; day <= 31; day++) {
-        dailyLabels.push(`${day}`);
-        const amt = dailyStats[day].amount;
-        dailyAmounts.push(amt);
-        if (accountingFilterState.day === day) {
-          barBgColors.push('#f59e0b'); // Highlight selected day in amber
-        } else if (amt >= maxDayAmount * 0.75 && amt > 0) {
-          barBgColors.push('#0d9488');
-        } else if (amt > 0) {
-          barBgColors.push('#2dd4bf');
-        } else {
-          barBgColors.push('#e2e8f0');
-        }
-      }
-
+      const emptyOverlay = document.getElementById('accountingDailyEmptyOverlay');
+      const emptyTitle = document.getElementById('accountingDailyEmptyTitle');
       const canvasEl = document.getElementById('accountingDailyChart');
-      if (canvasEl) {
-        if (dashboardState.charts.accountingDaily) dashboardState.charts.accountingDaily.destroy();
-        const ctxDaily = canvasEl.getContext('2d');
-        dashboardState.charts.accountingDaily = new Chart(ctxDaily, {
-          type: 'bar',
-          data: {
-            labels: dailyLabels,
-            datasets: [{
-              label: 'ยอดเบิก (บาท)',
-              data: dailyAmounts,
-              backgroundColor: barBgColors,
-              hoverBackgroundColor: '#0f766e',
-              borderRadius: 5,
-              borderSkipped: false
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            onClick: (evt, elements) => {
-              if (elements && elements.length > 0) {
-                const idx = elements[0].index;
-                const clickedDay = idx + 1;
-                selectAccountingDay(clickedDay);
+
+      if (selectedDay !== null && dailyStats[selectedDay]) {
+        // ===================================================================
+        // MODE B: SELECTED DAY -> TRANSFORM CHART TO BRANCH BREAKDOWN OF THAT DAY
+        // ===================================================================
+        const dayObj = dailyStats[selectedDay];
+        const dayBranches = Object.values(dayObj.byBranch).sort((a, b) => b.amount - a.amount);
+        const dayTotalAllBranches = dayBranches.reduce((s, x) => s + x.amount, 0);
+        const dayTotalItems = dayBranches.reduce((s, x) => s + x.count, 0);
+        const dateDisplay = dayObj.dateStr || `วันที่ ${selectedDay}`;
+
+        if (dotEl) dotEl.className = 'w-2.5 h-2.5 rounded-full bg-amber-500';
+        if (titleEl) titleEl.textContent = `📊 ยอดเบิกแยกตามสาขา — ประจำวันที่ ${selectedDay} (${dateDisplay})`;
+        if (subEl) {
+          subEl.textContent = dayBranches.length > 0
+            ? `วันที่ ${selectedDay} มียอดเบิกรวม ฿${dayTotalAllBranches.toLocaleString()} จาก ${dayBranches.length} สาขา (${dayTotalItems} รายการ) • คลิกแท่งสาขาเพื่อกรอง หรือคลิกซ้ำที่วันที่ ${selectedDay} เพื่อกลับ`
+            : `วันที่ ${selectedDay} ไม่มีรายการเบิกจ่าย`;
+        }
+        if (backBtn) backBtn.classList.remove('hidden');
+        if (activeBadge) {
+          activeBadge.textContent = `วันที่ ${selectedDay}: ${dayBranches.length} สาขา (฿${dayTotalAllBranches.toLocaleString()})`;
+          activeBadge.className = 'px-2.5 py-1 rounded-xl bg-amber-100 text-amber-900 border border-amber-300 font-extrabold';
+        }
+
+        if (dayBranches.length === 0) {
+          if (dashboardState.charts.accountingDaily) dashboardState.charts.accountingDaily.destroy();
+          if (emptyOverlay) emptyOverlay.classList.remove('hidden');
+          if (emptyTitle) emptyTitle.textContent = `วันที่ ${selectedDay} ไม่มีรายการเบิกจ่าย`;
+        } else {
+          if (emptyOverlay) emptyOverlay.classList.add('hidden');
+          if (canvasEl) {
+            if (dashboardState.charts.accountingDaily) dashboardState.charts.accountingDaily.destroy();
+            const ctxDaily = canvasEl.getContext('2d');
+            const bLabels = dayBranches.map(b => b.branch.replace('สาขา', ''));
+            const bAmounts = dayBranches.map(b => b.amount);
+            const bColors = dayBranches.map((b, i) => {
+              if (accountingFilterState.branch !== 'ALL' && accountingFilterState.branch === b.branch) return '#f59e0b';
+              if (i === 0) return '#0d9488';
+              if (i === 1) return '#14b8a6';
+              return '#2dd4bf';
+            });
+
+            dashboardState.charts.accountingDaily = new Chart(ctxDaily, {
+              type: 'bar',
+              data: {
+                labels: bLabels,
+                datasets: [{
+                  label: `ยอดเบิกวันที่ ${selectedDay} (บาท)`,
+                  data: bAmounts,
+                  backgroundColor: bColors,
+                  hoverBackgroundColor: '#f59e0b',
+                  borderRadius: 8,
+                  maxBarThickness: 54
+                }]
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                layout: {
+                  padding: { top: 22 }
+                },
+                onClick: (evt, elements) => {
+                  if (elements && elements.length > 0) {
+                    const idx = elements[0].index;
+                    const clickedBranch = dayBranches[idx] ? dayBranches[idx].branch : null;
+                    if (clickedBranch) selectAccountingBranch(clickedBranch);
+                  }
+                },
+                scales: {
+                  x: {
+                    grid: { display: false },
+                    ticks: {
+                      maxRotation: 25,
+                      minRotation: 0,
+                      autoSkip: false,
+                      font: { family: 'Prompt, Inter', size: 11, weight: '700' },
+                      color: '#0f172a'
+                    }
+                  },
+                  y: {
+                    beginAtZero: true,
+                    ticks: {
+                      callback: val => val >= 1000 ? (val / 1000).toLocaleString() + 'k ฿' : val + ' ฿',
+                      font: { family: 'Inter, Prompt', size: 10 },
+                      color: '#64748b'
+                    }
+                  }
+                },
+                plugins: {
+                  legend: { display: false },
+                  datalabels: {
+                    display: true,
+                    color: '#0f172a',
+                    anchor: 'end',
+                    align: 'top',
+                    offset: 2,
+                    font: { family: 'Prompt', weight: 'bold', size: 10.5 },
+                    formatter: val => '฿' + val.toLocaleString()
+                  },
+                  tooltip: {
+                    callbacks: {
+                      title: items => {
+                        if (!items.length) return '';
+                        const idx = items[0].dataIndex;
+                        const bObj = dayBranches[idx];
+                        return bObj ? `${bObj.branch} (วันที่ ${selectedDay})` : '';
+                      },
+                      label: ctx => {
+                        const bObj = dayBranches[ctx.dataIndex];
+                        return `ยอดเบิกรวม: ฿${ctx.parsed.y.toLocaleString()} (${bObj ? bObj.count : 0} รายการ)`;
+                      },
+                      afterBody: items => {
+                        if (!items.length) return [];
+                        const bObj = dayBranches[items[0].dataIndex];
+                        if (!bObj || !bObj.items) return [];
+                        return bObj.items.slice(0, 5).map(it => `• ${it.name}: ฿${Number(it.amount || 0).toLocaleString()}`);
+                      }
+                    }
+                  }
+                }
               }
+            });
+          }
+        }
+      } else {
+        // ===================================================================
+        // MODE A: DEFAULT 31-DAY OVERVIEW BAR CHART (วันที่ 1 – 31)
+        // ===================================================================
+        if (dotEl) dotEl.className = 'w-2.5 h-2.5 rounded-full bg-teal-500';
+        if (titleEl) titleEl.textContent = 'มุมมองรายวัน (Daily Spend & Calendar)';
+        if (subEl) subEl.textContent = 'คลิกที่แท่งกราฟ หรือคลิกที่ช่องวันที่ 1–31 ด้านล่าง เพื่อแปลงกราฟดูยอดเบิกแต่ละสาขาของวันนั้น';
+        if (backBtn) backBtn.classList.add('hidden');
+        if (emptyOverlay) emptyOverlay.classList.add('hidden');
+
+        if (activeBadge) {
+          activeBadge.textContent = accountingFilterState.branch !== 'ALL'
+            ? `${accountingFilterState.branch}: เบิก ${activeDaysCount} วัน`
+            : `มีการเบิก ${activeDaysCount} วันในเดือนนี้`;
+          activeBadge.className = 'px-2.5 py-1 rounded-xl bg-slate-100 text-slate-700 font-bold';
+        }
+
+        const dailyLabels = [];
+        const dailyAmounts = [];
+        const barBgColors = [];
+
+        for (let day = 1; day <= 31; day++) {
+          dailyLabels.push(`${day}`);
+          const amt = dailyStats[day].amount;
+          dailyAmounts.push(amt);
+          if (amt >= maxDayAmount * 0.85 && amt > 0) {
+            barBgColors.push('#f59e0b');
+          } else if (amt >= maxDayAmount * 0.4 && amt > 0) {
+            barBgColors.push('#0d9488');
+          } else if (amt > 0) {
+            barBgColors.push('#2dd4bf');
+          } else {
+            barBgColors.push('#e2e8f0');
+          }
+        }
+
+        if (canvasEl) {
+          if (dashboardState.charts.accountingDaily) dashboardState.charts.accountingDaily.destroy();
+          const ctxDaily = canvasEl.getContext('2d');
+          dashboardState.charts.accountingDaily = new Chart(ctxDaily, {
+            type: 'bar',
+            data: {
+              labels: dailyLabels,
+              datasets: [{
+                label: 'ยอดเบิก (บาท)',
+                data: dailyAmounts,
+                backgroundColor: barBgColors,
+                hoverBackgroundColor: '#0f766e',
+                borderRadius: 5,
+                borderSkipped: false
+              }]
             },
-            scales: {
-              x: {
-                grid: { display: false },
-                ticks: {
-                  maxRotation: 0,
-                  minRotation: 0,
-                  autoSkip: false,
-                  font: { family: 'Inter, Prompt', size: 10, weight: '700' },
-                  color: '#475569'
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              onClick: (evt, elements) => {
+                if (elements && elements.length > 0) {
+                  const idx = elements[0].index;
+                  const clickedDay = idx + 1;
+                  selectAccountingDay(clickedDay);
                 }
               },
-              y: {
-                beginAtZero: true,
-                ticks: {
-                  callback: val => val >= 1000 ? (val / 1000).toLocaleString() + 'k ฿' : val + ' ฿',
-                  font: { family: 'Inter, Prompt', size: 10 },
-                  color: '#64748b'
+              scales: {
+                x: {
+                  grid: { display: false },
+                  ticks: {
+                    maxRotation: 0,
+                    minRotation: 0,
+                    autoSkip: false,
+                    font: { family: 'Inter, Prompt', size: 10, weight: '700' },
+                    color: '#475569'
+                  }
+                },
+                y: {
+                  beginAtZero: true,
+                  ticks: {
+                    callback: val => val >= 1000 ? (val / 1000).toLocaleString() + 'k ฿' : val + ' ฿',
+                    font: { family: 'Inter, Prompt', size: 10 },
+                    color: '#64748b'
+                  }
                 }
-              }
-            },
-            plugins: {
-              legend: { display: false },
-              datalabels: { display: false },
-              tooltip: {
-                callbacks: {
-                  title: items => {
-                    if (!items.length) return '';
-                    const dNum = parseInt(items[0].label, 10);
-                    const st = dailyStats[dNum];
-                    return st && st.dateStr ? `วันที่ ${dNum} (${st.dateStr})` : `วันที่ ${dNum}`;
-                  },
-                  label: ctx => {
-                    const dNum = ctx.dataIndex + 1;
-                    const st = dailyStats[dNum];
-                    return `ยอดเบิก: ฿${ctx.parsed.y.toLocaleString()} (${st ? st.count : 0} รายการ • คลิกเพื่อกรอง)`;
+              },
+              plugins: {
+                legend: { display: false },
+                datalabels: { display: false },
+                tooltip: {
+                  callbacks: {
+                    title: items => {
+                      if (!items.length) return '';
+                      const dNum = parseInt(items[0].label, 10);
+                      const st = dailyStats[dNum];
+                      return st && st.dateStr ? `วันที่ ${dNum} (${st.dateStr})` : `วันที่ ${dNum}`;
+                    },
+                    label: ctx => {
+                      const dNum = ctx.dataIndex + 1;
+                      const st = dailyStats[dNum];
+                      return `ยอดเบิก: ฿${ctx.parsed.y.toLocaleString()} (${st ? st.count : 0} รายการ จาก ${st ? st.branches.size : 0} สาขา • คลิกเพื่อแยกดูรายสาขา)`;
+                    }
                   }
                 }
               }
             }
-          }
-        });
+          });
+        }
       }
 
       // Render 31-Day Calendar Heatmap Grid
@@ -3656,7 +3822,7 @@
           }
 
           if (isSelected) {
-            cellCls = 'bg-slate-900 text-white border-slate-950 ring-2 ring-amber-400 shadow-md';
+            cellCls = 'bg-slate-900 text-white border-slate-950 ring-2 ring-amber-400 shadow-md scale-[1.03]';
             amtCls = 'text-amber-300 font-extrabold';
           } else if (!inPeriodFilter) {
             cellCls += ' opacity-35';
@@ -3667,7 +3833,7 @@
             : '-';
 
           calHtml += `
-            <button type="button" onclick="selectAccountingDay(${day})" title="วันที่ ${day}: ฿${amt.toLocaleString()} (${st.count} รายการ)" class="rounded-xl p-1.5 border text-center transition flex flex-col items-center justify-center min-h-[48px] ${cellCls}">
+            <button type="button" onclick="selectAccountingDay(${day})" title="วันที่ ${day}: ฿${amt.toLocaleString()} (${st.count} รายการ • คลิกเพื่อดูกราฟแยกตามสาขาของวันนี้)" class="rounded-xl p-1.5 border text-center transition flex flex-col items-center justify-center min-h-[48px] ${cellCls}">
               <span class="text-xxs font-black leading-none">${day}</span>
               <span class="text-xxxs mt-1 leading-none ${amtCls}">${shortAmt}</span>
             </button>
@@ -3677,15 +3843,46 @@
       }
     }
 
-    // 3. Render Full All-Branch Leaderboard & Top 10 Chart
+    // 3. Render Full All-Branch Leaderboard & Top 10 Chart (Dynamically reacts to selected Day or Period!)
     function renderAccountingBranchLeaderboardAndChart(acct) {
-      const branchList = Array.isArray(acct.branchList) ? acct.branchList : [];
-      const totalAmount = Number(acct.totalAmount) || 0;
-      const maxBranchAmt = branchList.length > 0 ? Math.max(...branchList.map(b => Number(b.totalAmount) || 0), 1) : 1;
+      const details = Array.isArray(acct.details) ? acct.details : [];
+      let activeBranchList = [];
+      let contextTotalAmount = 0;
+      let scopeLabel = 'ของทั้งเดือน';
+
+      if (accountingFilterState.day !== null || accountingFilterState.period !== 'ALL') {
+        const mapByB = {};
+        details.forEach(item => {
+          const dayNum = extractAccountingDayNum(item.date, item.sortableDate);
+          if (accountingFilterState.day !== null && dayNum !== accountingFilterState.day) return;
+          if (accountingFilterState.period !== 'ALL' && getAccountingPeriodForDay(dayNum) !== accountingFilterState.period) return;
+          const bName = item.branch || 'ไม่ระบุสาขา';
+          const amt = Number(item.amount) || 0;
+          if (!mapByB[bName]) mapByB[bName] = { branch: bName, totalAmount: 0, itemsCount: 0 };
+          mapByB[bName].totalAmount += amt;
+          mapByB[bName].itemsCount++;
+          contextTotalAmount += amt;
+        });
+        activeBranchList = Object.values(mapByB).sort((a, b) => b.totalAmount - a.totalAmount);
+        if (accountingFilterState.day !== null) {
+          scopeLabel = `ของวันที่ ${accountingFilterState.day}`;
+        } else if (accountingFilterState.period === 'P1') {
+          scopeLabel = 'ของรอบ 1–10';
+        } else if (accountingFilterState.period === 'P2') {
+          scopeLabel = 'ของรอบ 11–20';
+        } else if (accountingFilterState.period === 'P3') {
+          scopeLabel = 'ของรอบ 21–31';
+        }
+      } else {
+        activeBranchList = Array.isArray(acct.branchList) ? acct.branchList : [];
+        contextTotalAmount = Number(acct.totalAmount) || 0;
+      }
+
+      const maxBranchAmt = activeBranchList.length > 0 ? Math.max(...activeBranchList.map(b => Number(b.totalAmount) || 0), 1) : 1;
 
       const footerCount = document.getElementById('accountingBranchFooterCount');
       if (footerCount) {
-        footerCount.textContent = `รวมทั้งหมด ${branchList.length} สาขาที่มีการเบิก`;
+        footerCount.textContent = `รวม ${activeBranchList.length} สาขาที่มีการเบิก (${scopeLabel})`;
       }
 
       // Map branch metadata (manager & region) from live branches if available
@@ -3701,13 +3898,13 @@
 
       const listWrap = document.getElementById('accountingBranchLeaderboardWrap');
       if (listWrap) {
-        if (branchList.length === 0) {
-          listWrap.innerHTML = `<div class="p-8 text-center text-slate-400 text-xs">ไม่พบข้อมูลการเบิกสาขา</div>`;
+        if (activeBranchList.length === 0) {
+          listWrap.innerHTML = `<div class="p-8 text-center text-slate-400 text-xs">ไม่พบข้อมูลการเบิกสาขา (${scopeLabel})</div>`;
         } else {
-          listWrap.innerHTML = branchList.map((b, idx) => {
+          listWrap.innerHTML = activeBranchList.map((b, idx) => {
             const amt = Number(b.totalAmount) || 0;
             const count = Number(b.itemsCount) || 0;
-            const pctOfTotal = totalAmount > 0 ? ((amt / totalAmount) * 100).toFixed(1) : '0.0';
+            const pctOfTotal = contextTotalAmount > 0 ? ((amt / contextTotalAmount) * 100).toFixed(1) : '0.0';
             const barWidth = Math.min(Math.max(Math.round((amt / maxBranchAmt) * 100), 4), 100);
             const isSelected = accountingFilterState.branch === b.branch;
             const meta = findBranchMeta(b.branch);
@@ -3736,7 +3933,7 @@
                   </div>
                   <div class="text-right flex-shrink-0">
                     <span class="font-black text-teal-800 text-xs sm:text-sm block">฿${amt.toLocaleString()}</span>
-                    <span class="text-xxxs font-bold text-slate-500">${pctOfTotal}% ของทั้งเดือน</span>
+                    <span class="text-xxxs font-bold text-slate-500">${pctOfTotal}% ${scopeLabel}</span>
                   </div>
                 </div>
                 <div class="w-full bg-slate-200/80 rounded-full h-1.5 mt-2 overflow-hidden">
@@ -3750,56 +3947,57 @@
 
       // Render Top 10 Branch Bar Chart
       const chartCanvas = document.getElementById('accountingBranchChart');
-      if (chartCanvas && branchList.length > 0) {
-        const topBranches = branchList.slice(0, 10);
-        const bLabels = topBranches.map(b => b.branch.replace('สาขา', ''));
-        const bAmounts = topBranches.map(b => b.totalAmount);
-
+      if (chartCanvas) {
         if (dashboardState.charts.accountingBranch) dashboardState.charts.accountingBranch.destroy();
-        const ctxBranch = chartCanvas.getContext('2d');
-        dashboardState.charts.accountingBranch = new Chart(ctxBranch, {
-          type: 'bar',
-          data: {
-            labels: bLabels,
-            datasets: [{
-              label: 'ยอดเบิกรวม (บาท)',
-              data: bAmounts,
-              backgroundColor: topBranches.map(b => accountingFilterState.branch === b.branch ? '#f59e0b' : '#14B8A6'),
-              borderRadius: 6
-            }]
-          },
-          options: {
-            indexAxis: 'y',
-            responsive: true,
-            maintainAspectRatio: false,
-            onClick: (evt, elements) => {
-              if (elements && elements.length > 0) {
-                const idx = elements[0].index;
-                const clickedBranch = topBranches[idx] ? topBranches[idx].branch : null;
-                if (clickedBranch) selectAccountingBranch(clickedBranch);
-              }
+        if (activeBranchList.length > 0) {
+          const topBranches = activeBranchList.slice(0, 10);
+          const bLabels = topBranches.map(b => b.branch.replace('สาขา', ''));
+          const bAmounts = topBranches.map(b => b.totalAmount);
+          const ctxBranch = chartCanvas.getContext('2d');
+          dashboardState.charts.accountingBranch = new Chart(ctxBranch, {
+            type: 'bar',
+            data: {
+              labels: bLabels,
+              datasets: [{
+                label: 'ยอดเบิกรวม (บาท)',
+                data: bAmounts,
+                backgroundColor: topBranches.map(b => accountingFilterState.branch === b.branch ? '#f59e0b' : '#14B8A6'),
+                borderRadius: 6
+              }]
             },
-            plugins: {
-              legend: { display: false },
-              datalabels: {
-                display: true,
-                color: '#0f172a',
-                anchor: 'end',
-                align: 'right',
-                offset: 4,
-                font: { family: 'Prompt', weight: 'bold', size: 10 },
-                formatter: val => '฿' + val.toLocaleString()
-              }
-            },
-            scales: {
-              x: {
-                ticks: {
-                  callback: val => val >= 1000 ? (val / 1000).toLocaleString() + 'k' : val
+            options: {
+              indexAxis: 'y',
+              responsive: true,
+              maintainAspectRatio: false,
+              onClick: (evt, elements) => {
+                if (elements && elements.length > 0) {
+                  const idx = elements[0].index;
+                  const clickedBranch = topBranches[idx] ? topBranches[idx].branch : null;
+                  if (clickedBranch) selectAccountingBranch(clickedBranch);
+                }
+              },
+              plugins: {
+                legend: { display: false },
+                datalabels: {
+                  display: true,
+                  color: '#0f172a',
+                  anchor: 'end',
+                  align: 'right',
+                  offset: 4,
+                  font: { family: 'Prompt', weight: 'bold', size: 10 },
+                  formatter: val => '฿' + val.toLocaleString()
+                }
+              },
+              scales: {
+                x: {
+                  ticks: {
+                    callback: val => val >= 1000 ? (val / 1000).toLocaleString() + 'k' : val
+                  }
                 }
               }
             }
-          }
-        });
+          });
+        }
       }
     }
 
