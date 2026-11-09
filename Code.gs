@@ -587,33 +587,38 @@ function getAccountingDashboardDataFast() {
 }
 
 // ==============================================================================
-// 5. HELPER: PARSE & FILTER MEETING DATES (ไม่ผูกติดกับปี นับการประชุมที่มีอยู่จริง)
+// 5. HELPER: PARSE & FILTER MEETING DATES (กรองเฉพาะเดือนที่เลือกเท่านั้น ไม่สนใจปี)
 // ==============================================================================
 function parseMeetingDateStr(val, targetMonth, targetYear) {
   if (val === null || val === undefined || val === '') return null;
 
+  var targetMonthNum = targetMonth + 1; // 1 - 12
+  var yTh = targetYear ? targetYear + 543 : 2569;
+
   // 1. กรณีเป็น Date Object จาก Google Sheets
   if (val instanceof Date || Object.prototype.toString.call(val) === '[object Date]') {
-    var d = String(val.getDate()).padStart(2, '0');
-    var mo = String(val.getMonth() + 1).padStart(2, '0');
-    var yTh = targetYear ? targetYear + 543 : 2569;
-    return d + '/' + mo + '/' + yTh;
+    if (val.getMonth() === targetMonth) {
+      var d = String(val.getDate()).padStart(2, '0');
+      var mo = String(val.getMonth() + 1).padStart(2, '0');
+      return d + '/' + mo + '/' + yTh;
+    }
+    return null;
   }
 
   // 2. กรณีเป็น Excel Serial Number
   if (typeof val === 'number' && val > 40000 && val < 60000) {
     var dObj = new Date((val - 25569) * 86400 * 1000);
-    var d = String(dObj.getDate()).padStart(2, '0');
-    var mo = String(dObj.getMonth() + 1).padStart(2, '0');
-    var yTh = targetYear ? targetYear + 543 : 2569;
-    return d + '/' + mo + '/' + yTh;
+    if (dObj.getMonth() === targetMonth) {
+      var d = String(dObj.getDate()).padStart(2, '0');
+      var mo = String(dObj.getMonth() + 1).padStart(2, '0');
+      return d + '/' + mo + '/' + yTh;
+    }
+    return null;
   }
 
   var s = String(val).trim();
   if (!s || s === '-' || s.length < 2) return null;
   if (s.indexOf('วันที่') === 0 || s.indexOf('ครั้งที่') === 0 || s === 'ลำดับ' || s === 'หัวข้อ' || s === 'หมายเหตุ') return null;
-
-  var yTh = targetYear ? targetYear + 543 : 2569;
 
   // 3. กรณีมีชื่อเดือนภาษาไทย/อังกฤษในข้อความ
   var thaiMonthKeywords = [
@@ -636,10 +641,14 @@ function parseMeetingDateStr(val, targetMonth, targetYear) {
     var kws = thaiMonthKeywords[mIdx];
     for (var k = 0; k < kws.length; k++) {
       if (sLower.indexOf(kws[k]) !== -1) {
-        var numMatch = s.match(/\b(\d{1,2})\b/);
-        var dayStr = numMatch ? String(numMatch[1]).padStart(2, '0') : '01';
-        var moStr = String(mIdx + 1).padStart(2, '0');
-        return dayStr + '/' + moStr + '/' + yTh;
+        // ต้องตรงกับเดือนที่เลือกเท่านั้น
+        if (mIdx === targetMonth) {
+          var numMatch = s.match(/\b(\d{1,2})\b/);
+          var dayStr = numMatch ? String(numMatch[1]).padStart(2, '0') : '01';
+          var moStr = String(mIdx + 1).padStart(2, '0');
+          return dayStr + '/' + moStr + '/' + yTh;
+        }
+        return null;
       }
     }
   }
@@ -649,7 +658,10 @@ function parseMeetingDateStr(val, targetMonth, targetYear) {
   if (mIso) {
     var mo = parseInt(mIso[2], 10);
     var d = parseInt(mIso[3], 10);
-    return String(d).padStart(2, '0') + '/' + String(mo).padStart(2, '0') + '/' + yTh;
+    if (mo === targetMonthNum) {
+      return String(d).padStart(2, '0') + '/' + String(mo).padStart(2, '0') + '/' + yTh;
+    }
+    return null;
   }
 
   // 5. กรณีเป็นรูปแบบตัวเลขที่มีขีดหรือสแลช: M/D/YYYY, D/M/YYYY, M/D, D/M
@@ -658,26 +670,27 @@ function parseMeetingDateStr(val, targetMonth, targetYear) {
     var p1 = parseInt(mSlash[1], 10);
     var p2 = parseInt(mSlash[2], 10);
 
-    var dayVal = p1;
-    var monthVal = p2;
+    var matchDay = null;
+    var matchMonth = null;
 
-    if (p1 > 12 && p2 <= 12) {
-      dayVal = p1;
-      monthVal = p2;
-    } else if (p2 > 12 && p1 <= 12) {
-      dayVal = p2;
-      monthVal = p1;
-    } else if (p1 <= 12 && p2 <= 31) {
-      // รูปแบบ US Format e.g. 10/18
-      monthVal = p1;
-      dayVal = p2;
+    // ตรวจสอบว่าเป็นเดือนเป้าหมายหรือไม่ (เช่น เดือน 10)
+    if (p1 === targetMonthNum && p2 >= 1 && p2 <= 31) {
+      // รูปแบบ US Format (Month/Day) เช่น 10/18
+      matchMonth = p1;
+      matchDay = p2;
+    } else if (p2 === targetMonthNum && p1 >= 1 && p1 <= 31) {
+      // รูปแบบ Thai/UK Format (Day/Month) เช่น 18/10
+      matchMonth = p2;
+      matchDay = p1;
     }
 
-    return String(dayVal).padStart(2, '0') + '/' + String(monthVal).padStart(2, '0') + '/' + yTh;
+    if (matchDay !== null && matchMonth !== null) {
+      return String(matchDay).padStart(2, '0') + '/' + String(matchMonth).padStart(2, '0') + '/' + yTh;
+    }
+    return null; // คนละเดือน ไม่นับ
   }
 
-  // หากมีค่าระบุที่ไม่ใช่ค่าว่าง ให้ส่งคืนค่านั้นเลย
-  return s;
+  return null;
 }
 
 // ==============================================================================
