@@ -161,12 +161,13 @@ function getGmDashboardDataFast(periodInfo) {
     if (sheetMap[exactName]) return sheetMap[exactName];
     if (sheetMap[`${managerName}-${typeName}`]) return sheetMap[`${managerName}-${typeName}`];
 
-    // 2. จับคู่ชื่อเล่น/นามแฝง (เช่น ลูกกุ้ง <-> กุ้ง, โชว์ <-> โชว)
+    // 2. จับคู่ชื่อเล่น/นามแฝง (เช่น ลูกกุ้ง <-> กุ้ง, โชว์ <-> โชว <-> โช)
     const aliases = [managerName];
-    if (managerName === 'ลูกกุ้ง') aliases.push('กุ้ง');
+    if (managerName === 'ลูกกุ้ง') aliases.push('กุ้ง', 'ลูกกุ้ง');
     if (managerName === 'กุ้ง') aliases.push('ลูกกุ้ง');
-    if (managerName === 'โชว์') aliases.push('โชว');
-    if (managerName === 'โชว') aliases.push('โชว์');
+    if (managerName === 'โชว์') aliases.push('โชว', 'โช', 'ผจก.โช', 'ผจก. โช');
+    if (managerName === 'โชว') aliases.push('โชว์', 'โช');
+    if (managerName === 'โช') aliases.push('โชว์', 'โชว');
 
     const cleanType = cleanThaiText(typeName);
 
@@ -327,7 +328,23 @@ function getGmDashboardDataFast(periodInfo) {
           return true;
         }
 
-        for (let r = 0; r < totalRows; r += 24) {
+        // ค้นหาตำแหน่งบล็อกสาขาแบบไดนามิก (ไม่ยึดติดกับ r += 24 อย่างเดียว)
+        let branchBlockRows = [];
+        for (let r = 0; r < totalRows; r++) {
+          if (isValidBranch(rData[r][3]) || isValidBranch(rData[r][0])) {
+            branchBlockRows.push(r);
+          }
+        }
+
+        // หากหาด้วยบล็อกไม่เจอ ให้ใช้วิธีเดิมเป็น fallback
+        if (branchBlockRows.length === 0) {
+          for (let r = 0; r < totalRows; r += 24) {
+            branchBlockRows.push(r);
+          }
+        }
+
+        for (let bIdx = 0; bIdx < branchBlockRows.length; bIdx++) {
+          const r = branchBlockRows[bIdx];
           // ค้นหาชื่อสาขาที่ Cell D (index 3) หรือ Cell A (index 0) ในแถว r, r+1
           let bName = '';
           if (isValidBranch(rData[r][3])) {
@@ -570,12 +587,12 @@ function getAccountingDashboardDataFast() {
 }
 
 // ==============================================================================
-// 5. HELPER: PARSE & FILTER MEETING DATES (รองรับทุก Format อย่างแม่นยำ)
+// 5. HELPER: PARSE & FILTER MEETING DATES (รองรับทุก Format: M/D/YYYY, D/M/YYYY, พ.ศ./ค.ศ., ภาษาไทย)
 // ==============================================================================
 function parseMeetingDateStr(val, targetMonth, targetYear) {
   if (val === null || val === undefined || val === '') return null;
 
-  // 1. กรณีเป็น Date Object
+  // 1. กรณีเป็น Date Object จาก Google Sheets
   if (val instanceof Date || Object.prototype.toString.call(val) === '[object Date]') {
     if (val.getMonth() === targetMonth) {
       var d = String(val.getDate()).padStart(2, '0');
@@ -624,7 +641,6 @@ function parseMeetingDateStr(val, targetMonth, targetYear) {
     var kws = thaiMonthKeywords[mIdx];
     for (var k = 0; k < kws.length; k++) {
       if (sLower.indexOf(kws[k]) !== -1) {
-        // ต้องตรงกับเดือนเป้าหมาย targetMonth เท่านั้น
         if (mIdx !== targetMonth) return null;
 
         var numMatch = s.match(/\b(\d{1,2})\b/);
@@ -656,21 +672,38 @@ function parseMeetingDateStr(val, targetMonth, targetYear) {
     return null;
   }
 
-  // 5. กรณีเป็นรูปแบบ DD/MM/YYYY หรือ DD/MM หรือ D/M
-  var mDm = s.match(/^(\d{1,2})[-/](\d{1,2})(?:[-/](\d{2,4}))?/);
-  if (mDm) {
-    var d = parseInt(mDm[1], 10);
-    var mo = parseInt(mDm[2], 10);
-    var yr = mDm[3];
-    if (mo - 1 === targetMonth) {
+  // 5. กรณีเป็นรูปแบบตัวเลขที่มีขีดหรือสแลช: รองรับทั้ง M/D/YYYY และ D/M/YYYY
+  // ตัวอย่างจริงจากชีท: 10/1/2026, 10/18/2026, 9/4/2026, 18/10/2026
+  var mSlash = s.match(/^(\d{1,2})[-/](\d{1,2})(?:[-/](\d{2,4}))?/);
+  if (mSlash) {
+    var p1 = parseInt(mSlash[1], 10);
+    var p2 = parseInt(mSlash[2], 10);
+    var yr = mSlash[3];
+
+    var dayVal = null;
+    var monthVal = null;
+
+    // ตรวจสอบว่า p1 หรือ p2 ตรงกับ targetMonth (index 0-11, เลขเดือนคือ 1-12)
+    var targetMonthNum = targetMonth + 1;
+
+    if (p1 === targetMonthNum && p2 >= 1 && p2 <= 31) {
+      // รูปแบบ US Format: Month/Day (เช่น 10/18/2026 หรือ 10/1/2026)
+      monthVal = p1;
+      dayVal = p2;
+    } else if (p2 === targetMonthNum && p1 >= 1 && p1 <= 31) {
+      // รูปแบบ Thai/UK Format: Day/Month (เช่น 18/10/2026 หรือ 1/10/2026)
+      dayVal = p1;
+      monthVal = p2;
+    }
+
+    if (dayVal !== null && monthVal !== null) {
       var yTh = targetYear + 543;
       if (yr) {
         var yVal = parseInt(yr, 10);
         yTh = yVal < 100 ? 2500 + yVal : (yVal > 2400 ? yVal : yVal + 543);
       }
-      return String(d).padStart(2, '0') + '/' + String(mo).padStart(2, '0') + '/' + yTh;
+      return String(dayVal).padStart(2, '0') + '/' + String(monthVal).padStart(2, '0') + '/' + yTh;
     }
-    return null;
   }
 
   return null;
