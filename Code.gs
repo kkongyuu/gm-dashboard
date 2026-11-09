@@ -28,8 +28,8 @@ function doGet(e) {
       const periodInfo = getCurrentPeriodInfo();
       const periodIndex = (periodParam !== null && !isNaN(periodParam)) ? periodParam : periodInfo.index;
 
-      // ใช้คีย์แคช v2 เพื่อให้ดึงข้อมูลคอลัมน์ H, I ใหม่ทันทีโดยไม่ติดแคชเก่า
-      const cacheKey = 'gm_dash_cache_v2_p' + periodIndex;
+      // ใช้คีย์แคช v3 เพื่อให้ดึงข้อมูลผู้จัดการทุกคน (รวมถึงชื่อที่เว้นวรรค/วรรณยุกต์ต่างกัน) ใหม่ทันทีโดยไม่ติดแคชเก่า
+      const cacheKey = 'gm_dash_cache_v3_p' + periodIndex;
       const cache = CacheService.getScriptCache();
 
       // ⚡ FAST CACHE: หากมีแคชและไม่ได้สั่งรีเฟรช ตอบกลับทันทีใน 0.1-0.2 วินาที!
@@ -89,7 +89,7 @@ function autoWarmDashboardCache() {
         data: data
       });
       if (jsonStr.length < 100000) {
-        cache.put('gm_dash_cache_v2_p' + p, jsonStr, 900);
+        cache.put('gm_dash_cache_v3_p' + p, jsonStr, 900);
       }
     } catch (e) {
       console.warn('Auto warm error period ' + p + ': ' + e.message);
@@ -137,12 +137,53 @@ function getAllDashboardData(forcedPeriodIndex) {
 function getGmDashboardDataFast(periodInfo) {
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   
-  // ⚡ เทคนิคความเร็วสูง: ดึงชีททั้งหมดในครั้งเดียวลง Map
+  // ⚡ เทคนิคความเร็วสูง: ดึงชีททั้งหมดในครั้งเดียวลง Map พร้อมระบบ Fuzzy Match รองรับวรรณยุกต์/การเคาะวรรค/ชื่อย่อ
   const allSheets = ss.getSheets();
   const sheetMap = {};
   allSheets.forEach(sheet => {
     sheetMap[sheet.getName().trim()] = sheet;
   });
+
+  // ฟังก์ชันจับคู่ชื่อชีทแบบยืดหยุ่นสูง (กันปัญหาเคาะวรรค, วรรณยุกต์ไทยสลับลำดับ, หรือสะกด โชว/โชว์, กุ้ง/ลูกกุ้ง)
+  function cleanThaiText(str) {
+    if (!str) return '';
+    return String(str)
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[\u0E31\u0E34-\u0E3A\u0E47-\u0E4E]/g, '') // ลบสระบน-ล่างและวรรณยุกต์
+      .replace(/[\s\-_]/g, '')
+      .toLowerCase();
+  }
+
+  function getSheetFuzzy(managerName, typeName) {
+    // 1. ลองหาแบบตรงตัวก่อน
+    const exactName = `${managerName} - ${typeName}`;
+    if (sheetMap[exactName]) return sheetMap[exactName];
+    if (sheetMap[`${managerName}-${typeName}`]) return sheetMap[`${managerName}-${typeName}`];
+
+    // 2. จับคู่ชื่อเล่น/นามแฝง (เช่น ลูกกุ้ง <-> กุ้ง, โชว์ <-> โชว)
+    const aliases = [managerName];
+    if (managerName === 'ลูกกุ้ง') aliases.push('กุ้ง');
+    if (managerName === 'กุ้ง') aliases.push('ลูกกุ้ง');
+    if (managerName === 'โชว์') aliases.push('โชว');
+    if (managerName === 'โชว') aliases.push('โชว์');
+
+    const cleanType = cleanThaiText(typeName);
+
+    for (let i = 0; i < allSheets.length; i++) {
+      const sName = allSheets[i].getName().trim();
+      const sClean = cleanThaiText(sName);
+      if (!sClean.includes(cleanType)) continue;
+
+      for (let a = 0; a < aliases.length; a++) {
+        const aClean = cleanThaiText(aliases[a]);
+        if (sClean.includes(aClean)) {
+          return allSheets[i];
+        }
+      }
+    }
+    return null;
+  }
 
   const managers = MANAGERS;
   let managersData = [];
@@ -164,7 +205,7 @@ function getGmDashboardDataFast(periodInfo) {
       // -------------------------------------------------------------
       let actualMeetings = 0;
       let meetingDates = [];
-      const mSheet = sheetMap[`${managerName} - Meeting`];
+      const mSheet = getSheetFuzzy(managerName, 'Meeting');
       if (mSheet) {
         const mData = mSheet.getDataRange().getValues();
         for (let r = 1; r < mData.length; r++) {
@@ -189,7 +230,7 @@ function getGmDashboardDataFast(periodInfo) {
       let managerProblems = [];
       let mRed = 0, mYellow = 0, mPurple = 0, mNormal = 0;
 
-      const pSheet = sheetMap[`${managerName} - Problem List`];
+      const pSheet = getSheetFuzzy(managerName, 'Problem List');
       if (pSheet) {
         const pData = pSheet.getDataRange().getValues();
         for (let r = 1; r < pData.length; r++) {
@@ -271,7 +312,7 @@ function getGmDashboardDataFast(periodInfo) {
       let allBranchNames = new Set(Object.keys(problemsByBranch));
       let managerTargetRed = 0, managerTargetYellow = 0, managerTargetGreen = 0;
 
-      const rSheet = sheetMap[`${managerName} - ReportGM`];
+      const rSheet = getSheetFuzzy(managerName, 'ReportGM');
       if (rSheet) {
         const rData = rSheet.getDataRange().getValues();
         const totalRows = rData.length;
