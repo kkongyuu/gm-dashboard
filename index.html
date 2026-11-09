@@ -359,7 +359,7 @@
           </div>
 
           <!-- Manager Portals Link Button -->
-          <button onclick="openManagerLinksModal()" title="ลิงก์ประจำตัว ผจก. 12 ท่าน" class="flex items-center space-x-1.5 px-3 py-1.5 text-xs sm:text-sm font-semibold text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 hover:text-blue-800 transition shadow-sm active:scale-95">
+          <button id="btnManagerLinksHeader" onclick="openManagerLinksModal()" title="ลิงก์ประจำตัว ผจก. 12 ท่าน" class="flex items-center space-x-1.5 px-3 py-1.5 text-xs sm:text-sm font-semibold text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 hover:text-blue-800 transition shadow-sm active:scale-95">
             <i data-lucide="share-2" class="w-4 h-4 text-blue-600"></i>
             <span class="hidden sm:inline">ลิงก์ ผจก. 12 ท่าน</span>
             <span class="sm:hidden">ผจก.</span>
@@ -372,7 +372,7 @@
           </button>
 
           <!-- Settings Modal Trigger -->
-          <button onclick="openSettingsModal()" title="ตั้งค่าการเชื่อมต่อ API" class="p-2 text-slate-500 hover:text-slate-800 bg-slate-100 rounded-lg hover:bg-slate-200 transition">
+          <button id="btnSettingsHeader" onclick="openSettingsModal()" title="ตั้งค่าการเชื่อมต่อ API" class="p-2 text-slate-500 hover:text-slate-800 bg-slate-100 rounded-lg hover:bg-slate-200 transition">
             <i data-lucide="settings" class="w-4 h-4"></i>
           </button>
         </div>
@@ -380,7 +380,7 @@
       </div>
 
       <!-- Navigation Tabs -->
-      <nav class="flex space-x-1 sm:space-x-4 border-t border-slate-100 overflow-x-auto custom-scrollbar py-1">
+      <nav id="mainNavTabs" class="flex space-x-1 sm:space-x-4 border-t border-slate-100 overflow-x-auto custom-scrollbar py-1">
         <button onclick="switchTab('tab-map')" id="nav-tab-map" class="tab-btn active px-3 py-2 text-xs sm:text-sm font-medium rounded-lg text-blue-600 bg-blue-50 flex items-center space-x-1.5 whitespace-nowrap">
           <i data-lucide="map" class="w-4 h-4"></i>
           <span>สรุปสาขา & แผนที่เครือข่าย</span>
@@ -418,7 +418,7 @@
   <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
     <!-- CURRENT PERIOD BANNER -->
-    <div class="mb-6 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-2xl p-4 sm:p-6 text-white shadow-xl relative overflow-hidden">
+    <div id="executivePeriodBanner" class="mb-6 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-2xl p-4 sm:p-6 text-white shadow-xl relative overflow-hidden">
       <div class="absolute right-0 top-0 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
       <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -2021,7 +2021,7 @@
   <!-- ===================================================================== -->
   <div id="managerPinModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 text-center relative animate-in fade-in zoom-in-95 duration-200">
-      <button onclick="closeManagerPinModal()" class="absolute right-4 top-4 text-slate-400 hover:text-slate-600">
+      <button id="pinModalCloseBtn" onclick="closeManagerPinModal()" class="absolute right-4 top-4 text-slate-400 hover:text-slate-600">
         <i data-lucide="x" class="w-5 h-5"></i>
       </button>
 
@@ -2056,7 +2056,7 @@
         <button onclick="submitPinLogin()" id="pinSubmitBtn" class="w-full py-2.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow transition">
           เข้าสู่ระบบ
         </button>
-        <button onclick="closeManagerPinModal()" class="w-full py-2 text-xs font-medium text-slate-500 hover:text-slate-700">
+        <button id="pinModalCancelBtn" onclick="closeManagerPinModal()" class="w-full py-2 text-xs font-medium text-slate-500 hover:text-slate-700">
           ยกเลิก / กลับไปดูภาพรวม GM
         </button>
       </div>
@@ -2375,7 +2375,8 @@
       selectedProblemCode: null,
       problemNeedsGmOnly: false,
       currentManager: null,
-      pendingPinManager: null
+      pendingPinManager: null,
+      isLockedManagerMode: false
     };
 
     // =========================================================================
@@ -2491,6 +2492,18 @@
         }
       }
 
+      // 🔒 หากเปิดผ่านลิงก์ส่วนตัวของ ผจก. (isLockedManagerMode) ให้กรองข้อมูลเฉพาะของ ผจก. ท่านนั้นเท่านั้น ไม่เก็บข้อมูลภาพรวมหรือของคนอื่นในหน่วยความจำ
+      if (dashboardState.isLockedManagerMode && dashboardState.currentManager) {
+        const targetMgr = dashboardState.currentManager;
+        if (Array.isArray(data.gmReport.managers)) {
+          data.gmReport.managers = data.gmReport.managers.filter(m => m.manager === targetMgr);
+        }
+        if (Array.isArray(data.gmReport.problemsList)) {
+          data.gmReport.problemsList = data.gmReport.problemsList.filter(p => p.manager === targetMgr);
+        }
+        data.accounting = { totalAmount: 0, branchList: [], dailyList: [] };
+      }
+
       return data;
     }
 
@@ -2502,7 +2515,9 @@
       if (refreshIcon) refreshIcon.classList.add('animate-spin');
 
       // Clear any older cache versions
-      const CACHE_PREFIX = 'gm_dash_cache_v9_live_p';
+      const CACHE_PREFIX = dashboardState.isLockedManagerMode && dashboardState.currentManager
+        ? `gm_dash_cache_v9_mgr_${dashboardState.currentManager}_p`
+        : 'gm_dash_cache_v9_live_p';
       try {
         Object.keys(localStorage)
           .filter(k => k.startsWith('gm_dash_cache') && !k.startsWith(CACHE_PREFIX))
@@ -2595,11 +2610,28 @@
       const data = dashboardState.data;
       if (!data) return;
 
-      // Update Period Banner & Sync Period Dropdowns
-      document.getElementById('heroPeriodText').textContent = `รายงานผลการดำเนินงาน ${data.periodInfo.displayText}`;
-      document.getElementById('lastUpdatedText').textContent = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ' น.';
       const periodSelect = document.getElementById('periodSelect');
       if (periodSelect) periodSelect.value = data.periodInfo.index;
+
+      // Update Mode Badge
+      const modeBadge = document.getElementById('dataSourceBadge');
+      if (modeBadge) {
+        modeBadge.className = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xxs sm:text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/80';
+        modeBadge.innerHTML = '<span class="w-1.5 h-1.5 mr-1.5 rounded-full bg-emerald-500 animate-pulse"></span>Real-Time Sync';
+      }
+
+      // 🔒 กรณีลิงก์ส่วนตัวของ ผจก. (isLockedManagerMode): แสดงเฉพาะหน้าพื้นที่งานส่วนตัวของ ผจก. เท่านั้น ห้ามเรนเดอร์หน้าภาพรวม GM
+      if (dashboardState.isLockedManagerMode) {
+        renderManagerPortal();
+        lucide.createIcons();
+        return;
+      }
+
+      // Update Period Banner & Sync Period Dropdowns (สำหรับโหมด GM)
+      const heroPeriodEl = document.getElementById('heroPeriodText');
+      if (heroPeriodEl) heroPeriodEl.textContent = `รายงานผลการดำเนินงาน ${data.periodInfo.displayText}`;
+      const lastUpdatedEl = document.getElementById('lastUpdatedText');
+      if (lastUpdatedEl) lastUpdatedEl.textContent = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ' น.';
 
       const probPeriodSelect = document.getElementById('probFilterPeriod');
       if (probPeriodSelect) {
@@ -2610,13 +2642,6 @@
         if (probPeriodSelect.options[0]) probPeriodSelect.options[0].textContent = `รอบ 1-10${mLabel}`;
         if (probPeriodSelect.options[1]) probPeriodSelect.options[1].textContent = `รอบ 11-20${mLabel}`;
         if (probPeriodSelect.options[2]) probPeriodSelect.options[2].textContent = `รอบ 21-31${mLabel}`;
-      }
-
-      // Update Mode Badge
-      const modeBadge = document.getElementById('dataSourceBadge');
-      if (modeBadge) {
-        modeBadge.className = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xxs sm:text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/80';
-        modeBadge.innerHTML = '<span class="w-1.5 h-1.5 mr-1.5 rounded-full bg-emerald-500 animate-pulse"></span>Real-Time Sync';
       }
 
       // Render Tab 0 (Thailand Map & Branch Summary)
@@ -6006,6 +6031,11 @@
     }
 
     function switchTab(tabId) {
+      // 🔒 หากเปิดผ่านลิงก์ส่วนตัวของ ผจก. (isLockedManagerMode) บังคับให้อยู่เฉพาะแท็บพื้นที่งานส่วนตัวของ ผจก. เท่านั้น
+      if (dashboardState.isLockedManagerMode) {
+        tabId = 'tab-manager';
+      }
+
       const applyDomSwitch = () => {
         document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
         const targetSection = document.getElementById(tabId);
@@ -6290,7 +6320,46 @@
     // -------------------------------------------------------------------------
     // A. ลิงก์ประจำตัว ผจก. 12 ท่าน (Modal & LINE Share)
     // -------------------------------------------------------------------------
+    function applyLockedManagerModeUI(mgrName) {
+      dashboardState.isLockedManagerMode = true;
+      dashboardState.currentManager = mgrName;
+
+      // ลบแท็บและส่วนแสดงผลภาพรวมของ GM ออกจาก DOM ทั้งหมด เพื่อไม่ให้ ผจก. เปิดดูภาพรวมหรือข้อมูลคนอื่นได้
+      const gmElementsToRemove = [
+        'tab-map',
+        'tab-overview',
+        'tab-kpi',
+        'tab-problems',
+        'tab-accounting',
+        'executivePeriodBanner',
+        'mainNavTabs',
+        'btnManagerLinksHeader',
+        'btnSettingsHeader',
+        'managerLinksModal',
+        'settingsModal',
+        'managerModal'
+      ];
+      gmElementsToRemove.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.remove();
+      });
+
+      // ปรับหัวเว็บให้เป็นหน้าเฉพาะของผู้จัดการท่านนั้น
+      const hTitle = document.getElementById('headerTitle');
+      if (hTitle) hTitle.textContent = `ระบบปฏิบัติงานผู้จัดการเขต: ผจก.${mgrName}`;
+      const hSub = document.getElementById('headerSubtitle');
+      if (hSub) hSub.textContent = `พื้นที่บันทึกการประชุมและติดตามปัญหาเฉพาะเขตพื้นที่รับผิดชอบ`;
+      document.title = `พื้นที่ปฏิบัติงาน ผจก.${mgrName}`;
+
+      // ซ่อนปุ่มปิด/ยกเลิกในหน้าต่าง PIN เพื่อบังคับให้ต้องใส่รหัส PIN ก่อนเข้าใช้งานเท่านั้น
+      const pinCloseBtn = document.getElementById('pinModalCloseBtn');
+      if (pinCloseBtn) pinCloseBtn.classList.add('hidden');
+      const pinCancelBtn = document.getElementById('pinModalCancelBtn');
+      if (pinCancelBtn) pinCancelBtn.classList.add('hidden');
+    }
+
     function openManagerLinksModal() {
+      if (dashboardState.isLockedManagerMode) return;
       const modal = document.getElementById('managerLinksModal');
       const grid = document.getElementById('managerLinksGrid');
       if (!modal || !grid) return;
@@ -6373,7 +6442,7 @@
     function copyAllManagerLinksLine() {
       const lines = [
         `📋 สรุปลิงก์พื้นที่ปฏิบัติงานส่วนตัว ผู้จัดการเขต 12 ท่าน`,
-        `(สำหรับบันทึกการประชุม, แจ้งปัญหาหน้างาน และอัปเดตการแก้ไขคอลัมน์ H/I)`,
+        `(ลิงก์ส่วนตัวเฉพาะบุคคล — ดูได้เฉพาะข้อมูลในเขตของตนเอง ไม่สามารถดูภาพรวมคนอื่นได้)`,
         `🔑 รหัส PIN เริ่มต้นสำหรับทุกท่าน: 1234`,
         `━━━━━━━━━━━━━━━━━━`
       ];
@@ -6389,6 +6458,9 @@
     // B. ระบบล็อกอินด้วย PIN (Manager PIN Authentication)
     // -------------------------------------------------------------------------
     function selectManagerPortal(managerName) {
+      if (dashboardState.isLockedManagerMode && managerName !== dashboardState.currentManager) {
+        return;
+      }
       closeManagerLinksModal();
       if (isManagerPinUnlocked(managerName)) {
         activateManagerSession(managerName);
@@ -6414,7 +6486,11 @@
       lucide.createIcons();
     }
 
-    function closeManagerPinModal() {
+    function closeManagerPinModal(forceClose = false) {
+      // 🔒 ในโหมดลิงก์ส่วนตัวของ ผจก. ห้ามกดปิดหน้าต่าง PIN จนกว่าจะใส่รหัสผ่านถูกต้อง
+      if (dashboardState.isLockedManagerMode && !forceClose && !isManagerPinUnlocked(dashboardState.currentManager)) {
+        return;
+      }
       const modal = document.getElementById('managerPinModal');
       if (modal) modal.classList.add('hidden');
       dashboardState.pendingPinManager = null;
@@ -6455,7 +6531,7 @@
       // ตรวจสอบ PIN มาตรฐาน (1234 หรือ 9999) ทันทีเพื่อความรวดเร็ว หรือเช็คผ่าน API
       if (pin === '1234' || pin === '9999') {
         markManagerPinUnlocked(mgr, pin === '9999');
-        closeManagerPinModal();
+        closeManagerPinModal(true);
         activateManagerSession(mgr);
         showToast(`✅ เข้าสู่ระบบพื้นที่งาน ผจก.${mgr} สำเร็จ`);
         return;
@@ -6470,7 +6546,7 @@
         const res = await callManagerApi('verifyPin', { manager: mgr, pin });
         if (res && res.status === 'success') {
           markManagerPinUnlocked(mgr, false);
-          closeManagerPinModal();
+          closeManagerPinModal(true);
           activateManagerSession(mgr);
           showToast(`✅ เข้าสู่ระบบพื้นที่งาน ผจก.${mgr} สำเร็จ`);
         } else {
@@ -6499,30 +6575,28 @@
         navLabel.textContent = `พื้นที่งาน: ผจก.${managerName}`;
       }
 
-      // อัปเดต URL โดยไม่รีโหลดหน้าเว็บ
-      try {
-        const url = new URL(window.location.href);
-        url.searchParams.set('manager', managerName);
-        window.history.replaceState({}, '', url.toString());
-      } catch (e) { /* ignore */ }
-
       switchTab('tab-manager');
       renderManagerPortal();
     }
 
     function logoutManagerPortal() {
+      // 🔒 หากเปิดจากลิงก์ส่วนตัวของ ผจก. ปุ่มนี้จะทำหน้าที่ "ล็อกหน้าจอ" (กลับไปถาม PIN ของตัวเองเท่านั้น ไม่สามารถสลับไปดูคนอื่นหรือภาพรวมได้)
+      if (dashboardState.isLockedManagerMode) {
+        try {
+          sessionStorage.removeItem('gm_unlocked_managers');
+        } catch (e) { /* ignore */ }
+        renderManagerPortal();
+        openManagerPinModal(dashboardState.currentManager);
+        showToast('🔒 ล็อกหน้าจอพื้นที่ปฏิบัติงานเรียบร้อยแล้ว');
+        return;
+      }
+
       dashboardState.currentManager = null;
       localStorage.removeItem('gm_active_manager');
       const navLabel = document.getElementById('navManagerLabel');
       if (navLabel) {
         navLabel.textContent = 'พื้นที่งาน ผจก. (12 คน)';
       }
-      try {
-        const url = new URL(window.location.href);
-        url.searchParams.delete('manager');
-        url.searchParams.delete('mgr');
-        window.history.replaceState({}, '', url.toString());
-      } catch (e) { /* ignore */ }
       renderManagerPortal();
     }
 
@@ -6535,7 +6609,25 @@
 
       const mgrName = dashboardState.currentManager;
 
-      // กรณีที่ยังไม่ได้เลือกผู้จัดการ ให้แสดงหน้าเลือกผู้จัดการทั้ง 12 ท่าน
+      // 🔒 กรณีลิงก์ส่วนตัวของ ผจก. แต่ยังไม่ได้ปลดล็อกรหัส PIN: ซ่อนข้อมูลทั้งหมดจนกว่าจะใส่ PIN ถูกต้อง
+      if (dashboardState.isLockedManagerMode && mgrName && !isManagerPinUnlocked(mgrName)) {
+        container.innerHTML = `
+          <div class="bg-white rounded-3xl p-8 sm:p-12 border border-slate-200 shadow-sm text-center max-w-lg mx-auto my-8 space-y-4">
+            <div class="w-16 h-16 mx-auto rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shadow-inner">
+              <i data-lucide="lock" class="w-8 h-8"></i>
+            </div>
+            <h2 class="text-xl font-black text-slate-900">พื้นที่ปฏิบัติงานส่วนตัว: ผจก. ${escapeHtml(mgrName)}</h2>
+            <p class="text-xs sm:text-sm text-slate-500">ลิงก์นี้ถูกจำกัดสิทธิ์เฉพาะผู้จัดการเขตเจ้าของพื้นที่เท่านั้น (ไม่สามารถเปิดดูภาพรวมบริษัทหรือข้อมูลของผู้จัดการท่านอื่นได้)</p>
+            <button type="button" onclick="openManagerPinModal('${escapeHtml(mgrName)}')" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-bold rounded-xl shadow transition">
+              🔑 กรอกรหัส PIN เพื่อเข้าใช้งาน
+            </button>
+          </div>
+        `;
+        lucide.createIcons();
+        return;
+      }
+
+      // กรณีที่ยังไม่ได้เลือกผู้จัดการ (เฉพาะโหมด GM เท่านั้น) ให้แสดงหน้าเลือกผู้จัดการทั้ง 12 ท่าน
       if (!mgrName) {
         const managersData = (dashboardState.data && dashboardState.data.gmReport && Array.isArray(dashboardState.data.gmReport.managers))
           ? dashboardState.data.gmReport.managers
@@ -6672,9 +6764,9 @@
                 <i data-lucide="share-2" class="w-4 h-4 text-indigo-200"></i>
                 <span>ลิงก์ส่วนตัว</span>
               </button>
-              <button type="button" onclick="logoutManagerPortal()" class="px-3.5 py-2.5 bg-white/10 hover:bg-rose-500/30 text-indigo-100 hover:text-white border border-white/15 text-xs font-semibold rounded-xl transition flex items-center gap-1.5 active:scale-95" title="สลับผู้จัดการท่านอื่น">
-                <i data-lucide="users" class="w-4 h-4"></i>
-                <span>สลับ ผจก.</span>
+              <button type="button" onclick="logoutManagerPortal()" class="px-3.5 py-2.5 bg-white/10 hover:bg-rose-500/30 text-indigo-100 hover:text-white border border-white/15 text-xs font-semibold rounded-xl transition flex items-center gap-1.5 active:scale-95" title="${dashboardState.isLockedManagerMode ? 'ล็อกหน้าจอ' : 'สลับผู้จัดการท่านอื่น'}">
+                <i data-lucide="${dashboardState.isLockedManagerMode ? 'lock' : 'users'}" class="w-4 h-4"></i>
+                <span>${dashboardState.isLockedManagerMode ? 'ล็อกหน้าจอ' : 'สลับ ผจก.'}</span>
               </button>
             </div>
           </div>
@@ -7268,15 +7360,13 @@
         });
       }
 
-      // ตรวจสอบ URL Parameter ?manager=ชื่อผจก เพื่อให้ลิงก์ประจำตัว ผจก. 12 ท่านเปิดเข้าพื้นที่ส่วนตัวได้ทันที
+      // ตรวจสอบ URL Parameter ?manager=ชื่อผจก เพื่อล็อกเข้าโหมดส่วนตัวของ ผจก. ท่านนั้นทันที (ไม่สามารถดูภาพรวม GM หรือข้อมูลคนอื่นได้)
       const urlParams = new URLSearchParams(window.location.search);
       const paramMgr = (urlParams.get('manager') || urlParams.get('mgr') || '').trim();
       const matchedMgr = MANAGERS_LIST.find(m => m === paramMgr);
 
       if (matchedMgr) {
-        dashboardState.currentManager = matchedMgr;
-        const navLabel = document.getElementById('navManagerLabel');
-        if (navLabel) navLabel.textContent = `พื้นที่งาน: ผจก.${matchedMgr}`;
+        applyLockedManagerModeUI(matchedMgr);
         switchTab('tab-manager');
         if (!isManagerPinUnlocked(matchedMgr)) {
           openManagerPinModal(matchedMgr);
