@@ -318,27 +318,27 @@ function getGmDashboardDataFast(periodInfo) {
         const rData = rSheet.getDataRange().getValues();
         const totalRows = rData.length;
 
-        // ฟังก์ชันตรวจสอบชื่อสาขาที่ถูกต้อง (ไม่ตัดคำว่า สาขา ออก และกรองค่าวันที่ออก)
+        // ฟังก์ชันตรวจสอบชื่อสาขาที่ถูกต้อง (ต้องมีคำว่า สาขา หรือเป็นชื่อสาขาจริง และไม่เอาหัวตาราง/KPI/ตัวเลขวันที่)
         function isValidBranch(name) {
           if (!name || name instanceof Date) return false;
           const s = String(name).trim();
           if (s === '' || s === '-' || s === 'สาขา' || s === 'หัวข้อ' || s === 'ครั้งที่') return false;
           if (s.indexOf('1-10') === 0 || s.indexOf('11-20') === 0 || s.indexOf('21-31') === 0) return false;
-          if (s.indexOf('GMT') !== -1) return false;
-          return true;
+          if (s.indexOf('GMT') !== -1 || /^\d+$/.test(s)) return false;
+          
+          // คัดกรองข้อความที่เป็นหัวข้อ KPI หรือเกณฑ์ประเมินออก
+          const lower = s.toLowerCase();
+          if (lower.includes('target') || lower.includes('revenue') || lower.includes('nrm') || lower.includes('ncm') || lower.includes('crm')) return false;
+          if (s.includes('การนัด') || s.includes('หมายเหตุ') || s.includes('เป้าหมาย') || s.includes('มาตรการ') || s.includes('เป็นไปตามเป้า')) return false;
+
+          // ต้องมีคำว่า สาขา หรือขึ้นต้นด้วยคำว่า สาขา
+          return s.includes('สาขา');
         }
 
-        // ค้นหาตำแหน่งบล็อกสาขาแบบไดนามิก (ไม่ยึดติดกับ r += 24 อย่างเดียว)
+        // ค้นหาตำแหน่งหัวบล็อกสาขา โดยตรวจสอบทีละ 24 แถว (โครงสร้างมาตรฐานของ ReportGM)
         let branchBlockRows = [];
-        for (let r = 0; r < totalRows; r++) {
-          if (isValidBranch(rData[r][3]) || isValidBranch(rData[r][0])) {
-            branchBlockRows.push(r);
-          }
-        }
-
-        // หากหาด้วยบล็อกไม่เจอ ให้ใช้วิธีเดิมเป็น fallback
-        if (branchBlockRows.length === 0) {
-          for (let r = 0; r < totalRows; r += 24) {
+        for (let r = 0; r < totalRows; r += 24) {
+          if (isValidBranch(rData[r][3]) || isValidBranch(rData[r][0]) || (r + 1 < totalRows && (isValidBranch(rData[r + 1][3]) || isValidBranch(rData[r + 1][0])))) {
             branchBlockRows.push(r);
           }
         }
@@ -597,8 +597,8 @@ function parseMeetingDateStr(val, targetMonth, targetYear) {
     if (val.getMonth() === targetMonth) {
       var d = String(val.getDate()).padStart(2, '0');
       var mo = String(val.getMonth() + 1).padStart(2, '0');
-      var yr = val.getFullYear() > 2400 ? val.getFullYear() : val.getFullYear() + 543;
-      return d + '/' + mo + '/' + yr;
+      var yTh = targetYear + 543;
+      return d + '/' + mo + '/' + yTh;
     }
     return null;
   }
@@ -609,8 +609,8 @@ function parseMeetingDateStr(val, targetMonth, targetYear) {
     if (dObj.getMonth() === targetMonth) {
       var d = String(dObj.getDate()).padStart(2, '0');
       var mo = String(dObj.getMonth() + 1).padStart(2, '0');
-      var yr = dObj.getFullYear() > 2400 ? dObj.getFullYear() : dObj.getFullYear() + 543;
-      return d + '/' + mo + '/' + yr;
+      var yTh = targetYear + 543;
+      return d + '/' + mo + '/' + yTh;
     }
     return null;
   }
