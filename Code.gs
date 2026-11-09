@@ -14,12 +14,18 @@ const ACCOUNTING_SHEET_NAME = 'Dashboard This month';
 const MANAGERS = ["กาญจน์", "นัท", "ซอฟ", "ลูกกุ้ง", "อัจ", "รัตน์", "อี้", "หมิว", "จาเน่", "โชว์", "เปีย", "ส้มโอ"];
 
 // ==============================================================================
-// 1. GET HANDLER: รองรับทั้ง Web App และ JSON API
+// 1. GET HANDLER: รองรับทั้ง Web App, JSON API และ Manager Actions
 // ==============================================================================
 function doGet(e) {
   const params = e && e.parameter ? e.parameter : {};
   const action = params.action || '';
   const isForcedRefresh = params.refresh === 'true' || params.nocache === '1';
+
+  // 1.0 จัดการคำสั่งการบันทึกข้อมูลและรหัส PIN สำหรับ ผจก. 12 ท่าน
+  if (['addMeeting', 'addProblem', 'updateProblem', 'verifyPin'].includes(action)) {
+    const result = handleManagerAction(action, params);
+    return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
+  }
 
   // 1.1 ขอข้อมูลเป็น JSON API (สำหรับเว็บเบราว์เซอร์ / Frontend)
   if (action === 'api' || action === 'getData' || params.format === 'json') {
@@ -94,6 +100,218 @@ function autoWarmDashboardCache() {
     } catch (e) {
       console.warn('Auto warm error period ' + p + ': ' + e.message);
     }
+  }
+}
+
+// ==============================================================================
+// 1.3 ล้างแคชและประมวลผลคำสั่ง Input สำหรับ ผจก. 12 ท่าน
+// ==============================================================================
+const MANAGER_PINS = {
+  "default": "1234",
+  "master": "9999",
+  "gm": "9999"
+};
+
+function clearDashboardCaches() {
+  try {
+    const cache = CacheService.getScriptCache();
+    for (let p = 0; p <= 5; p++) {
+      cache.remove('gm_dash_cache_v3_p' + p);
+      cache.remove('gm_dash_cache_v2_p' + p);
+      cache.remove('gm_dash_cache_p' + p);
+    }
+  } catch (e) {
+    console.warn('Cache clear error:', e);
+  }
+}
+
+function handleManagerAction(action, params) {
+  try {
+    const manager = String(params.manager || '').trim();
+
+    // ก. ตรวจสอบรหัส PIN
+    if (action === 'verifyPin') {
+      const pin = String(params.pin || '').trim();
+      const expectedPin = (manager && MANAGER_PINS[manager]) ? MANAGER_PINS[manager] : MANAGER_PINS["default"];
+      if (pin === expectedPin || pin === MANAGER_PINS["master"] || pin === MANAGER_PINS["gm"]) {
+        return { status: 'success', message: 'เข้าสู่ระบบสำเร็จ', manager: manager };
+      }
+      return { status: 'error', message: 'รหัส PIN ไม่ถูกต้อง (PIN เริ่มต้น: 1234)' };
+    }
+
+    if (!manager) {
+      return { status: 'error', message: 'กรุณาระบุชื่อผู้จัดการ' };
+    }
+
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const allSheets = ss.getSheets();
+    const sheetMap = {};
+    allSheets.forEach(s => sheetMap[s.getName().trim()] = s);
+
+    function cleanThai(str) {
+      if (!str) return '';
+      return String(str)
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[\u0E31\u0E34-\u0E3A\u0E47-\u0E4E]/g, '')
+        .replace(/[\s\-_]/g, '')
+        .toLowerCase();
+    }
+
+    function findSheet(mgr, type) {
+      const exact = `${mgr} - ${type}`;
+      if (sheetMap[exact]) return sheetMap[exact];
+      if (sheetMap[`${mgr}-${type}`]) return sheetMap[`${mgr}-${type}`];
+
+      const aliases = [mgr];
+      if (mgr === 'ลูกกุ้ง') aliases.push('กุ้ง', 'ลูกกุ้ง');
+      if (mgr === 'กุ้ง') aliases.push('ลูกกุ้ง');
+      if (mgr === 'โชว์') aliases.push('โชว', 'โช', 'ผจก.โช', 'ผจก. โช');
+      if (mgr === 'โชว') aliases.push('โชว์', 'โช');
+      if (mgr === 'โช') aliases.push('โชว์', 'โชว');
+
+      const cleanType = cleanThai(type);
+      for (let i = 0; i < allSheets.length; i++) {
+        const sName = allSheets[i].getName().trim();
+        const sClean = cleanThai(sName);
+        if (!sClean.includes(cleanType)) continue;
+        for (let a = 0; a < aliases.length; a++) {
+          if (sClean.includes(cleanThai(aliases[a]))) {
+            return allSheets[i];
+          }
+        }
+      }
+      return null;
+    }
+
+    // 1. ADD MEETING
+    if (action === 'addMeeting') {
+      let mSheet = findSheet(manager, 'Meeting');
+      if (!mSheet) {
+        mSheet = ss.insertSheet(`${manager} - Meeting`);
+        mSheet.appendRow(['วันที่ประชุม', 'สาขา', 'เนื้อหาการประชุม', 'ผู้รับผิดชอบ', 'ผู้ไม่เข้าร่วม']);
+      }
+
+      let dateVal = String(params.date || '').trim();
+      if (!dateVal) {
+        dateVal = Utilities.formatDate(new Date(), 'Asia/Bangkok', 'M/d/yyyy');
+      } else if (dateVal.includes('-')) {
+        const parts = dateVal.split('-');
+        if (parts.length === 3) {
+          const y = parts[0];
+          const m = parseInt(parts[1], 10);
+          const d = parseInt(parts[2], 10);
+          dateVal = `${m}/${d}/${y}`;
+        }
+      }
+
+      const branch = String(params.branch || '').trim();
+      const content = String(params.content || '').trim();
+      const responsible = String(params.responsible || `ผจก. ${manager}`).trim();
+      const attendees = String(params.attendees || 'ครบทุกคน').trim();
+
+      if (!content) {
+        return { status: 'error', message: 'กรุณากรอกเนื้อหาการประชุม' };
+      }
+
+      mSheet.appendRow([dateVal, branch, content, responsible, attendees]);
+      clearDashboardCaches();
+
+      return {
+        status: 'success',
+        message: `บันทึกการประชุมของ ผจก.${manager} สำเร็จแล้ว`,
+        record: { date: dateVal, branch: branch, content: content, responsible: responsible, attendees: attendees }
+      };
+    }
+
+    // 2. ADD PROBLEM
+    if (action === 'addProblem') {
+      let pSheet = findSheet(manager, 'Problem List');
+      if (!pSheet) {
+        pSheet = ss.insertSheet(`${manager} - Problem List`);
+        pSheet.appendRow(['ลำดับ', 'สาขา', 'ความเร่งด่วน', 'ต้องการให้ GM ช่วยเหลือ', 'สถานะ', 'หมวดหมู่', 'หัวข้อปัญหา', 'รายละเอียดปัญหา', 'การแก้ไขปัญหา']);
+      }
+
+      const branch = String(params.branch || '').trim();
+      const urgency = String(params.urgency || 'ทั่วไป').trim();
+      const needsGmHelp = String(params.needsGmHelp || '-').trim();
+      const status = String(params.status || 'กำลังดำเนินการ').trim();
+      const category = String(params.category || 'ทั่วไป').trim();
+      const subject = String(params.subject || '').trim();
+      const colH = String(params.colH || params.detail || '').trim();
+      const colI = String(params.colI || params.solution || '').trim();
+
+      if (!subject && !branch) {
+        return { status: 'error', message: 'กรุณาระบุหัวข้อปัญหาหรือสาขา' };
+      }
+
+      const lastRow = pSheet.getLastRow();
+      const rowNum = lastRow > 1 ? lastRow : 1;
+
+      pSheet.appendRow([rowNum, branch, urgency, needsGmHelp, status, category, subject, colH, colI]);
+      clearDashboardCaches();
+
+      return {
+        status: 'success',
+        message: `แจ้งปัญหาหน้างานของ ผจก.${manager} สำเร็จแล้ว`,
+        record: { branch: branch, subject: subject, urgency: urgency, colH: colH, colI: colI }
+      };
+    }
+
+    // 3. UPDATE PROBLEM (COL H, COL I, STATUS, URGENCY)
+    if (action === 'updateProblem') {
+      const pSheet = findSheet(manager, 'Problem List');
+      if (!pSheet) {
+        return { status: 'error', message: `ไม่พบชีท Problem List ของ ผจก.${manager}` };
+      }
+
+      const pData = pSheet.getDataRange().getValues();
+      const targetSubject = String(params.subject || '').trim();
+      const targetBranch = String(params.branch || '').trim();
+      const rowIndex = params.rowIndex ? parseInt(params.rowIndex) : null;
+      let matchedRow = -1;
+
+      if (rowIndex && rowIndex >= 2 && rowIndex <= pData.length) {
+        matchedRow = rowIndex;
+      } else {
+        for (let r = 1; r < pData.length; r++) {
+          const rBranch = String(pData[r][1] || '').trim();
+          const rSubject = String(pData[r][6] || '').trim();
+          if (rSubject === targetSubject && (!targetBranch || rBranch === targetBranch)) {
+            matchedRow = r + 1;
+            break;
+          }
+        }
+      }
+
+      if (matchedRow === -1) {
+        return { status: 'error', message: 'ไม่พบรายการปัญหาที่ต้องการแก้ไขในชีท' };
+      }
+
+      if (params.colH !== undefined) {
+        pSheet.getRange(matchedRow, 8).setValue(String(params.colH));
+      }
+      if (params.colI !== undefined) {
+        pSheet.getRange(matchedRow, 9).setValue(String(params.colI));
+      }
+      if (params.status !== undefined && params.status !== '') {
+        pSheet.getRange(matchedRow, 5).setValue(String(params.status));
+      }
+      if (params.urgency !== undefined && params.urgency !== '') {
+        pSheet.getRange(matchedRow, 3).setValue(String(params.urgency));
+      }
+
+      clearDashboardCaches();
+
+      return {
+        status: 'success',
+        message: `อัปเดตข้อมูลปัญหาแถวที่ ${matchedRow} สำเร็จแล้ว`
+      };
+    }
+
+    return { status: 'error', message: `ไม่พบคำสั่ง ${action}` };
+  } catch (err) {
+    return { status: 'error', message: err.message || String(err) };
   }
 }
 
@@ -206,6 +424,7 @@ function getGmDashboardDataFast(periodInfo) {
       // -------------------------------------------------------------
       let actualMeetings = 0;
       let meetingDates = [];
+      let meetingLogs = [];
       const mSheet = getSheetFuzzy(managerName, 'Meeting');
       if (mSheet) {
         const mData = mSheet.getDataRange().getValues();
@@ -215,6 +434,15 @@ function getGmDashboardDataFast(periodInfo) {
             let dateStr = parseMeetingDateStr(val, periodInfo.month, periodInfo.year);
             if (dateStr) {
               meetingDates.push(dateStr);
+              meetingLogs.push({
+                rowIndex: r + 1,
+                date: dateStr,
+                rawDate: String(val),
+                branch: String(mData[r][1] || '').trim(),
+                content: String(mData[r][2] || '').trim(),
+                responsible: String(mData[r][3] || '').trim(),
+                attendees: String(mData[r][4] || '').trim()
+              });
             }
           }
         }
@@ -284,6 +512,7 @@ function getGmDashboardDataFast(periodInfo) {
             }
 
             const probItem = {
+              rowIndex: r + 1,
               manager: managerName,
               branch: bKey,
               urgency: urgency || 'ทั่วไป',
@@ -471,6 +700,7 @@ function getGmDashboardDataFast(periodInfo) {
         actualMeetings: actualMeetings,
         expectedMeetings: 8,
         meetingDates: meetingDates,
+        meetingLogs: meetingLogs,
         compliance: compliance,
         meetingStatus: meetingStatus,
         branches: finalBranches,
@@ -694,14 +924,22 @@ function parseMeetingDateStr(val, targetMonth, targetYear) {
 }
 
 // ==============================================================================
-// 6. POST REQUEST HANDLER (คงความเข้ากันได้ 100% กับ LINE Bot เดิม)
+// 6. POST REQUEST HANDLER (คงความเข้ากันได้ 100% กับ LINE Bot เดิม และรองรับ Input จาก Web App)
 // ==============================================================================
 function doPost(e) {
   try {
     const data = JSON.parse(e.postData.contents);
-    const events = data.events;
 
-    events.forEach(event => {
+    // 1. ตรวจจับคำสั่งจาก Frontend / Web App (เช่น บันทึกการประชุม, แจ้งปัญหา, แก้ไขปัญหา, ยืนยัน PIN)
+    if (data && data.action && ['addMeeting', 'addProblem', 'updateProblem', 'verifyPin'].includes(data.action)) {
+      const result = handleManagerAction(data.action, data);
+      return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // 2. ตรวจจับคำสั่งจาก LINE Bot Webhook
+    const events = data.events;
+    if (events && Array.isArray(events)) {
+      events.forEach(event => {
       if (event.type === 'join' && event.source.type === 'group') {
         const groupId = event.source.groupId;
         const replyToken = event.replyToken;
@@ -743,6 +981,7 @@ function doPost(e) {
         }
       }
     });
+  }
 
     return ContentService.createTextOutput("OK").setMimeType(ContentService.MimeType.TEXT);
   } catch (error) {
