@@ -757,9 +757,10 @@ function handleManagerAction(action, params) {
       }
 
       let periodsPayload = {};
-      if (params.periodsJson) {
+      const rawPeriodsInput = params.periodsJson !== undefined ? params.periodsJson : params.periods;
+      if (rawPeriodsInput) {
         try {
-          periodsPayload = typeof params.periodsJson === 'string' ? JSON.parse(params.periodsJson) : params.periodsJson;
+          periodsPayload = typeof rawPeriodsInput === 'string' ? JSON.parse(rawPeriodsInput) : rawPeriodsInput;
         } catch (e) {
           return { status: 'error', message: 'รูปแบบข้อมูล ReportGM ไม่ถูกต้อง: ' + e.message };
         }
@@ -838,14 +839,16 @@ function handleManagerAction(action, params) {
           const end0 = Math.min(start0 + 6, refreshedData.length);
 
           const kpiDefs = [
-            { fieldVal: 'targetVal', fieldCrit: 'targetCriteria', match: a => a.includes('target') || a.includes('revenue'), defaultTitle: '🎯 Target Revenue', defaultSub: po.revSub, fallbackOffset: 1 },
-            { fieldVal: 'nrmVal', fieldCrit: 'nrmCriteria', match: a => a.includes('new case') || a.includes('ncm') || a.includes('nrm'), defaultTitle: '👥 New Case Management (NCM)', defaultSub: 'จำนวนลูกค้าใหม่', fallbackOffset: 2 },
-            { fieldVal: 'crmVal', fieldCrit: 'crmCriteria', match: a => a.includes('crm'), defaultTitle: '❤️ CRM Performance', defaultSub: '% CRM ต่อเป้า', fallbackOffset: 3 },
-            { fieldVal: 'apptVal', fieldCrit: 'apptCriteria', match: a => a.includes('การนัด') || a.includes('appointment'), defaultTitle: 'การนัด', defaultSub: 'เปอร์เซ็นการนัด', fallbackOffset: 4 }
+            { fieldVal: 'targetVal', altVal: 'targetRevenue', fieldCrit: 'targetCriteria', altCrit: 'criteria', match: a => a.includes('target') || a.includes('revenue'), defaultTitle: '🎯 Target Revenue', defaultSub: po.revSub, fallbackOffset: 1 },
+            { fieldVal: 'nrmVal', altVal: 'nrm', fieldCrit: 'nrmCriteria', match: a => a.includes('new case') || a.includes('ncm') || a.includes('nrm'), defaultTitle: '👥 New Case Management (NCM)', defaultSub: 'จำนวนลูกค้าใหม่', fallbackOffset: 2 },
+            { fieldVal: 'crmVal', altVal: 'crm', fieldCrit: 'crmCriteria', match: a => a.includes('crm'), defaultTitle: '❤️ CRM Performance', defaultSub: '% CRM ต่อเป้า', fallbackOffset: 3 },
+            { fieldVal: 'apptVal', altVal: 'appointment', fieldCrit: 'apptCriteria', match: a => a.includes('การนัด') || a.includes('appointment'), defaultTitle: 'การนัด', defaultSub: 'เปอร์เซ็นการนัด', fallbackOffset: 4 }
           ];
 
           kpiDefs.forEach(kd => {
-            if (pInput[kd.fieldVal] === undefined && pInput[kd.fieldCrit] === undefined) return;
+            const valToSave = pInput[kd.fieldVal] !== undefined ? pInput[kd.fieldVal] : (kd.altVal ? pInput[kd.altVal] : undefined);
+            const critToSave = pInput[kd.fieldCrit] !== undefined ? pInput[kd.fieldCrit] : (kd.altCrit ? pInput[kd.altCrit] : undefined);
+            if (valToSave === undefined && critToSave === undefined) return;
             let targetRow1 = -1;
             for (let kr = start0; kr < end0; kr++) {
               const colALower = String((refreshedData[kr] && refreshedData[kr][0]) || '').toLowerCase();
@@ -861,11 +864,11 @@ function handleManagerAction(action, params) {
                 sheet.getRange(targetRow1, 1, 1, 2).setValues([[kd.defaultTitle, kd.defaultSub]]);
               }
             }
-            if (pInput[kd.fieldVal] !== undefined) {
-              sheet.getRange(targetRow1, 3).setValue(String(pInput[kd.fieldVal]).trim() || '-');
+            if (valToSave !== undefined) {
+              sheet.getRange(targetRow1, 3).setValue(String(valToSave).trim() || '-');
             }
-            if (pInput[kd.fieldCrit] !== undefined) {
-              sheet.getRange(targetRow1, 4).setValue(String(pInput[kd.fieldCrit]).trim());
+            if (critToSave !== undefined) {
+              sheet.getRange(targetRow1, 4).setValue(String(critToSave).trim());
             }
           });
         });
@@ -1659,6 +1662,7 @@ function parseMeetingDateStr(val, targetMonth, targetYear) {
     var mo = String(val.getMonth() + 1).padStart(2, '0');
     var yrVal = val.getFullYear();
     var yrTh = yrVal > 2400 ? yrVal : yrVal + 543;
+    if (yrTh >= 2500 && yrTh <= 2530) yrTh += 57;
     return d + '/' + mo + '/' + yrTh;
   }
 
@@ -1725,6 +1729,7 @@ function parseMeetingDateStr(val, targetMonth, targetYear) {
       if (p3 < 100) yrSlashTh = 2500 + p3;
       else if (p3 > 2400) yrSlashTh = p3;
       else yrSlashTh = p3 + 543;
+      if (yrSlashTh >= 2500 && yrSlashTh <= 2530) yrSlashTh += 57;
     }
 
     var matchDay = null;

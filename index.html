@@ -346,12 +346,19 @@
           </div>
         </div>
 
-        <!-- Controls: Period Selector & Refresh -->
+        <!-- Controls: Month Filter Selector & Refresh -->
         <div class="flex items-center space-x-2 sm:space-x-3">
-          <!-- All 3 Periods Active Badge -->
-          <div class="flex items-center bg-indigo-50 px-2.5 py-1.5 rounded-lg border border-indigo-200 text-indigo-700 text-xxs sm:text-xs font-bold">
-            <i data-lucide="calendar-range" class="w-3.5 h-3.5 text-indigo-600 mr-1.5 hidden sm:inline"></i>
-            <span>ครบ 3 รอบ (1-10 • 1-20 • 1-31)</span>
+          <!-- Global Month Filter Selector (กรองเดือนสำหรับการประชุมและปัญหา) -->
+          <div class="flex items-center bg-indigo-50 px-2.5 py-1.5 rounded-lg border border-indigo-200 text-indigo-800 text-xxs sm:text-xs font-bold">
+            <i data-lucide="calendar" class="w-3.5 h-3.5 text-indigo-600 mr-1.5 hidden sm:inline"></i>
+            <span class="mr-1 hidden md:inline text-indigo-600">เดือน:</span>
+            <select id="globalMonthFilter" onchange="onMonthFilterChange(this.value)" class="bg-transparent font-bold text-indigo-900 outline-none cursor-pointer">
+              <option value="09">กันยายน 2569</option>
+              <option value="10">ตุลาคม 2569</option>
+              <option value="11">พฤศจิกายน 2569</option>
+              <option value="08">สิงหาคม 2569</option>
+              <option value="ALL">ทุกเดือน (รวมทั้งหมด)</option>
+            </select>
           </div>
 
           <!-- Manager Portals Link Button -->
@@ -925,12 +932,24 @@
         
         <!-- Meeting Compliance Chart (2 cols) -->
         <div class="lg:col-span-2 bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
-          <div class="flex items-center justify-between mb-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
             <div>
-              <h3 class="font-bold text-slate-800 text-base">สรุปจำนวนการประชุมแยกตามผู้จัดการ (12 คน)</h3>
-              <p class="text-xs text-slate-500">เป้าหมาย 8 ครั้งต่อคน (สถานะ 🟢 ผ่านเกณฑ์ / 🔴 ต่ำกว่าเกณฑ์)</p>
+              <h3 class="font-bold text-slate-800 text-base" id="meetingChartTitle">สรุปจำนวนการประชุมแยกตามผู้จัดการ (12 คน)</h3>
+              <p class="text-xs text-slate-500" id="meetingChartSub">เป้าหมาย 8 ครั้งต่อเดือน/คน (สถานะ 🟢 ผ่านเกณฑ์ / 🔴 ต่ำกว่าเกณฑ์)</p>
             </div>
-            <span class="text-xs font-semibold px-2 py-1 bg-slate-100 text-slate-600 rounded-lg">Target: 8</span>
+            <div class="flex items-center gap-2">
+              <div class="flex items-center bg-blue-50 border border-blue-200 rounded-lg px-2.5 py-1">
+                <span class="text-xxs font-bold text-blue-600 mr-1.5 whitespace-nowrap">📅 เดือน:</span>
+                <select id="gmMeetingMonthFilter" onchange="onMonthFilterChange(this.value)" class="bg-transparent text-xs font-bold text-blue-900 outline-none cursor-pointer">
+                  <option value="09">กันยายน 2569</option>
+                  <option value="10">ตุลาคม 2569</option>
+                  <option value="11">พฤศจิกายน 2569</option>
+                  <option value="08">สิงหาคม 2569</option>
+                  <option value="ALL">ทุกเดือน</option>
+                </select>
+              </div>
+              <span class="text-xs font-semibold px-2 py-1 bg-slate-100 text-slate-600 rounded-lg">Target: 8</span>
+            </div>
           </div>
           <div class="h-64 relative">
             <canvas id="meetingChart"></canvas>
@@ -1070,11 +1089,18 @@
           </div>
         </div>
 
-        <!-- Filter Dropdowns (ช่วงเวลา, สาขา, ผู้จัดการ, ความเร่งด่วน) -->
+        <!-- Filter Dropdowns (เดือน, สาขา, ผู้จัดการ, หมวดหมู่) -->
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 w-full lg:w-auto">
-          <!-- ช่วงเวลา (แสดงครบ 3 รอบ) -->
+          <!-- เดือน (Month Filter) -->
           <div class="flex items-center bg-indigo-50 border border-indigo-200 rounded-xl px-2.5 py-2">
-            <span class="text-xxs font-bold text-indigo-700 whitespace-nowrap">📅 แสดงครบ 3 รอบ (1-10 • 1-20 • 1-31)</span>
+            <span class="text-xxs font-bold text-indigo-600 mr-1.5 whitespace-nowrap">📅 เดือน:</span>
+            <select id="probFilterMonth" onchange="onMonthFilterChange(this.value)" class="bg-transparent text-xs font-bold text-indigo-900 outline-none w-full cursor-pointer">
+              <option value="ALL">ทุกเดือน</option>
+              <option value="11">พฤศจิกายน 2569</option>
+              <option value="10">ตุลาคม 2569</option>
+              <option value="09">กันยายน 2569</option>
+              <option value="08">สิงหาคม 2569</option>
+            </select>
           </div>
 
           <!-- ผู้จัดการ -->
@@ -1390,7 +1416,7 @@
             </div>
             <button onclick="openUpdateProblemModal(dashboardState.selectedProblemCode)" class="px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xxs sm:text-xs font-bold transition flex items-center space-x-1 active:scale-95">
               <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
-              <span>แก้ไขข้อมูล (Col H/I)</span>
+              <span>แก้ไขข้อมูลปัญหา</span>
             </button>
             <button onclick="copySelectedProblemToClipboard()" class="px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xxs sm:text-xs font-bold transition flex items-center space-x-1 active:scale-95">
               <i data-lucide="clipboard-copy" class="w-3.5 h-3.5"></i>
@@ -2188,12 +2214,12 @@
         </div>
 
         <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">รายละเอียดปัญหา (คอลัมน์ H)</label>
+          <label class="block text-xs font-bold text-slate-700 mb-1">รายละเอียดปัญหา</label>
           <textarea id="problemDetailInput" rows="2" placeholder="อธิบายรายละเอียดสิ่งที่เกิดขึ้น ปัญหาหรืออุปสรรค..." class="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none"></textarea>
         </div>
 
         <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">แนวทางการแก้ไขเบื้องต้น (คอลัมน์ I)</label>
+          <label class="block text-xs font-bold text-slate-700 mb-1">แนวทางการแก้ไขเบื้องต้น</label>
           <textarea id="problemSolutionInput" rows="2" placeholder="ระบุแนวทางแก้ไขเบื้องต้น สิ่งที่ได้ดำเนินการไปแล้ว หรือแผนงาน..." class="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none"></textarea>
         </div>
 
@@ -2310,12 +2336,12 @@
         </div>
 
         <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">รายละเอียดปัญหา (คอลัมน์ H)</label>
+          <label class="block text-xs font-bold text-slate-700 mb-1">รายละเอียดปัญหา</label>
           <textarea id="updateProblemDetailInput" rows="3" placeholder="ระบุเนื้อหา / รายละเอียดปัญหาเพิ่มเติม..." class="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"></textarea>
         </div>
 
         <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">แนวทางการแก้ไขปัญหา / ความคืบหน้า (คอลัมน์ I)</label>
+          <label class="block text-xs font-bold text-slate-700 mb-1">แนวทางการแก้ไขปัญหา / ความคืบหน้า</label>
           <textarea id="updateProblemSolutionInput" rows="3" placeholder="ระบุการแก้ไขเบื้องต้น หรือความคืบหน้า..." class="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"></textarea>
         </div>
 
@@ -2353,6 +2379,7 @@
       <form id="updateMeetingForm" onsubmit="event.preventDefault(); submitUpdateMeetingForm();" class="mt-4 space-y-3.5">
         <input type="hidden" id="updateMeetingManager">
         <input type="hidden" id="updateMeetingRowIndex">
+        <input type="hidden" id="updateMeetingOldDate">
         <input type="hidden" id="updateMeetingOldBranch">
         <input type="hidden" id="updateMeetingOldContent">
 
@@ -2418,11 +2445,12 @@
         <input type="hidden" id="updateReportGmManager">
 
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 bg-slate-50 rounded-2xl border border-slate-200">
-          <div class="flex items-center gap-2">
+          <div class="flex flex-wrap items-center gap-2">
             <span class="text-xs font-bold text-slate-700">เลือกสาขาที่ต้องการอัปเดต:</span>
             <select id="updateReportGmBranchSelect" onchange="onReportGmBranchSelectChange(this.value)" class="px-3 py-1.5 text-xs font-bold bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-slate-900">
               <!-- Populated via JS -->
             </select>
+            <input type="text" id="updateReportGmBranchCustomInput" placeholder="ระบุชื่อสาขาใหม่..." class="hidden px-3 py-1.5 text-xs bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-slate-900">
           </div>
           <span class="text-xxs text-slate-500">💡 รูปแบบยอดขายตัวอย่าง: <strong>461,588 (30.77%)</strong> หรือ <strong>1,250,000 (92%)</strong></span>
         </div>
@@ -2602,7 +2630,7 @@
     <!-- Bottom Actions Bar -->
     <div class="p-3 bg-white border-t border-slate-200 flex items-center justify-end gap-2 flex-shrink-0">
       <button onclick="closeCaseBottomSheet(); openUpdateProblemModal(dashboardState.selectedProblemCode);" class="flex-1 py-2.5 text-xs font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 active:scale-95 rounded-xl transition">
-        ✏️ แก้ไข Col H/I
+        ✏️ แก้ไขข้อมูลปัญหา
       </button>
       <button onclick="copySelectedProblemToClipboard()" class="flex-1 py-2.5 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 active:scale-95 rounded-xl transition">
         📋 คัดลอกส่ง LINE
@@ -2638,9 +2666,16 @@
 
     const MANAGERS_LIST = ["กาญจน์", "นัท", "ซอฟ", "ลูกกุ้ง", "อัจ", "รัตน์", "อี้", "หมิว", "จาเน่", "โชว์", "เปีย", "ส้มโอ"];
 
+    const THAI_MONTH_NAMES_BY_CODE = {
+      '01': 'มกราคม', '02': 'กุมภาพันธ์', '03': 'มีนาคม', '04': 'เมษายน',
+      '05': 'พฤษภาคม', '06': 'มิถุนายน', '07': 'กรกฎาคม', '08': 'สิงหาคม',
+      '09': 'กันยายน', '10': 'ตุลาคม', '11': 'พฤศจิกายน', '12': 'ธันวาคม'
+    };
+
     let dashboardState = {
       apiUrl: storedUrl,
       currentPeriodIndex: 0,
+      selectedMonth: 'AUTO',
       data: null,
       charts: {
         meeting: null,
@@ -2774,29 +2809,249 @@
         }
         return item;
       };
-      if (patch.targetRevenue !== undefined) {
+      const targetVal = patch.targetVal !== undefined ? patch.targetVal : patch.targetRevenue;
+      const targetCrit = patch.targetCriteria !== undefined ? patch.targetCriteria : patch.criteria;
+      const crmVal = patch.crmVal !== undefined ? patch.crmVal : patch.crm;
+      const crmCrit = patch.crmCriteria !== undefined ? patch.crmCriteria : undefined;
+      const nrmVal = patch.nrmVal !== undefined ? patch.nrmVal : patch.nrm;
+      const apptVal = patch.apptVal !== undefined ? patch.apptVal : patch.appointment;
+
+      function inferKpiStatusFromValAndCrit(valStr, critStr) {
+        const c = String(critStr || '').trim();
+        if (c.includes('ไม่เป็นไปตามเป้า')) return 'red';
+        if (c.includes('เสี่ยงต่ำกว่าเป้าหมาย')) return 'yellow';
+        if (c.includes('มีโอกาสเป็นไปตามเป้า')) return 'green';
+        const mPct = String(valStr || '').match(/\(([\d.]+)%\)/);
+        if (mPct) {
+          const pct = parseFloat(mPct[1]);
+          if (pct >= 100) return 'green';
+          if (pct >= 85) return 'yellow';
+          return 'red';
+        }
+        return 'pending';
+      }
+
+      if (targetVal !== undefined) {
         const k = ensureKpi('Target Revenue', 'Target Revenue', 'ยอดสะสมเทียบเป้า 10 วัน');
-        k.value = String(patch.targetRevenue || '-').trim() || '-';
-        if (patch.status) k.status = patch.status;
-        if (patch.criteria !== undefined) k.criteria = patch.criteria;
+        k.value = String(targetVal || '-').trim() || '-';
+        if (targetCrit !== undefined) k.criteria = targetCrit;
+        k.status = patch.status && patch.status !== 'pending'
+          ? patch.status
+          : inferKpiStatusFromValAndCrit(k.value, k.criteria);
       }
-      if (patch.crm !== undefined) {
+      if (crmVal !== undefined) {
         const k = ensureKpi('CRM', 'CRM', '% CRM ต่อเป้า');
-        k.value = String(patch.crm || '-').trim() || '-';
-        if (patch.crmStatus) k.status = patch.crmStatus;
+        k.value = String(crmVal || '-').trim() || '-';
+        if (crmCrit !== undefined) k.criteria = crmCrit;
+        k.status = patch.crmStatus || inferKpiStatusFromValAndCrit(k.value, k.criteria);
       }
-      if (patch.nrm !== undefined) {
+      if (nrmVal !== undefined) {
         const k = ensureKpi('NRM', 'NRM', 'จำนวนลูกค้าใหม่');
-        k.value = String(patch.nrm || '-').trim() || '-';
+        k.value = String(nrmVal || '-').trim() || '-';
       }
-      if (patch.appointment !== undefined) {
+      if (apptVal !== undefined) {
         const k = ensureKpi('การนัด', 'การนัด', 'เปอร์เซ็นการนัด');
-        k.value = String(patch.appointment || '-').trim() || '-';
+        k.value = String(apptVal || '-').trim() || '-';
       }
-      if (patch.status) {
-        pObj.status = patch.status;
-      } else {
-        pObj.status = evaluateBranchKpiStatusClient(pObj.kpis);
+      pObj.status = evaluateBranchKpiStatusClient(pObj.kpis);
+    }
+
+    // ฟังก์ชันจัดระเบียบวันที่ประชุม (แก้ปัญหา Google Sheets สลับ วัน/เดือน จาก US Locale และปี พ.ศ. 2 หลัก เช่น /68, /69)
+    function normalizeManagerMeetingLogs(logs) {
+      if (!Array.isArray(logs)) return [];
+      const parsed = logs.map((l, idx) => {
+        const item = { ...l };
+        const s = String(item.date || item.rawDate || '').trim();
+        const m = s.match(/^(\d{1,2})[\/\-\.](\d{1,2})(?:[\/\-\.](\d{2,4}))?/);
+        if (!m) {
+          item.monthCode = '';
+          item.monthLabel = 'ไม่ระบุเดือน';
+          return item;
+        }
+        const p1 = parseInt(m[1], 10);
+        const p2 = parseInt(m[2], 10);
+        let y = m[3] ? parseInt(m[3], 10) : 2569;
+        if (y >= 2500 && y <= 2530) y += 57; // 2511 -> 2568, 2512 -> 2569
+        else if (y < 100) y += 2500;
+        else if (y < 2400) y += 543;
+        if (y === 2568) y = 2569; // ปรับปีที่พิมพ์ /68 ในชีทปี 2569 ให้เป็นปีเดียวกัน
+
+        let unambiguousMo = null;
+        if (p1 > 12 && p2 >= 1 && p2 <= 12) unambiguousMo = p2;
+        else if (p2 > 12 && p1 >= 1 && p1 <= 12) unambiguousMo = p1;
+
+        return { ...item, _p1: p1, _p2: p2, _y: y, _unambiguousMo: unambiguousMo, _origIdx: idx };
+      });
+
+      for (let i = 0; i < parsed.length; i++) {
+        const row = parsed[i];
+        if (!row._p1) continue;
+        let day = row._p1;
+        let month = row._p2;
+
+        if (row._p2 > 12 && row._p1 <= 12) {
+          month = row._p1;
+          day = row._p2;
+        } else if (row._p1 <= 12 && row._p2 <= 12 && row._p1 !== row._p2) {
+          let prevMo = null;
+          let nextMo = null;
+          for (let j = i - 1; j >= 0; j--) {
+            if (parsed[j]._resolvedMo) { prevMo = parsed[j]._resolvedMo; break; }
+            if (parsed[j]._unambiguousMo) { prevMo = parsed[j]._unambiguousMo; break; }
+          }
+          for (let j = i + 1; j < parsed.length; j++) {
+            if (parsed[j]._unambiguousMo) { nextMo = parsed[j]._unambiguousMo; break; }
+          }
+          if (nextMo !== null && row._p1 === nextMo && row._p2 !== nextMo) {
+            month = row._p1;
+            day = row._p2;
+          } else if (prevMo !== null && row._p1 === prevMo && row._p2 !== prevMo) {
+            month = row._p1;
+            day = row._p2;
+          } else if (prevMo !== null && row._p1 === prevMo + 1 && row._p2 < prevMo) {
+            month = row._p1;
+            day = row._p2;
+          }
+        }
+
+        row._resolvedMo = month;
+        row._resolvedDay = day;
+        const ddStr = String(day).padStart(2, '0');
+        const mmStr = String(month).padStart(2, '0');
+        row.date = `${ddStr}/${mmStr}/${row._y}`;
+        row.monthCode = mmStr;
+        row.yearTh = row._y;
+        row.monthLabel = `${THAI_MONTH_NAMES_BY_CODE[mmStr] || mmStr} ${row._y}`;
+      }
+
+      return parsed;
+    }
+
+    function extractMonthCodeFromText(text) {
+      if (!text) return '';
+      const s = String(text);
+      const slash = s.match(/\b(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?\b/);
+      if (slash) {
+        const p2 = parseInt(slash[2], 10);
+        if (p2 >= 1 && p2 <= 12) return String(p2).padStart(2, '0');
+      }
+      const kwMap = [
+        { code: '01', kws: ['มกราคม', 'ม.ค.'] },
+        { code: '02', kws: ['กุมภาพันธ์', 'ก.พ.'] },
+        { code: '03', kws: ['มีนาคม', 'มี.ค.'] },
+        { code: '04', kws: ['เมษายน', 'เม.ย.'] },
+        { code: '05', kws: ['พฤษภาคม', 'พ.ค.'] },
+        { code: '06', kws: ['มิถุนายน', 'มิ.ย.'] },
+        { code: '07', kws: ['กรกฎาคม', 'ก.ค.'] },
+        { code: '08', kws: ['สิงหาคม', 'ส.ค.'] },
+        { code: '09', kws: ['กันยายน', 'ก.ย.'] },
+        { code: '10', kws: ['ตุลาคม', 'ต.ค.'] },
+        { code: '11', kws: ['พฤศจิกายน', 'พ.ย.'] },
+        { code: '12', kws: ['ธันวาคม', 'ธ.ค.'] }
+      ];
+      for (const item of kwMap) {
+        if (item.kws.some(kw => s.includes(kw))) return item.code;
+      }
+      return '';
+    }
+
+    function applyActiveMonthToData(data, monthCode) {
+      if (!data || !data.gmReport || !Array.isArray(data.gmReport.managers)) return;
+      const activeMonth = monthCode || 'ALL';
+      let totalMeetingsDoneCount = 0;
+
+      data.gmReport.managers.forEach(m => {
+        const allLogs = Array.isArray(m.allMeetingLogs) ? m.allMeetingLogs : (m.meetingLogs || []);
+        m.meetingLogs = (activeMonth && activeMonth !== 'ALL')
+          ? allLogs.filter(l => l.monthCode === activeMonth)
+          : [...allLogs];
+        m.meetingDates = m.meetingLogs.map(l => l.date);
+        m.actualMeetings = m.meetingLogs.length;
+        m.expectedMeetings = 8;
+        m.compliance = Math.round((m.actualMeetings / m.expectedMeetings) * 100);
+        m.meetingStatus = m.actualMeetings >= m.expectedMeetings ? 'green' : 'red';
+        totalMeetingsDoneCount += m.actualMeetings;
+      });
+
+      if (data.gmReport.summary) {
+        data.gmReport.summary.totalMeetingsDone = totalMeetingsDoneCount;
+        const expectedTotal = (data.gmReport.managers.length || 12) * 8;
+        data.gmReport.summary.totalMeetingsExpected = expectedTotal;
+        data.gmReport.summary.meetingComplianceAvg = expectedTotal > 0
+          ? Math.round((totalMeetingsDoneCount / expectedTotal) * 100)
+          : 0;
+      }
+    }
+
+    function getActiveMonthDisplayLabel() {
+      const mCode = dashboardState.selectedMonth;
+      const yearTh = (dashboardState.data && dashboardState.data.periodInfo && dashboardState.data.periodInfo.yearTh) || 2569;
+      if (!mCode || mCode === 'ALL') return `ทุกเดือน (${yearTh})`;
+      return `${THAI_MONTH_NAMES_BY_CODE[mCode] || mCode} ${yearTh}`;
+    }
+
+    function syncMonthSelectorDropdowns() {
+      const data = dashboardState.data;
+      if (!data || !data.gmReport) return;
+      const yearTh = (data.periodInfo && data.periodInfo.yearTh) || 2569;
+      const monthCounts = data.monthMeetingCounts || {};
+      const allCount = data.totalAllMonthsMeetings || 0;
+
+      // เรียงลำดับเดือนที่มีข้อมูลจากล่าสุดไปเก่าสุด
+      const defaultMonths = ['11', '10', '09', '08'];
+      const extraMonths = Object.keys(monthCounts).filter(k => k && !defaultMonths.includes(k));
+      const monthOrder = [...extraMonths, ...defaultMonths].sort((a, b) => Number(b) - Number(a));
+
+      const buildOptions = (forManagerName = null) => {
+        let mgrCounts = monthCounts;
+        let mgrTotal = allCount;
+        if (forManagerName && Array.isArray(data.gmReport.managers)) {
+          const mObj = data.gmReport.managers.find(x => x.manager === forManagerName);
+          const allLogs = mObj && Array.isArray(mObj.allMeetingLogs) ? mObj.allMeetingLogs : [];
+          mgrCounts = {};
+          allLogs.forEach(l => {
+            if (l.monthCode) mgrCounts[l.monthCode] = (mgrCounts[l.monthCode] || 0) + 1;
+          });
+          mgrTotal = allLogs.length;
+        }
+
+        let html = monthOrder.map(mc => {
+          const mName = THAI_MONTH_NAMES_BY_CODE[mc] || `เดือน ${mc}`;
+          const cnt = mgrCounts[mc] || 0;
+          return `<option value="${mc}">${mName} ${yearTh} (${cnt} ครั้ง)</option>`;
+        }).join('');
+        html += `<option value="ALL">ทุกเดือน (รวม ${mgrTotal} ครั้ง)</option>`;
+        return html;
+      };
+
+      const globalOpts = buildOptions(dashboardState.isLockedManagerMode ? dashboardState.currentManager : null);
+      ['globalMonthFilter', 'gmMeetingMonthFilter'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.innerHTML = globalOpts;
+          el.value = dashboardState.selectedMonth || 'ALL';
+        }
+      });
+
+      const probEl = document.getElementById('probFilterMonth');
+      if (probEl) {
+        let pHtml = `<option value="ALL">ทุกเดือน (ทั้งหมด)</option>`;
+        pHtml += monthOrder.map(mc => `<option value="${mc}">${THAI_MONTH_NAMES_BY_CODE[mc] || mc} ${yearTh}</option>`).join('');
+        probEl.innerHTML = pHtml;
+        probEl.value = dashboardState.selectedMonth || 'ALL';
+      }
+    }
+
+    function onMonthFilterChange(monthVal) {
+      dashboardState.selectedMonth = monthVal || 'ALL';
+      if (dashboardState.data) {
+        applyActiveMonthToData(dashboardState.data, dashboardState.selectedMonth);
+        renderDashboard();
+        // หากเปิด Modal ดูประวัติผู้จัดการอยู่ ให้รีเฟรชข้อมูลใน Modal ทันทีด้วย
+        const mgrModal = document.getElementById('managerModal');
+        if (mgrModal && !mgrModal.classList.contains('hidden') && dashboardState.activeModalManagerName) {
+          openManagerDetails(dashboardState.activeModalManagerName);
+        }
       }
     }
 
@@ -2810,11 +3065,13 @@
       // พร้อมผสานรายการประชุม (addMeeting + updateMeeting) และ ReportGM ครบทั้ง 3 รอบ (1-10, 1-20, 1-31)
       let validBranchesCount = 0;
       let kpiGreen = 0, kpiYellow = 0, kpiRed = 0, kpiPending = 0;
-      let totalMeetingsDoneCount = 0;
+      const monthMeetingCounts = {};
+      let totalAllMonthsMeetings = 0;
 
       if (Array.isArray(data.gmReport.managers)) {
         data.gmReport.managers.forEach(m => {
-          if (!Array.isArray(m.meetingLogs)) m.meetingLogs = [];
+          const baseLogs = Array.isArray(m.allMeetingLogs) ? m.allMeetingLogs : (Array.isArray(m.meetingLogs) ? m.meetingLogs : []);
+          m.meetingLogs = baseLogs.map(l => ({ ...l }));
           if (!Array.isArray(m.meetingDates)) m.meetingDates = [];
 
           // 1.1 ผสานรายการประชุมที่เพิ่งเพิ่มใหม่ของ ผจก. ท่านนี้
@@ -2860,11 +3117,14 @@
             });
           });
 
-          m.actualMeetings = Math.max(m.meetingLogs.length, m.meetingDates.length, m.actualMeetings || 0);
-          m.expectedMeetings = m.expectedMeetings || 8;
-          m.compliance = Math.round((m.actualMeetings / m.expectedMeetings) * 100);
-          m.meetingStatus = m.actualMeetings >= m.expectedMeetings ? 'green' : 'red';
-          totalMeetingsDoneCount += m.actualMeetings;
+          // 1.3 จัดระเบียบวันที่ประชุมและแยกเดือน (แก้ปัญหาวัน/เดือนสลับกันและปี พ.ศ. 2 หลัก)
+          m.allMeetingLogs = normalizeManagerMeetingLogs(m.meetingLogs);
+          m.allMeetingLogs.forEach(log => {
+            if (log.monthCode) {
+              monthMeetingCounts[log.monthCode] = (monthMeetingCounts[log.monthCode] || 0) + 1;
+            }
+            totalAllMonthsMeetings++;
+          });
 
           if (Array.isArray(m.branches)) {
             m.branches = m.branches.filter(b => !isInvalidBranchName(b.name));
@@ -2978,11 +3238,27 @@
         });
       }
 
+      data.monthMeetingCounts = monthMeetingCounts;
+      data.totalAllMonthsMeetings = totalAllMonthsMeetings;
+
+      // เลือกเดือนเริ่มต้นอัตโนมัติ (เลือกเดือนล่าสุดที่มีข้อมูลการประชุมในระบบ หรือของ ผจก. ท่านนั้น)
+      if (!dashboardState.selectedMonth || dashboardState.selectedMonth === 'AUTO') {
+        if (dashboardState.isLockedManagerMode && dashboardState.currentManager && Array.isArray(data.gmReport.managers)) {
+          const myMgr = data.gmReport.managers.find(x => x.manager === dashboardState.currentManager);
+          const myLogs = (myMgr && Array.isArray(myMgr.allMeetingLogs)) ? myMgr.allMeetingLogs : [];
+          const myMonths = [...new Set(myLogs.map(l => l.monthCode).filter(Boolean))].sort((a, b) => Number(b) - Number(a));
+          dashboardState.selectedMonth = myMonths[0] || '10';
+        } else {
+          // เลือกเดือนล่าสุดที่มีการบันทึกการประชุมอย่างแพร่หลาย (เช่น ตุลาคม 10 หรือ กันยายน 09 หรือ พฤศจิกายน 11)
+          if ((monthMeetingCounts['11'] || 0) >= 25) dashboardState.selectedMonth = '11';
+          else if ((monthMeetingCounts['10'] || 0) > 0) dashboardState.selectedMonth = '10';
+          else if ((monthMeetingCounts['09'] || 0) > 0) dashboardState.selectedMonth = '09';
+          else dashboardState.selectedMonth = 'ALL';
+        }
+      }
+
       if (data.gmReport.summary) {
         data.gmReport.summary.totalBranches = validBranchesCount;
-        data.gmReport.summary.totalMeetingsDone = totalMeetingsDoneCount;
-        const expectedTotal = data.gmReport.summary.totalMeetingsExpected || (12 * 8);
-        data.gmReport.summary.meetingComplianceAvg = expectedTotal > 0 ? Math.round((totalMeetingsDoneCount / expectedTotal) * 100) : 0;
         data.gmReport.summary.kpiStatusCount = {
           green: kpiGreen,
           yellow: kpiYellow,
@@ -2990,6 +3266,9 @@
           pending: kpiPending
         };
       }
+
+      // คำนวณจำนวนการประชุมตามเดือนที่เลือก (ในเดือนนั้นๆ ก็คือในเดือนนั้นๆ)
+      applyActiveMonthToData(data, dashboardState.selectedMonth);
 
       // 2. จัดระเบียบข้อมูลปัญหาสำรวจจริงจาก Google Sheet + ผสานรายการแจ้งปัญหาใหม่และการแก้ไขจากฟอร์มทันที
       if (Array.isArray(data.gmReport.problemsList)) {
@@ -3096,6 +3375,7 @@
           p.hasColIFromApi = (rawColI !== undefined && rawColI !== null && String(rawColI).trim() !== '' && String(rawColI).trim() !== '-');
           p.problemDetail = p.hasColHFromApi ? String(rawColH).trim() : '-';
           p.initialFix = p.hasColIFromApi ? String(rawColI).trim() : '-';
+          p.monthCode = p.monthCode || extractMonthCodeFromText(`${p.subject || ''} ${p.problemDetail || ''} ${p.initialFix || ''}`);
         });
 
         // สรุปยอดปัญหาตามระดับความเร่งด่วนจริง
@@ -3229,8 +3509,8 @@
 
       // Clear any older cache versions
       const CACHE_PREFIX = dashboardState.isLockedManagerMode && dashboardState.currentManager
-        ? `gm_dash_cache_v10_all3_mgr_${dashboardState.currentManager}`
-        : 'gm_dash_cache_v10_all3_live';
+        ? `gm_dash_cache_v11_monthly_mgr_${dashboardState.currentManager}`
+        : 'gm_dash_cache_v11_monthly_live';
       try {
         Object.keys(localStorage)
           .filter(k => k.startsWith('gm_dash_cache') && !k.startsWith(CACHE_PREFIX))
@@ -3343,6 +3623,8 @@
       const data = dashboardState.data;
       if (!data) return;
 
+      syncMonthSelectorDropdowns();
+
       // Update Mode Badge
       const modeBadge = document.getElementById('dataSourceBadge');
       if (modeBadge) {
@@ -3357,13 +3639,11 @@
         return;
       }
 
-      // Update Period Banner (แสดงครบทั้ง 3 รอบ: 1-10 • 1-20 • 1-31)
+      // Update Period Banner (แสดงเดือนที่เลือกสำหรับการประชุม/ปัญหา และผลประกอบการ ReportGM ครบ 3 รอบ)
       const heroPeriodEl = document.getElementById('heroPeriodText');
       if (heroPeriodEl) {
-        const monthPart = (data.periodInfo && data.periodInfo.monthName && data.periodInfo.yearTh)
-          ? `ประจำเดือน${data.periodInfo.monthName} ${data.periodInfo.yearTh}`
-          : (data.periodInfo && data.periodInfo.displayText ? data.periodInfo.displayText : '');
-        heroPeriodEl.textContent = `รายงานผลการดำเนินงาน ${monthPart} • แสดงครบทั้ง 3 รอบ (1-10 • 1-20 • 1-31)`;
+        const activeMonthText = getActiveMonthDisplayLabel();
+        heroPeriodEl.textContent = `รายงานผลการดำเนินงาน ประจำเดือน${activeMonthText}`;
       }
       const lastUpdatedEl = document.getElementById('lastUpdatedText');
       if (lastUpdatedEl) lastUpdatedEl.textContent = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ' น.';
@@ -3429,7 +3709,11 @@
 
     // 4.2 Render Charts (Chart.js พร้อมตัวเลขแสดงตรงบนกราฟ อ่านได้ทันทีไม่ต้องเอาเมาส์ชี้)
     function renderCharts(data) {
-      // Chart 1: Meeting Compliance Chart (แสดงเลขครั้งประชุมบนแท่งกราฟเลย)
+      // Chart 1: Meeting Compliance Chart (แสดงเลขครั้งประชุมของเดือนที่เลือกบนแท่งกราฟเลย)
+      const chartTitleEl = document.getElementById('meetingChartTitle');
+      if (chartTitleEl) {
+        chartTitleEl.textContent = `สรุปจำนวนการประชุมแยกตามผู้จัดการ — ประจำเดือน${getActiveMonthDisplayLabel()}`;
+      }
       const mgrLabels = data.gmReport.managers.map(m => m.manager);
       const mgrActuals = data.gmReport.managers.map(m => m.actualMeetings);
       const barColors = data.gmReport.managers.map(m => m.actualMeetings >= 8 ? '#10B981' : '#F43F5E');
@@ -3651,6 +3935,7 @@
         targetRevenue: rev.value,
         crm: crm.value,
         crmStatus: crm.status,
+        crmCriteria: crm.criteria,
         nrm: String(nrm.value || '-').trim() || '-',
         appointment: appVal,
         criteria: rev.criteria
@@ -4037,6 +4322,8 @@
 
       // Filter Logic
       const filtered = allProblems.filter(p => {
+        // Month Filter (กรองตามเดือนเมื่อรายการปัญหามีการระบุเดือน)
+        if (dashboardState.selectedMonth && dashboardState.selectedMonth !== 'ALL' && p.monthCode && p.monthCode !== dashboardState.selectedMonth) return false;
         // Urgency Filter
         if (dashboardState.problemFilterRisk !== 'ALL' && p.urgency !== dashboardState.problemFilterRisk) return false;
         // Status Filter
@@ -6945,14 +7232,31 @@
       fetchDashboardData();
     }
 
-    // Manager Details Modal (แสดงประวัติการประชุมพร้อมปุ่มแก้ไข + สาขาครบทั้ง 3 รอบพร้อมปุ่มแก้ไข ReportGM)
+    // Manager Details Modal (แสดงประวัติการประชุมรายเดือนพร้อมตัวกรองเดือน + สาขาครบทั้ง 3 รอบพร้อมปุ่มแก้ไข ReportGM)
     function openManagerDetails(managerName) {
       const mgr = dashboardState.data.gmReport.managers.find(m => m.manager === managerName);
       if (!mgr) return;
+      dashboardState.activeModalManagerName = managerName;
+
+      const yearTh = (dashboardState.data && dashboardState.data.periodInfo && dashboardState.data.periodInfo.yearTh) || 2569;
+      const allLogs = Array.isArray(mgr.allMeetingLogs) ? mgr.allMeetingLogs : (Array.isArray(mgr.meetingLogs) ? mgr.meetingLogs : []);
+      const mgrMonthCounts = {};
+      allLogs.forEach(l => {
+        if (l.monthCode) mgrMonthCounts[l.monthCode] = (mgrMonthCounts[l.monthCode] || 0) + 1;
+      });
+      const defaultMonths = ['11', '10', '09', '08'];
+      const extraMonths = Object.keys(mgrMonthCounts).filter(k => k && !defaultMonths.includes(k));
+      const monthOrder = [...extraMonths, ...defaultMonths].sort((a, b) => Number(b) - Number(a));
+      const monthOptionsHtml = monthOrder.map(mc => {
+        const mName = THAI_MONTH_NAMES_BY_CODE[mc] || mc;
+        const cnt = mgrMonthCounts[mc] || 0;
+        const sel = dashboardState.selectedMonth === mc ? 'selected' : '';
+        return `<option value="${mc}" ${sel}>${mName} ${yearTh} (${cnt} ครั้ง)</option>`;
+      }).join('') + `<option value="ALL" ${dashboardState.selectedMonth === 'ALL' ? 'selected' : ''}>ทุกเดือน (รวม ${allLogs.length} ครั้ง)</option>`;
 
       document.getElementById('modalMgrInitial').textContent = mgr.manager.substring(0, 1);
       document.getElementById('modalMgrName').textContent = `ผู้จัดการ: ${mgr.manager}`;
-      document.getElementById('modalMgrSub').textContent = `ดูแลทั้งหมด ${mgr.branches.length} สาขา | อัตราประชุม ${mgr.compliance}%`;
+      document.getElementById('modalMgrSub').textContent = `ดูแลทั้งหมด ${mgr.branches.length} สาขา | การประชุม (${getActiveMonthDisplayLabel()}): ${mgr.actualMeetings}/${mgr.expectedMeetings} ครั้ง (${mgr.compliance}%)`;
 
       const content = document.getElementById('modalMgrContent');
       const meetingLogs = Array.isArray(mgr.meetingLogs) ? mgr.meetingLogs : [];
@@ -6976,10 +7280,8 @@
             </div>
           </div>
         `).join('');
-      } else if (Array.isArray(mgr.meetingDates) && mgr.meetingDates.length > 0) {
-        meetingsHtml = mgr.meetingDates.map((d, i) => `<span class="inline-block px-2.5 py-1 bg-slate-100 rounded-lg text-xs font-medium text-slate-700 mr-2 mb-2">นัดที่ ${i + 1}: ${escapeHtml(d)}</span>`).join('');
       } else {
-        meetingsHtml = '<p class="text-xs text-slate-400">ไม่มีบันทึกการประชุม</p>';
+        meetingsHtml = `<p class="text-xs text-slate-400 py-3 text-center">ไม่มีบันทึกการประชุมในเดือน${escapeHtml(getActiveMonthDisplayLabel())} (สามารถเปลี่ยนเดือนจากตัวเลือกด้านบน)</p>`;
       }
 
       let branchesHtml = mgr.branches.map(b => {
@@ -7003,17 +7305,25 @@
 
       content.innerHTML = `
         <div>
-          <div class="flex items-center justify-between mb-2">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
             <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">📅 ประวัติการประชุม (${mgr.actualMeetings}/${mgr.expectedMeetings} ครั้ง)</h4>
-            <button type="button" onclick="openMeetingInputModal('${escapeHtml(mgr.manager)}')" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xxs font-bold transition">
-              + เพิ่มการประชุม
-            </button>
+            <div class="flex items-center gap-2">
+              <div class="flex items-center bg-blue-50 border border-blue-200 rounded-lg px-2 py-0.5">
+                <span class="text-xxs font-bold text-blue-600 mr-1">เดือน:</span>
+                <select onchange="onMonthFilterChange(this.value)" class="bg-transparent text-xxs font-bold text-blue-900 outline-none cursor-pointer">
+                  ${monthOptionsHtml}
+                </select>
+              </div>
+              <button type="button" onclick="openMeetingInputModal('${escapeHtml(mgr.manager)}')" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xxs font-bold transition">
+                + เพิ่มการประชุม
+              </button>
+            </div>
           </div>
           <div class="p-3 bg-blue-50/50 rounded-xl border border-blue-100 max-h-60 overflow-y-auto custom-scrollbar">${meetingsHtml}</div>
         </div>
         <div>
           <div class="flex items-center justify-between mb-2">
-            <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">🏢 สาขาในการดูแลครบทั้ง 3 รอบ (${mgr.branches.length} สาขา)</h4>
+            <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">🏢 ผลประกอบการสาขา ReportGM ครบทั้ง 3 รอบ (${mgr.branches.length} สาขา)</h4>
             <button type="button" onclick="openUpdateReportGmModal('${escapeHtml(mgr.manager)}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xxs font-bold transition">
               + เพิ่ม/แก้ไขสาขาใน ReportGM
             </button>
@@ -7507,6 +7817,23 @@
       dashboardState.currentManager = managerName;
       localStorage.setItem('gm_active_manager', managerName);
 
+      // หากผู้จัดการท่านนี้ไม่มีบันทึกการประชุมในเดือนที่เลือกอยู่ แต่มีในเดือนอื่น ให้สลับไปเดือนล่าสุดของผู้จัดการท่านนี้อัตโนมัติ
+      if (dashboardState.data && dashboardState.data.gmReport && Array.isArray(dashboardState.data.gmReport.managers)) {
+        const mObj = dashboardState.data.gmReport.managers.find(x => x.manager === managerName);
+        const allLogs = mObj && Array.isArray(mObj.allMeetingLogs) ? mObj.allMeetingLogs : [];
+        if (allLogs.length > 0 && dashboardState.selectedMonth !== 'ALL') {
+          const hasInCurMonth = allLogs.some(l => l.monthCode === dashboardState.selectedMonth);
+          if (!hasInCurMonth) {
+            const months = [...new Set(allLogs.map(l => l.monthCode).filter(Boolean))].sort((a, b) => Number(b) - Number(a));
+            if (months[0]) {
+              dashboardState.selectedMonth = months[0];
+              applyActiveMonthToData(dashboardState.data, dashboardState.selectedMonth);
+              syncMonthSelectorDropdowns();
+            }
+          }
+        }
+      }
+
       const navLabel = document.getElementById('navManagerLabel');
       if (navLabel) {
         navLabel.textContent = `พื้นที่งาน: ผจก.${managerName}`;
@@ -7582,7 +7909,7 @@
                   <span>Manager Personal Portal</span>
                 </span>
                 <h2 class="text-xl sm:text-2xl font-black text-slate-900 mt-2">เลือกพื้นที่ปฏิบัติงานผู้จัดการเขต (12 ท่าน)</h2>
-                <p class="text-xs sm:text-sm text-slate-500 mt-1">คลิกเลือกชื่อผู้จัดการเพื่อเข้าสู่ระบบบันทึกการประชุม แจ้งปัญหาหน้างาน และอัปเดตแนวทางแก้ไข (คอลัมน์ H & I)</p>
+                <p class="text-xs sm:text-sm text-slate-500 mt-1">คลิกเลือกชื่อผู้จัดการเพื่อเข้าสู่ระบบบันทึกการประชุม แจ้งปัญหาหน้างาน และอัปเดตแนวทางแก้ไขปัญหา</p>
               </div>
               <button type="button" onclick="openManagerLinksModal()" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow transition flex items-center gap-2 self-start sm:self-auto active:scale-95">
                 <i data-lucide="share-2" class="w-4 h-4"></i>
@@ -7663,8 +7990,23 @@
 
       const meetingLogs = Array.isArray(mgrObj.meetingLogs) ? mgrObj.meetingLogs : [];
       const meetingDates = Array.isArray(mgrObj.meetingDates) ? mgrObj.meetingDates : [];
+      const allMgrLogs = Array.isArray(mgrObj.allMeetingLogs) ? mgrObj.allMeetingLogs : meetingLogs;
+      const yearTh = (data && data.periodInfo && data.periodInfo.yearTh) || 2569;
+      const mgrMonthCounts = {};
+      allMgrLogs.forEach(l => {
+        if (l.monthCode) mgrMonthCounts[l.monthCode] = (mgrMonthCounts[l.monthCode] || 0) + 1;
+      });
+      const defaultMonths = ['11', '10', '09', '08'];
+      const extraMonths = Object.keys(mgrMonthCounts).filter(k => k && !defaultMonths.includes(k));
+      const monthOrder = [...extraMonths, ...defaultMonths].sort((a, b) => Number(b) - Number(a));
+      const mgrMonthOptionsHtml = monthOrder.map(mc => {
+        const mName = THAI_MONTH_NAMES_BY_CODE[mc] || mc;
+        const cnt = mgrMonthCounts[mc] || 0;
+        const sel = dashboardState.selectedMonth === mc ? 'selected' : '';
+        return `<option value="${mc}" ${sel}>${mName} ${yearTh} (${cnt} ครั้ง)</option>`;
+      }).join('') + `<option value="ALL" ${dashboardState.selectedMonth === 'ALL' ? 'selected' : ''}>ทุกเดือน (รวม ${allMgrLogs.length} ครั้ง)</option>`;
 
-      const periodText = (data && data.periodInfo && data.periodInfo.displayText) ? data.periodInfo.displayText : 'รอบปัจจุบัน';
+      const activeMonthText = getActiveMonthDisplayLabel();
 
       container.innerHTML = `
         <!-- 1. MANAGER HERO BANNER & QUICK ACTIONS -->
@@ -7680,7 +8022,7 @@
                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                     <span>เชื่อมต่อ Google Sheets สด</span>
                   </span>
-                  <span class="text-xxs text-indigo-200 font-medium">${escapeHtml(periodText)}</span>
+                  <span class="text-xxs text-indigo-200 font-medium">ประจำเดือน${escapeHtml(activeMonthText)}</span>
                 </div>
                 <h2 class="text-xl sm:text-2xl font-black tracking-tight mt-1">พื้นที่ปฏิบัติงาน: ผู้จัดการ${escapeHtml(mgrName)}</h2>
                 <p class="text-xs text-indigo-200/90 mt-0.5">ดูแลรับผิดชอบ ${branches.length} สาขา • บันทึกข้อมูลลงชีทของ ผจก.${escapeHtml(mgrName)} โดยตรง</p>
@@ -7722,7 +8064,7 @@
           <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-6 pt-5 border-t border-indigo-800/60">
             <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-3.5 border border-white/10">
               <div class="flex items-center justify-between text-xxs text-indigo-200">
-                <span>📅 การประชุมทั้งหมด</span>
+                <span>📅 การประชุม (${escapeHtml(activeMonthText)})</span>
                 <span class="font-bold px-2 py-0.5 rounded-full ${mgrObj.compliance >= 80 ? 'bg-emerald-500/30 text-emerald-200' : 'bg-amber-500/30 text-amber-200'}">${mgrObj.compliance || 0}%</span>
               </div>
               <div class="text-xl sm:text-2xl font-black mt-1">${mgrObj.actualMeetings || 0} / ${mgrObj.expectedMeetings || 8} <span class="text-xs font-medium text-indigo-200">ครั้ง</span></div>
@@ -7730,7 +8072,7 @@
 
             <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-3.5 border border-white/10">
               <div class="flex items-center justify-between text-xxs text-indigo-200">
-                <span>🏢 สาขาที่ดูแล (3 รอบ)</span>
+                <span>🏢 ผลประกอบการสาขา (3 รอบ)</span>
                 <span>🟢 ${kpiGreen} 🟡 ${kpiYellow} 🔴 ${kpiRed}</span>
               </div>
               <div class="text-xl sm:text-2xl font-black mt-1">${branches.length} <span class="text-xs font-medium text-indigo-200">สาขา</span></div>
@@ -7754,28 +8096,36 @@
           </div>
         </div>
 
-        <!-- 2. TWO-COLUMN WORKSPACE: MEETINGS + REPORTGM (3 ROUNDS) & PROBLEMS LIST -->
+        <!-- 2. TWO-COLUMN WORKSPACE: MEETINGS (MONTHLY) + REPORTGM (3 ROUNDS) & PROBLEMS LIST -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
           
-          <!-- LEFT COLUMN (6 cols): ประวัติการประชุม & สาขาในความดูแล (ReportGM ครบทั้ง 3 รอบ) -->
+          <!-- LEFT COLUMN (6 cols): ประวัติการประชุมรายเดือน & สาขาในความดูแล (ReportGM ครบทั้ง 3 รอบ) -->
           <div class="lg:col-span-6 space-y-6">
             
-            <!-- ประวัติการประชุม (พร้อมปุ่มแก้ไขทุกแถว) -->
+            <!-- ประวัติการประชุมรายเดือน (พร้อมตัวกรองเดือนและปุ่มแก้ไขทุกแถว) -->
             <div class="bg-white rounded-3xl p-5 border border-slate-200 shadow-sm space-y-4">
-              <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
                 <div class="flex items-center space-x-2">
                   <div class="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
                     <i data-lucide="calendar" class="w-4 h-4"></i>
                   </div>
                   <div>
-                    <h3 class="font-bold text-slate-900 text-sm sm:text-base">บันทึกการประชุม (${mgrObj.actualMeetings || 0}/${mgrObj.expectedMeetings || 8})</h3>
-                    <p class="text-xxs text-slate-500">ชีท: ${escapeHtml(mgrName)} - Meeting • คลิก "แก้ไข" เพื่อปรับปรุงข้อมูลได้ทันที</p>
+                    <h3 class="font-bold text-slate-900 text-sm sm:text-base">บันทึกการประชุม (${mgrObj.actualMeetings || 0}/${mgrObj.expectedMeetings || 8} ครั้ง)</h3>
+                    <p class="text-xxs text-slate-500">ประจำเดือน${escapeHtml(activeMonthText)} • คลิก "แก้ไข" เพื่อปรับปรุงข้อมูลได้ทันที</p>
                   </div>
                 </div>
-                <button type="button" onclick="openMeetingInputModal('${escapeHtml(mgrName)}')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition flex items-center gap-1 shadow-sm active:scale-95">
-                  <i data-lucide="plus" class="w-3.5 h-3.5"></i>
-                  <span>เพิ่มบันทึก</span>
-                </button>
+                <div class="flex items-center gap-2">
+                  <div class="flex items-center bg-blue-50 border border-blue-200 rounded-xl px-2.5 py-1.5">
+                    <span class="text-xxs font-bold text-blue-600 mr-1 whitespace-nowrap">📅 เดือน:</span>
+                    <select id="mgrPortalMonthFilter" onchange="onMonthFilterChange(this.value)" class="bg-transparent text-xs font-bold text-blue-900 outline-none cursor-pointer">
+                      ${mgrMonthOptionsHtml}
+                    </select>
+                  </div>
+                  <button type="button" onclick="openMeetingInputModal('${escapeHtml(mgrName)}')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition flex items-center gap-1 shadow-sm active:scale-95">
+                    <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                    <span>เพิ่มบันทึก</span>
+                  </button>
+                </div>
               </div>
 
               ${meetingLogs.length > 0 ? `
@@ -7802,7 +8152,7 @@
                 </div>
               ` : (meetingDates.length > 0 ? `
                 <div class="p-3.5 bg-blue-50/50 rounded-2xl border border-blue-100 space-y-2">
-                  <p class="text-xs font-bold text-slate-700">วันที่บันทึกการประชุมทั้งหมด:</p>
+                  <p class="text-xs font-bold text-slate-700">วันที่บันทึกการประชุม:</p>
                   <div class="flex flex-wrap gap-1.5">
                     ${meetingDates.map((d, i) => `<span class="px-2.5 py-1 bg-white rounded-lg border border-blue-200 text-xs font-semibold text-blue-800">ครั้งที่ ${i + 1}: ${escapeHtml(d)}</span>`).join('')}
                   </div>
@@ -7810,9 +8160,10 @@
               ` : `
                 <div class="py-8 text-center text-slate-400 space-y-2">
                   <i data-lucide="calendar-x" class="w-8 h-8 mx-auto text-slate-300"></i>
-                  <p class="text-xs font-medium">ยังไม่มีบันทึกการประชุม</p>
+                  <p class="text-xs font-medium">ยังไม่มีบันทึกการประชุมในเดือน${escapeHtml(activeMonthText)}</p>
+                  <p class="text-xxs text-slate-400">สามารถเลือกดูเดือนอื่นได้จากตัวเลือกเดือนด้านบน หรือกดปุ่มเพิ่มบันทึกการประชุมใหม่</p>
                   <button type="button" onclick="openMeetingInputModal('${escapeHtml(mgrName)}')" class="mt-1 px-3.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold rounded-xl border border-blue-200 transition">
-                    + บันทึกการประชุมครั้งแรก
+                    + บันทึกการประชุมใหม่
                   </button>
                 </div>
               `)}
@@ -7881,7 +8232,7 @@
                   </div>
                   <div>
                     <h3 class="font-bold text-slate-900 text-sm sm:text-base">รายการปัญหาหน้างาน & การแก้ไข (${myProblems.length} เคส)</h3>
-                    <p class="text-xxs text-slate-500">ชีท: ${escapeHtml(mgrName)} - Problem List • คลิก "แก้ไข Col H/I" เพื่ออัปเดตรายละเอียดหรือแนวทางแก้ไข</p>
+                    <p class="text-xxs text-slate-500">ชีท: ${escapeHtml(mgrName)} - Problem List • คลิก "แก้ไขข้อมูล" เพื่ออัปเดตรายละเอียดหรือแนวทางแก้ไข</p>
                   </div>
                 </div>
                 <button type="button" onclick="openProblemInputModal('${escapeHtml(mgrName)}')" class="px-3.5 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl transition flex items-center gap-1.5 shadow-sm self-start sm:self-auto active:scale-95">
@@ -7915,7 +8266,7 @@
                           </div>
                           <button type="button" onclick="openUpdateProblemModal('${escapeHtml(p.code)}')" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition flex items-center gap-1 shadow-sm active:scale-95">
                             <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
-                            <span>แก้ไข Col H / I</span>
+                            <span>แก้ไขข้อมูล</span>
                           </button>
                         </div>
 
@@ -7926,11 +8277,11 @@
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5 text-xs">
                           <div class="p-3 rounded-xl bg-blue-50/70 border border-blue-200/70">
-                            <span class="text-xxs font-bold text-blue-800 block mb-1">📄 รายละเอียดปัญหา (คอลัมน์ H):</span>
+                            <span class="text-xxs font-bold text-blue-800 block mb-1">📄 รายละเอียดปัญหา:</span>
                             <p class="text-slate-800 font-medium whitespace-pre-line leading-relaxed">${escapeHtml(p.problemDetail || '-')}</p>
                           </div>
                           <div class="p-3 rounded-xl bg-emerald-50/70 border border-emerald-200/70">
-                            <span class="text-xxs font-bold text-emerald-800 block mb-1">🛠 แนวทางการแก้ไขปัญหา (คอลัมน์ I):</span>
+                            <span class="text-xxs font-bold text-emerald-800 block mb-1">🛠 แนวทางการแก้ไขปัญหา:</span>
                             <p class="text-emerald-950 font-medium whitespace-pre-line leading-relaxed">${escapeHtml(p.initialFix || '-')}</p>
                           </div>
                         </div>
@@ -8070,6 +8421,13 @@
 
         if (res && res.status === 'success') {
           const displayDate = (res.record && res.record.date) ? res.record.date : formatInputDateToThaiSlash(dateVal);
+          const addedMonthMatch = String(displayDate).match(/^(\d{1,2})\/(\d{1,2})\//);
+          if (addedMonthMatch) {
+            const addedMonthCode = String(parseInt(addedMonthMatch[2], 10)).padStart(2, '0');
+            if (dashboardState.selectedMonth && dashboardState.selectedMonth !== 'ALL') {
+              dashboardState.selectedMonth = addedMonthCode;
+            }
+          }
           savePendingSyncRecord({
             type: 'addMeeting',
             manager: mgr,
@@ -8432,6 +8790,8 @@
       document.getElementById('updateMeetingRowIndex').value = logItem.rowIndex || '';
       document.getElementById('updateMeetingManager').value = mgr;
       document.getElementById('updateMeetingOldDate').value = logItem.date || '';
+      const oldBranchEl = document.getElementById('updateMeetingOldBranch');
+      if (oldBranchEl) oldBranchEl.value = logItem.branch || '';
       document.getElementById('updateMeetingOldContent').value = logItem.content || '';
 
       document.getElementById('updateMeetingDateInput').value = convertThaiSlashDateToIsoInput(logItem.date);
@@ -8454,6 +8814,7 @@
       const manager = document.getElementById('updateMeetingManager')?.value || dashboardState.currentManager || '';
       const rowIndex = document.getElementById('updateMeetingRowIndex')?.value || '';
       const oldDate = document.getElementById('updateMeetingOldDate')?.value || '';
+      const oldBranch = document.getElementById('updateMeetingOldBranch')?.value || '';
       const oldContent = document.getElementById('updateMeetingOldContent')?.value || '';
       const dateVal = document.getElementById('updateMeetingDateInput')?.value || '';
       const branch = document.getElementById('updateMeetingBranchInput')?.value.trim() || '';
@@ -8477,6 +8838,7 @@
           manager,
           rowIndex,
           oldDate,
+          oldBranch,
           oldContent,
           date: dateVal,
           branch,
@@ -8487,11 +8849,19 @@
 
         if (res && res.status === 'success') {
           const formattedDate = (res.record && res.record.date) ? res.record.date : formatInputDateToThaiSlash(dateVal);
+          const updMonthMatch = String(formattedDate).match(/^(\d{1,2})\/(\d{1,2})\//);
+          if (updMonthMatch) {
+            const updMonthCode = String(parseInt(updMonthMatch[2], 10)).padStart(2, '0');
+            if (dashboardState.selectedMonth && dashboardState.selectedMonth !== 'ALL') {
+              dashboardState.selectedMonth = updMonthCode;
+            }
+          }
           savePendingSyncRecord({
             type: 'updateMeeting',
             manager,
             rowIndex: res.record?.rowIndex || rowIndex,
             oldDate,
+            oldBranch,
             oldContent,
             date: formattedDate,
             branch,
@@ -8536,20 +8906,30 @@
         : null;
 
       const mapKeyToSuffix = { '1-10': '1_10', '1-20': '1_20', '1-31': '1_31' };
+      const statusToCriteriaText = (st, crit) => {
+        if (crit) return crit;
+        if (st === 'green') return 'มีโอกาสเป็นไปตามเป้า';
+        if (st === 'yellow') return 'เสี่ยงต่ำกว่าเป้าหมาย';
+        if (st === 'red') return 'มีโอกาสเป็นไม่เป็นไปตามเป้า หากไม่มีมาตรการเพิ่มเติม';
+        return '';
+      };
+
       ['1-10', '1-20', '1-31'].forEach(pk => {
         const sfx = mapKeyToSuffix[pk];
         const pObj = (bObj && bObj.periods && bObj.periods[pk]) ? bObj.periods[pk] : null;
         const m = extractFourMetricsFromPeriodObj(pObj);
 
-        const stEl = document.getElementById(`rgm_status_${sfx}`);
-        const revEl = document.getElementById(`rgm_rev_${sfx}`);
-        const crmEl = document.getElementById(`rgm_crm_${sfx}`);
-        const nrmEl = document.getElementById(`rgm_nrm_${sfx}`);
-        const appEl = document.getElementById(`rgm_app_${sfx}`);
+        const revEl = document.getElementById(`rgm_${sfx}_targetVal`);
+        const revCritEl = document.getElementById(`rgm_${sfx}_targetCrit`);
+        const crmEl = document.getElementById(`rgm_${sfx}_crmVal`);
+        const crmCritEl = document.getElementById(`rgm_${sfx}_crmCrit`);
+        const nrmEl = document.getElementById(`rgm_${sfx}_nrmVal`);
+        const appEl = document.getElementById(`rgm_${sfx}_apptVal`);
 
-        if (stEl) stEl.value = m.status || 'pending';
         if (revEl) revEl.value = (m.targetRevenue && m.targetRevenue !== '-') ? m.targetRevenue : '';
+        if (revCritEl) revCritEl.value = statusToCriteriaText(m.status, m.criteria);
         if (crmEl) crmEl.value = (m.crm && m.crm !== '-') ? m.crm : '';
+        if (crmCritEl) crmCritEl.value = statusToCriteriaText(m.crmStatus, m.crmCriteria);
         if (nrmEl) nrmEl.value = (m.nrm && m.nrm !== '-') ? m.nrm : '';
         if (appEl) appEl.value = (m.appointment && m.appointment !== '-') ? m.appointment : '';
       });
@@ -8654,28 +9034,32 @@
         return;
       }
 
+      const buildRoundPayload = (sfx) => {
+        const targetVal = document.getElementById(`rgm_${sfx}_targetVal`)?.value.trim() || '-';
+        const targetCriteria = document.getElementById(`rgm_${sfx}_targetCrit`)?.value || '';
+        const nrmVal = document.getElementById(`rgm_${sfx}_nrmVal`)?.value.trim() || '-';
+        const apptVal = document.getElementById(`rgm_${sfx}_apptVal`)?.value.trim() || '-';
+        const crmVal = document.getElementById(`rgm_${sfx}_crmVal`)?.value.trim() || '-';
+        const crmCriteria = document.getElementById(`rgm_${sfx}_crmCrit`)?.value || '';
+        return {
+          targetVal,
+          targetRevenue: targetVal,
+          targetCriteria,
+          criteria: targetCriteria,
+          nrmVal,
+          nrm: nrmVal,
+          apptVal,
+          appointment: apptVal,
+          crmVal,
+          crm: crmVal,
+          crmCriteria
+        };
+      };
+
       const periodsPayload = {
-        '1-10': {
-          status: document.getElementById('rgm_status_1_10')?.value || 'pending',
-          targetRevenue: document.getElementById('rgm_rev_1_10')?.value.trim() || '-',
-          crm: document.getElementById('rgm_crm_1_10')?.value.trim() || '-',
-          nrm: document.getElementById('rgm_nrm_1_10')?.value.trim() || '-',
-          appointment: document.getElementById('rgm_app_1_10')?.value.trim() || '-'
-        },
-        '1-20': {
-          status: document.getElementById('rgm_status_1_20')?.value || 'pending',
-          targetRevenue: document.getElementById('rgm_rev_1_20')?.value.trim() || '-',
-          crm: document.getElementById('rgm_crm_1_20')?.value.trim() || '-',
-          nrm: document.getElementById('rgm_nrm_1_20')?.value.trim() || '-',
-          appointment: document.getElementById('rgm_app_1_20')?.value.trim() || '-'
-        },
-        '1-31': {
-          status: document.getElementById('rgm_status_1_31')?.value || 'pending',
-          targetRevenue: document.getElementById('rgm_rev_1_31')?.value.trim() || '-',
-          crm: document.getElementById('rgm_crm_1_31')?.value.trim() || '-',
-          nrm: document.getElementById('rgm_nrm_1_31')?.value.trim() || '-',
-          appointment: document.getElementById('rgm_app_1_31')?.value.trim() || '-'
-        }
+        '1-10': buildRoundPayload('1_10'),
+        '1-20': buildRoundPayload('1_20'),
+        '1-31': buildRoundPayload('1_31')
       };
 
       if (submitBtn) {
@@ -8687,6 +9071,7 @@
         const res = await callManagerApi('updateReportGM', {
           manager,
           branch,
+          periodsJson: JSON.stringify(periodsPayload),
           periods: periodsPayload
         });
 
