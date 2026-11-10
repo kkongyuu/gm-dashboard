@@ -2399,15 +2399,99 @@
       return false;
     }
 
+    const PENDING_SYNC_STORAGE_KEY = 'gm_pending_sync_v1';
+
+    function getPendingSyncRecords() {
+      try {
+        const raw = localStorage.getItem(PENDING_SYNC_STORAGE_KEY);
+        if (!raw) return [];
+        const list = JSON.parse(raw);
+        if (!Array.isArray(list)) return [];
+        // เก็บรายการภายใน 7 วันล่าสุด
+        const cutoff = Date.now() - (7 * 24 * 60 * 60 * 1000);
+        return list.filter(item => item && (!item.ts || item.ts > cutoff));
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function savePendingSyncRecord(record) {
+      try {
+        const list = getPendingSyncRecords();
+        record.ts = Date.now();
+        list.push(record);
+        if (list.length > 150) {
+          list.splice(0, list.length - 150);
+        }
+        localStorage.setItem(PENDING_SYNC_STORAGE_KEY, JSON.stringify(list));
+      } catch (e) {
+        console.warn('savePendingSyncRecord error:', e);
+      }
+    }
+
+    function formatInputDateToThaiSlash(dateStr) {
+      if (!dateStr) {
+        const now = new Date();
+        return `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear() + 543}`;
+      }
+      const s = String(dateStr).trim();
+      if (s.includes('-')) {
+        const parts = s.split('-');
+        if (parts.length === 3) {
+          const yNum = parseInt(parts[0], 10);
+          const mNum = parseInt(parts[1], 10);
+          const dNum = parseInt(parts[2], 10);
+          const yTh = yNum > 2400 ? yNum : yNum + 543;
+          return `${String(dNum).padStart(2, '0')}/${String(mNum).padStart(2, '0')}/${yTh}`;
+        }
+      }
+      return s;
+    }
+
     function sanitizeDashboardData(data) {
       if (!data || !data.gmReport) return data;
 
+      const pendingSync = getPendingSyncRecords();
+
       // 1. ลบสาขาผีที่เป็นวันที่ (Sat Jan 10 2026...) และตัวเลขหัวคอลัมน์วันที่ (เช่น 46032) ออกจากทุกผู้จัดการ
+      // พร้อมผสานรายการประชุมที่เพิ่งบันทึกใหม่จากฟอร์ม (ให้แสดงผลทันทีแม้ IMPORTRANGE ยังซิงค์ไม่เสร็จ)
       let validBranchesCount = 0;
       let kpiGreen = 0, kpiYellow = 0, kpiRed = 0, kpiPending = 0;
+      let totalMeetingsDoneCount = 0;
 
       if (Array.isArray(data.gmReport.managers)) {
         data.gmReport.managers.forEach(m => {
+          if (!Array.isArray(m.meetingLogs)) m.meetingLogs = [];
+          if (!Array.isArray(m.meetingDates)) m.meetingDates = [];
+
+          // ผสานรายการประชุมที่เพิ่งเพิ่มใหม่ของ ผจก. ท่านนี้
+          const addedMeetings = pendingSync.filter(r => r.type === 'addMeeting' && r.manager === m.manager);
+          addedMeetings.forEach(pm => {
+            const exists = m.meetingLogs.some(log =>
+              String(log.content || '').trim() === String(pm.content || '').trim() &&
+              (!pm.branch || String(log.branch || '').trim() === String(pm.branch || '').trim())
+            );
+            if (!exists && pm.content) {
+              const dFormatted = pm.date || formatInputDateToThaiSlash('');
+              m.meetingDates.push(dFormatted);
+              m.meetingLogs.push({
+                rowIndex: pm.rowIndex || (m.meetingLogs.length + 2),
+                date: dFormatted,
+                rawDate: dFormatted,
+                branch: pm.branch || '',
+                content: pm.content || '',
+                responsible: pm.responsible || `ผจก. ${m.manager}`,
+                attendees: pm.attendees || 'ครบทุกคน'
+              });
+            }
+          });
+
+          m.actualMeetings = Math.max(m.meetingLogs.length, m.meetingDates.length, m.actualMeetings || 0);
+          m.expectedMeetings = m.expectedMeetings || 8;
+          m.compliance = Math.round((m.actualMeetings / m.expectedMeetings) * 100);
+          m.meetingStatus = m.actualMeetings >= m.expectedMeetings ? 'green' : 'red';
+          totalMeetingsDoneCount += m.actualMeetings;
+
           if (Array.isArray(m.branches)) {
             m.branches = m.branches.filter(b => !isInvalidBranchName(b.name));
             m.allBranchNames = m.branches.map(b => b.name);
@@ -2428,6 +2512,9 @@
 
       if (data.gmReport.summary) {
         data.gmReport.summary.totalBranches = validBranchesCount;
+        data.gmReport.summary.totalMeetingsDone = totalMeetingsDoneCount;
+        const expectedTotal = data.gmReport.summary.totalMeetingsExpected || (12 * 8);
+        data.gmReport.summary.meetingComplianceAvg = expectedTotal > 0 ? Math.round((totalMeetingsDoneCount / expectedTotal) * 100) : 0;
         data.gmReport.summary.kpiStatusCount = {
           green: kpiGreen,
           yellow: kpiYellow,
@@ -2436,11 +2523,73 @@
         };
       }
 
-      // 2. จัดระเบียบข้อมูลปัญหาสำรวจจริงจาก Google Sheet ให้มีรหัส PR-01, PR-02 ชัดเจน
+      // 2. จัดระเบียบข้อมูลปัญหาสำรวจจริงจาก Google Sheet + ผสานรายการแจ้งปัญหาใหม่และการแก้ไขจากฟอร์มทันที
       if (Array.isArray(data.gmReport.problemsList)) {
-        data.gmReport.problemsList = data.gmReport.problemsList.filter(p => p && (p.branch || p.subject));
+        // ผสานรายการแจ้งปัญหาใหม่ที่เพิ่งกดบันทึก
+        const addedProblems = pendingSync.filter(r => r.type === 'addProblem' && r.manager);
+        addedProblems.forEach(pa => {
+          const exists = data.gmReport.problemsList.some(p =>
+            p && p.manager === pa.manager &&
+            String(p.subject || '').trim() === String(pa.subject || '').trim() &&
+            (!pa.branch || String(p.branch || '').trim() === String(pa.branch || '').trim())
+          );
+          if (!exists && (pa.subject || pa.colH || pa.colI)) {
+            data.gmReport.problemsList.push({
+              rowIndex: pa.rowIndex || (data.gmReport.problemsList.length + 2),
+              manager: pa.manager,
+              branch: pa.branch || 'สาขาทั่วไป',
+              urgency: pa.urgency || 'ทั่วไป',
+              needsGmHelp: pa.needsGmHelp || '-',
+              isNeedGm: Boolean(pa.needsGmHelp && pa.needsGmHelp !== '-' && pa.needsGmHelp !== 'ไม่ระบุ'),
+              status: pa.status || 'กำลังดำเนินการ',
+              category: pa.category || 'ทั่วไป',
+              subject: pa.subject || '(ไม่ได้ระบุหัวข้อ)',
+              colH: pa.colH || '',
+              colI: pa.colI || '',
+              problemDetail: pa.colH || '-',
+              initialFix: pa.colI || '-'
+            });
+          }
+        });
+
+        // ผสานรายการอัปเดตปัญหา (Col H, Col I, Status, Urgency) ที่เพิ่งกดแก้ไข
+        const updatedProblems = pendingSync.filter(r => r.type === 'updateProblem' && r.manager);
+        updatedProblems.forEach(pu => {
+          data.gmReport.problemsList.forEach(p => {
+            if (!p || p.manager !== pu.manager) return;
+            const matchSubject = pu.subject && String(p.subject || '').trim() === String(pu.subject || '').trim() &&
+              (!pu.branch || String(p.branch || '').trim() === String(pu.branch || '').trim());
+            const matchRow = pu.rowIndex && String(p.rowIndex || '') === String(pu.rowIndex || '') &&
+              (!pu.subject || String(p.subject || '').trim() === String(pu.subject || '').trim());
+            if (matchSubject || matchRow) {
+              if (pu.colH !== undefined) {
+                p.colH = pu.colH;
+                p.problemDetail = pu.colH || '-';
+              }
+              if (pu.colI !== undefined) {
+                p.colI = pu.colI;
+                p.initialFix = pu.colI || '-';
+              }
+              if (pu.status) p.status = pu.status;
+              if (pu.urgency) p.urgency = pu.urgency;
+            }
+          });
+        });
+
+        // กรองแถวว่างที่ไม่มีทั้งหัวข้อและรายละเอียดออก และตัดรายการที่สถานะ "ปิดแล้ว"
+        data.gmReport.problemsList = data.gmReport.problemsList.filter(p => {
+          if (!p || (!p.branch && !p.subject)) return false;
+          if (p.status === 'ปิดแล้ว') return false;
+          const rawH = String(p.colH ?? p.problemDetail ?? '').trim();
+          const rawI = String(p.colI ?? p.initialFix ?? '').trim();
+          const hasH = rawH !== '' && rawH !== '-';
+          const hasI = rawI !== '' && rawI !== '-';
+          const hasRealSubject = p.subject && p.subject !== '(ไม่ได้ระบุหัวข้อ)';
+          return hasRealSubject || hasH || hasI;
+        });
+
         data.gmReport.problemsList.forEach((p, idx) => {
-          p.code = p.code || `PR-${String(idx + 1).padStart(2, '0')}`;
+          p.code = `PR-${String(idx + 1).padStart(2, '0')}`;
           p.index = idx + 1;
           
           // Normalized urgency & risk
@@ -2469,8 +2618,8 @@
           // ดึงข้อมูลคอลัมน์ H (รายละเอียดปัญหา / เนื้อหา) และคอลัมน์ I (การแก้ไขปัญหา) จาก Google Sheets / API โดยตรง
           const rawColH = p.colH ?? p['เนื้อหา'] ?? p['รายละเอียดปัญหา'] ?? p.content ?? p.problemDetail ?? p.detail ?? p.description ?? p.h;
           const rawColI = p.colI ?? p['การแก้ไขปัญหา'] ?? p['การแก้ไขเบื้องต้น'] ?? p.solution ?? p.initialFix ?? p.fix ?? p.action ?? p.i;
-          p.hasColHFromApi = (rawColH !== undefined && rawColH !== null && String(rawColH).trim() !== '');
-          p.hasColIFromApi = (rawColI !== undefined && rawColI !== null && String(rawColI).trim() !== '');
+          p.hasColHFromApi = (rawColH !== undefined && rawColH !== null && String(rawColH).trim() !== '' && String(rawColH).trim() !== '-');
+          p.hasColIFromApi = (rawColI !== undefined && rawColI !== null && String(rawColI).trim() !== '' && String(rawColI).trim() !== '-');
           p.problemDetail = p.hasColHFromApi ? String(rawColH).trim() : '-';
           p.initialFix = p.hasColIFromApi ? String(rawColI).trim() : '-';
         });
@@ -7154,6 +7303,21 @@
         });
 
         if (res && res.status === 'success') {
+          const displayDate = (res.record && res.record.date) ? res.record.date : formatInputDateToThaiSlash(dateVal);
+          savePendingSyncRecord({
+            type: 'addMeeting',
+            manager: mgr,
+            rowIndex: res.record?.rowIndex || null,
+            date: displayDate,
+            branch,
+            content,
+            responsible,
+            attendees
+          });
+          if (dashboardState.data) {
+            dashboardState.data = sanitizeDashboardData(dashboardState.data);
+            renderDashboard();
+          }
           showToast(`✅ ${res.message || 'บันทึกการประชุมสำเร็จ!'}`);
           closeMeetingInputModal();
           clearLocalDashboardCache();
@@ -7252,6 +7416,23 @@
         });
 
         if (res && res.status === 'success') {
+          savePendingSyncRecord({
+            type: 'addProblem',
+            manager: mgr,
+            rowIndex: res.record?.rowIndex || null,
+            branch,
+            urgency,
+            needsGmHelp,
+            category,
+            subject,
+            colH,
+            colI,
+            status
+          });
+          if (dashboardState.data) {
+            dashboardState.data = sanitizeDashboardData(dashboardState.data);
+            renderDashboard();
+          }
           showToast(`✅ ${res.message || 'แจ้งปัญหาหน้างานสำเร็จ!'}`);
           closeProblemInputModal();
           clearLocalDashboardCache();
@@ -7358,6 +7539,17 @@
         });
 
         if (res && res.status === 'success') {
+          savePendingSyncRecord({
+            type: 'updateProblem',
+            manager,
+            rowIndex,
+            branch,
+            subject,
+            status,
+            urgency,
+            colH,
+            colI
+          });
           // อัปเดตข้อมูลในหน่วยความจำทันทีเพื่อให้หน้าเว็บเปลี่ยนทันที
           if (item) {
             if (colH !== undefined) {
@@ -7372,6 +7564,9 @@
             }
             if (status) item.status = status;
             if (urgency) item.urgency = urgency;
+          }
+          if (dashboardState.data) {
+            dashboardState.data = sanitizeDashboardData(dashboardState.data);
           }
 
           showToast(`✅ ${res.message || 'อัปเดตข้อมูลปัญหาสำเร็จ!'}`);

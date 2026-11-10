@@ -141,6 +141,54 @@ function clearDashboardCaches() {
   }
 }
 
+function recordPendingSyncAction(entry) {
+  try {
+    const props = PropertiesService.getScriptProperties();
+    const raw = props.getProperty('MGR_PENDING_SYNC_V2');
+    let list = [];
+    if (raw) {
+      try { list = JSON.parse(raw) || []; } catch (e) { list = []; }
+    }
+    entry.ts = Date.now();
+    list.push(entry);
+    // เก็บเฉพาะ 120 รายการล่าสุดเพื่อไม่ให้เกินขนาด PropertiesService
+    if (list.length > 120) {
+      list = list.slice(list.length - 120);
+    }
+    props.setProperty('MGR_PENDING_SYNC_V2', JSON.stringify(list));
+  } catch (e) {
+    console.warn('recordPendingSyncAction error:', e);
+  }
+}
+
+function getPendingSyncActions() {
+  try {
+    const raw = PropertiesService.getScriptProperties().getProperty('MGR_PENDING_SYNC_V2');
+    if (!raw) return [];
+    const list = JSON.parse(raw);
+    return Array.isArray(list) ? list : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function sheetHasImportRange(sheet) {
+  if (!sheet) return false;
+  try {
+    const maxR = Math.min(sheet.getLastRow() || 3, 5);
+    const maxC = Math.min(sheet.getLastColumn() || 3, 5);
+    const formulas = sheet.getRange(1, 1, Math.max(maxR, 1), Math.max(maxC, 1)).getFormulas();
+    for (let r = 0; r < formulas.length; r++) {
+      for (let c = 0; c < formulas[r].length; c++) {
+        if (formulas[r][c] && formulas[r][c].toUpperCase().indexOf('IMPORTRANGE') !== -1) {
+          return true;
+        }
+      }
+    }
+  } catch (e) { /* ignore */ }
+  return false;
+}
+
 function handleManagerAction(action, params) {
   try {
     const manager = String(params.manager || '').trim();
@@ -224,35 +272,66 @@ function handleManagerAction(action, params) {
       return null;
     }
 
-    // หาแถวว่างแถวแรกสำหรับบันทึกการประชุม (ป้องกันกรณีชีทมีตีตาราง/สูตรว่างไว้ด้านล่าง)
+    // ค้นหาชีทในไฟล์หลัก (Output Spreadsheet) เพื่อซิงค์ข้อมูลคู่ขนานทันทีหากไม่ได้ผูกสูตร IMPORTRANGE
+    function findMainOutputSheet(mgr, type) {
+      try {
+        const mainSs = SpreadsheetApp.openById(SPREADSHEET_ID);
+        const mSheets = mainSs.getSheets();
+        const exact1 = `${mgr} - ${type}`;
+        const exact2 = `${mgr}-${type}`;
+        for (let i = 0; i < mSheets.length; i++) {
+          const n = mSheets[i].getName().trim();
+          if (n === exact1 || n === exact2) return mSheets[i];
+        }
+        const aliases = [mgr];
+        if (mgr === 'ลูกกุ้ง') aliases.push('กุ้ง');
+        if (mgr === 'โชว์') aliases.push('โชว', 'โช');
+        const cType = cleanThai(type);
+        for (let i = 0; i < mSheets.length; i++) {
+          const sClean = cleanThai(mSheets[i].getName().trim());
+          if (!sClean.includes(cType)) continue;
+          for (let a = 0; a < aliases.length; a++) {
+            if (sClean.includes(cleanThai(aliases[a]))) return mSheets[i];
+          }
+        }
+      } catch (e) {
+        console.warn('findMainOutputSheet warning:', e);
+      }
+      return null;
+    }
+
+    // หาแถวว่างต่อจากรายการล่าสุด (สแกนจากล่างขึ้นบน เพื่อข้ามแถวว่างที่ตีตาราง/ผูก Dropdown ล่วงหน้าไว้ด้านล่าง และไม่เขียนทับแถวเว้นว่างด้านบน)
     function findFirstEmptyMeetingRow(sheet) {
       const vals = sheet.getDataRange().getValues();
-      for (let r = 1; r < vals.length; r++) {
+      for (let r = vals.length - 1; r >= 0; r--) {
         const cA = String(vals[r][0] || '').trim();
         const cB = String(vals[r][1] || '').trim();
         const cC = String(vals[r][2] || '').trim();
-        if (!cA && !cB && !cC) {
-          return r + 1;
+        // ข้ามแถวที่มีแค่เลขลำดับ 1, 2, 3 ในคอลัมน์ A แต่ยังไม่มีสาขาหรือเนื้อหาการประชุม
+        const hasRealDateOrHeader = cA !== '' && cA !== '-' && !/^\d{1,3}$/.test(cA);
+        if (cB !== '' || cC !== '' || hasRealDateOrHeader) {
+          return Math.max(r + 2, 2);
         }
       }
-      return Math.max(vals.length + 1, 2);
+      return 2;
     }
 
-    // หาแถวว่างแถวแรกสำหรับแจ้งปัญหา (เช็คจากคอลัมน์ B สาขา และคอลัมน์ G หัวข้อปัญหา เผื่อคอลัมน์ A มีรันเลขลำดับไว้ล่วงหน้า)
+    // หาแถวว่างต่อจากรายการปัญหาล่าสุด (สแกนจากล่างขึ้นบน เช็คจากหัวข้อปัญหา Col G หรือรายละเอียด Col H/I เพื่อข้ามแถว Dropdown ว่างด้านล่าง)
     function findFirstEmptyProblemRow(sheet) {
       const vals = sheet.getDataRange().getValues();
-      for (let r = 1; r < vals.length; r++) {
+      for (let r = vals.length - 1; r >= 0; r--) {
         const cB = String(vals[r][1] || '').trim();
         const cG = String(vals[r][6] || '').trim();
         const cH = String(vals[r][7] || '').trim();
-        if (!cB && !cG && !cH) {
-          return r + 1;
+        const cI = String(vals[r][8] || '').trim();
+        if (cG !== '' || cH !== '' || cI !== '' || cB === 'สาขา' || cB.includes('หัวข้อ')) {
+          return Math.max(r + 2, 2);
         }
       }
-      return Math.max(vals.length + 1, 2);
+      return 2;
     }
 
-    // 1. ADD MEETING (บันทึกลงไฟล์ของผู้จัดการโดยตรง)
+    // 1. ADD MEETING (บันทึกลงไฟล์ของผู้จัดการโดยตรง + ซิงค์เข้า Dashboard ทันที)
     if (action === 'addMeeting') {
       let mSheet = findSheet(manager, 'Meeting');
       if (!mSheet) {
@@ -260,17 +339,42 @@ function handleManagerAction(action, params) {
         mSheet.appendRow(['วันที่ประชุม', 'สาขา', 'เนื้อหาการประชุม', 'ผู้รับผิดชอบ', 'ผู้ไม่เข้าร่วม']);
       }
 
-      let dateVal = String(params.date || '').trim();
-      if (!dateVal) {
-        dateVal = Utilities.formatDate(new Date(), 'Asia/Bangkok', 'M/d/yyyy');
-      } else if (dateVal.includes('-')) {
-        const parts = dateVal.split('-');
+      const rawDateInput = String(params.date || '').trim();
+      let dateObjToWrite = new Date();
+      let displayDateTh = '';
+
+      if (rawDateInput && rawDateInput.includes('-')) {
+        const parts = rawDateInput.split('-');
         if (parts.length === 3) {
-          const y = parts[0];
-          const m = parseInt(parts[1], 10);
-          const d = parseInt(parts[2], 10);
-          dateVal = `${m}/${d}/${y}`;
+          const yNum = parseInt(parts[0], 10);
+          const mNum = parseInt(parts[1], 10);
+          const dNum = parseInt(parts[2], 10);
+          const yGreg = yNum > 2400 ? yNum - 543 : yNum;
+          const yTh = yGreg + 543;
+          dateObjToWrite = new Date(yGreg, mNum - 1, dNum, 12, 0, 0);
+          displayDateTh = `${String(dNum).padStart(2, '0')}/${String(mNum).padStart(2, '0')}/${yTh}`;
         }
+      } else if (rawDateInput && rawDateInput.includes('/')) {
+        const parts = rawDateInput.split('/');
+        if (parts.length === 3) {
+          const p1 = parseInt(parts[0], 10);
+          const p2 = parseInt(parts[1], 10);
+          const p3 = parseInt(parts[2], 10);
+          const dNum = p1 > 12 ? p1 : (p2 > 12 ? p2 : p1);
+          const mNum = p1 > 12 ? p2 : (p2 > 12 ? p1 : p2);
+          const yGreg = p3 < 100 ? (p3 > 50 ? 1957 + p3 : 2000 + p3) : (p3 > 2400 ? p3 - 543 : p3);
+          const yTh = yGreg + 543;
+          dateObjToWrite = new Date(yGreg, mNum - 1, dNum, 12, 0, 0);
+          displayDateTh = `${String(dNum).padStart(2, '0')}/${String(mNum).padStart(2, '0')}/${yTh}`;
+        }
+      }
+
+      if (!displayDateTh) {
+        const now = new Date();
+        const dNum = now.getDate();
+        const mNum = now.getMonth() + 1;
+        const yTh = now.getFullYear() + 543;
+        displayDateTh = `${String(dNum).padStart(2, '0')}/${String(mNum).padStart(2, '0')}/${yTh}`;
       }
 
       const branch = String(params.branch || '').trim();
@@ -283,18 +387,50 @@ function handleManagerAction(action, params) {
       }
 
       const targetRow = findFirstEmptyMeetingRow(mSheet);
-      mSheet.getRange(targetRow, 1, 1, 5).setValues([[dateVal, branch, content, responsible, attendees]]);
+      mSheet.getRange(targetRow, 1, 1, 5).setValues([[dateObjToWrite, branch, content, responsible, attendees]]);
       SpreadsheetApp.flush();
+
+      // ซิงค์คู่ขนานไปยังไฟล์หลัก (หากชีทหลักไม่ได้ใช้ IMPORTRANGE)
+      try {
+        const mainMSheet = findMainOutputSheet(manager, 'Meeting');
+        if (mainMSheet && !sheetHasImportRange(mainMSheet)) {
+          const mainRow = findFirstEmptyMeetingRow(mainMSheet);
+          mainMSheet.getRange(mainRow, 1, 1, 5).setValues([[dateObjToWrite, branch, content, responsible, attendees]]);
+          SpreadsheetApp.flush();
+        }
+      } catch (syncErr) {
+        console.warn('Mirror meeting to main sheet warning:', syncErr);
+      }
+
+      // บันทึกลง Pending Sync เพื่อให้ Dashboard แสดงผลทันที 100% แม้ IMPORTRANGE ของ Google Sheets จะดีเลย์
+      recordPendingSyncAction({
+        type: 'addMeeting',
+        manager: manager,
+        rowIndex: targetRow,
+        date: displayDateTh,
+        branch: branch,
+        content: content,
+        responsible: responsible,
+        attendees: attendees
+      });
+
       clearDashboardCaches();
 
       return {
         status: 'success',
         message: `บันทึกการประชุมลงชีทของ ผจก.${manager} (แถวที่ ${targetRow}) สำเร็จแล้ว`,
-        record: { date: dateVal, branch: branch, content: content, responsible: responsible, attendees: attendees }
+        record: {
+          rowIndex: targetRow,
+          date: displayDateTh,
+          branch: branch,
+          content: content,
+          responsible: responsible,
+          attendees: attendees
+        }
       };
     }
 
-    // 2. ADD PROBLEM (บันทึกลงไฟล์ของผู้จัดการโดยตรง)
+    // 2. ADD PROBLEM (บันทึกลงไฟล์ของผู้จัดการโดยตรง + ซิงค์เข้า Dashboard ทันที)
     if (action === 'addProblem') {
       let pSheet = findSheet(manager, 'Problem List');
       if (!pSheet) {
@@ -324,82 +460,142 @@ function handleManagerAction(action, params) {
       }
       pSheet.getRange(targetRow, 2, 1, 8).setValues([[branch, urgency, needsGmHelp, status, category, subject, colH, colI]]);
       SpreadsheetApp.flush();
+
+      // ซิงค์คู่ขนานไปยังไฟล์หลัก (หากชีทหลักไม่ได้ใช้ IMPORTRANGE)
+      try {
+        const mainPSheet = findMainOutputSheet(manager, 'Problem List');
+        if (mainPSheet && !sheetHasImportRange(mainPSheet)) {
+          const mainRow = findFirstEmptyProblemRow(mainPSheet);
+          const mColA = mainPSheet.getRange(mainRow, 1).getValue();
+          const mFormA = mainPSheet.getRange(mainRow, 1).getFormula();
+          if (!mFormA && (mColA === '' || mColA === null)) {
+            mainPSheet.getRange(mainRow, 1).setValue(mainRow - 1);
+          }
+          mainPSheet.getRange(mainRow, 2, 1, 8).setValues([[branch, urgency, needsGmHelp, status, category, subject, colH, colI]]);
+          SpreadsheetApp.flush();
+        }
+      } catch (syncErr) {
+        console.warn('Mirror problem to main sheet warning:', syncErr);
+      }
+
+      recordPendingSyncAction({
+        type: 'addProblem',
+        manager: manager,
+        rowIndex: targetRow,
+        branch: branch,
+        urgency: urgency,
+        needsGmHelp: needsGmHelp,
+        status: status,
+        category: category,
+        subject: subject,
+        colH: colH,
+        colI: colI
+      });
+
       clearDashboardCaches();
 
       return {
         status: 'success',
         message: `แจ้งปัญหาหน้างานลงชีทของ ผจก.${manager} (แถวที่ ${targetRow}) สำเร็จแล้ว`,
-        record: { branch: branch, subject: subject, urgency: urgency, colH: colH, colI: colI }
+        record: {
+          rowIndex: targetRow,
+          manager: manager,
+          branch: branch,
+          urgency: urgency,
+          needsGmHelp: needsGmHelp,
+          status: status,
+          category: category,
+          subject: subject,
+          colH: colH,
+          colI: colI
+        }
       };
     }
 
-    // 3. UPDATE PROBLEM (อัปเดต COL H, COL I, STATUS, URGENCY ลงในไฟล์ของผู้จัดการโดยตรง)
+    // 3. UPDATE PROBLEM (อัปเดต COL H, COL I, STATUS, URGENCY ลงในไฟล์ของผู้จัดการโดยตรง + ซิงค์เข้า Dashboard ทันที)
     if (action === 'updateProblem') {
       const pSheet = findSheet(manager, 'Problem List');
       if (!pSheet) {
         return { status: 'error', message: `ไม่พบชีท Problem List ในไฟล์ของ ผจก.${manager}` };
       }
 
-      const pData = pSheet.getDataRange().getValues();
       const targetSubject = String(params.subject || '').trim();
       const targetBranch = String(params.branch || '').trim();
       const rowIndex = params.rowIndex ? parseInt(params.rowIndex, 10) : null;
-      let matchedRow = -1;
 
-      // 1. ตรวจสอบแถวตาม rowIndex ก่อนว่าตรงกับหัวข้อปัญหาหรือไม่
-      if (rowIndex && rowIndex >= 2 && rowIndex <= pData.length) {
-        const rSubject = String(pData[rowIndex - 1][6] || '').trim();
-        if (!targetSubject || rSubject === targetSubject) {
-          matchedRow = rowIndex;
-        }
-      }
+      function applyProblemUpdateOnSheet(sheet) {
+        if (!sheet) return -1;
+        const pData = sheet.getDataRange().getValues();
+        let matched = -1;
 
-      // 2. หากไม่ตรง ให้ค้นหาจากหัวข้อปัญหาและชื่อสาขาในชีทของผู้จัดการ
-      if (matchedRow === -1 && targetSubject) {
-        for (let r = 1; r < pData.length; r++) {
-          const rBranch = String(pData[r][1] || '').trim();
-          const rSubject = String(pData[r][6] || '').trim();
-          if (rSubject === targetSubject && (!targetBranch || rBranch === targetBranch)) {
-            matchedRow = r + 1;
-            break;
+        if (rowIndex && rowIndex >= 2 && rowIndex <= pData.length) {
+          const rSubject = String(pData[rowIndex - 1][6] || '').trim();
+          if (!targetSubject || rSubject === targetSubject) {
+            matched = rowIndex;
           }
         }
-      }
-
-      // 3. Fallback: ค้นหาเฉพาะหัวข้อปัญหาที่ตรงกัน
-      if (matchedRow === -1 && targetSubject) {
-        for (let r = 1; r < pData.length; r++) {
-          const rSubject = String(pData[r][6] || '').trim();
-          if (rSubject === targetSubject) {
-            matchedRow = r + 1;
-            break;
+        if (matched === -1 && targetSubject) {
+          for (let r = 1; r < pData.length; r++) {
+            const rBranch = String(pData[r][1] || '').trim();
+            const rSubject = String(pData[r][6] || '').trim();
+            if (rSubject === targetSubject && (!targetBranch || rBranch === targetBranch)) {
+              matched = r + 1;
+              break;
+            }
           }
         }
+        if (matched === -1 && targetSubject) {
+          for (let r = 1; r < pData.length; r++) {
+            const rSubject = String(pData[r][6] || '').trim();
+            if (rSubject === targetSubject) {
+              matched = r + 1;
+              break;
+            }
+          }
+        }
+        if (matched !== -1) {
+          if (params.colH !== undefined) sheet.getRange(matched, 8).setValue(String(params.colH));
+          if (params.colI !== undefined) sheet.getRange(matched, 9).setValue(String(params.colI));
+          if (params.status !== undefined && params.status !== '') sheet.getRange(matched, 5).setValue(String(params.status));
+          if (params.urgency !== undefined && params.urgency !== '') sheet.getRange(matched, 3).setValue(String(params.urgency));
+        }
+        return matched;
       }
 
-      if (matchedRow === -1) {
+      const matchedRow = applyProblemUpdateOnSheet(pSheet);
+      let matchedMainRow = -1;
+      try {
+        const mainPSheet = findMainOutputSheet(manager, 'Problem List');
+        if (mainPSheet && !sheetHasImportRange(mainPSheet)) {
+          matchedMainRow = applyProblemUpdateOnSheet(mainPSheet);
+        }
+      } catch (syncErr) {
+        console.warn('Mirror updateProblem warning:', syncErr);
+      }
+
+      if (matchedRow === -1 && matchedMainRow === -1) {
         return { status: 'error', message: 'ไม่พบรายการปัญหาที่ต้องการแก้ไขในชีทของผู้จัดการ' };
       }
 
-      if (params.colH !== undefined) {
-        pSheet.getRange(matchedRow, 8).setValue(String(params.colH));
-      }
-      if (params.colI !== undefined) {
-        pSheet.getRange(matchedRow, 9).setValue(String(params.colI));
-      }
-      if (params.status !== undefined && params.status !== '') {
-        pSheet.getRange(matchedRow, 5).setValue(String(params.status));
-      }
-      if (params.urgency !== undefined && params.urgency !== '') {
-        pSheet.getRange(matchedRow, 3).setValue(String(params.urgency));
-      }
-
       SpreadsheetApp.flush();
+
+      recordPendingSyncAction({
+        type: 'updateProblem',
+        manager: manager,
+        rowIndex: matchedRow !== -1 ? matchedRow : rowIndex,
+        branch: targetBranch,
+        subject: targetSubject,
+        status: params.status,
+        urgency: params.urgency,
+        colH: params.colH,
+        colI: params.colI
+      });
+
       clearDashboardCaches();
 
       return {
         status: 'success',
-        message: `อัปเดตข้อมูลปัญหาในชีทของ ผจก.${manager} (แถวที่ ${matchedRow}) สำเร็จแล้ว`
+        message: `อัปเดตข้อมูลปัญหาในชีทของ ผจก.${manager} (แถวที่ ${matchedRow !== -1 ? matchedRow : matchedMainRow}) สำเร็จแล้ว`
       };
     }
 
@@ -511,6 +707,9 @@ function getGmDashboardDataFast(periodInfo) {
     kpiStatusCount: { green: 0, yellow: 0, red: 0, pending: 0 }
   };
 
+  // ดึงรายการที่เพิ่งเพิ่ม/อัปเดตผ่านฟอร์ม เพื่อผสานทันทีแม้ IMPORTRANGE ยังซิงค์ไม่เสร็จ
+  const pendingSyncList = getPendingSyncActions();
+
   managers.forEach(managerName => {
     try {
       // -------------------------------------------------------------
@@ -540,8 +739,30 @@ function getGmDashboardDataFast(periodInfo) {
             }
           }
         }
-        actualMeetings = meetingDates.length;
       }
+
+      // ผสานรายการประชุมที่เพิ่งบันทึกจากฟอร์มของ ผจก. (ป้องกัน IMPORTRANGE ดีเลย์)
+      const pendingMeetings = pendingSyncList.filter(a => a && a.type === 'addMeeting' && a.manager === managerName);
+      pendingMeetings.forEach(pm => {
+        const alreadyExists = meetingLogs.some(log =>
+          log.content === pm.content && (!pm.branch || log.branch === pm.branch)
+        );
+        if (!alreadyExists && pm.content) {
+          const dStr = pm.date || parseMeetingDateStr(new Date(), periodInfo.month, periodInfo.year) || '';
+          meetingDates.push(dStr);
+          meetingLogs.push({
+            rowIndex: pm.rowIndex || (meetingLogs.length + 2),
+            date: dStr,
+            rawDate: dStr,
+            branch: pm.branch || '',
+            content: pm.content || '',
+            responsible: pm.responsible || `ผจก. ${managerName}`,
+            attendees: pm.attendees || 'ครบทุกคน'
+          });
+        }
+      });
+
+      actualMeetings = meetingDates.length;
       summaryTotals.totalMeetingsDone += actualMeetings;
       const compliance = Math.round((actualMeetings / 8) * 100);
       const meetingStatus = actualMeetings >= 8 ? "green" : "red";
@@ -554,6 +775,7 @@ function getGmDashboardDataFast(periodInfo) {
       let mRed = 0, mYellow = 0, mPurple = 0, mNormal = 0;
 
       const pSheet = getSheetFuzzy(managerName, 'Problem List');
+      const rawProblemsRows = [];
       if (pSheet) {
         const pData = pSheet.getDataRange().getValues();
         for (let r = 1; r < pData.length; r++) {
@@ -564,68 +786,129 @@ function getGmDashboardDataFast(periodInfo) {
           const status = String(row[4] || '').trim();
           const category = String(row[5] || '').trim();
           const subject = String(row[6] || '').trim();
-          // ดึงข้อมูลจากคอลัมน์ H (index 7: รายละเอียดปัญหา) และคอลัมน์ I (index 8: การแก้ไขปัญหา)
           const colH = (row.length > 7 && row[7] !== undefined && row[7] !== null) ? String(row[7]).trim() : '';
           const colI = (row.length > 8 && row[8] !== undefined && row[8] !== null) ? String(row[8]).trim() : '';
 
-          // เงื่อนไข: มีสาขาหรือหัวเรื่อง และสถานะยังไม่ปิด
-          if ((branch || subject) && status !== 'ปิดแล้ว') {
-            const bKey = branch || 'สาขาทั่วไป';
-            if (!problemsByBranch[bKey]) problemsByBranch[bKey] = { red: 0, yellow: 0, purple: 0, normal: 0, total: 0 };
+          // ข้ามแถวว่างที่มีเฉพาะชื่อสาขาจาก Dropdown ล่วงหน้าแต่ไม่มีหัวข้อและไม่มีรายละเอียดปัญหา
+          if (!subject && !colH && !colI) continue;
 
-            let urgencyType = "normal";
-            const uLower = urgency.toLowerCase();
+          rawProblemsRows.push({
+            rowIndex: r + 1,
+            branch: branch,
+            urgency: urgency,
+            needsGmHelp: needsGmHelp,
+            status: status,
+            category: category,
+            subject: subject,
+            colH: colH,
+            colI: colI
+          });
+        }
+      }
 
-            if (urgency.includes('Critical') || uLower.includes('critical') || urgency.includes('วิกฤต')) {
-              problemsByBranch[bKey].red++;
-              mRed++;
-              summaryTotals.problems.critical++;
-              urgencyType = "critical";
-            } else if (urgency.includes('High') || uLower.includes('high') || urgency.includes('ด่วน')) {
-              problemsByBranch[bKey].yellow++;
-              mYellow++;
-              summaryTotals.problems.high++;
-              urgencyType = "high";
-            } else if (urgency.includes('Overdue') || uLower.includes('overdue') || urgency.includes('เกินกำหนด')) {
-              problemsByBranch[bKey].purple++;
-              mPurple++;
-              summaryTotals.problems.overdue++;
-              urgencyType = "overdue";
-            } else {
-              problemsByBranch[bKey].normal++;
-              mNormal++;
-              summaryTotals.problems.normal++;
-              urgencyType = "normal";
-            }
-            problemsByBranch[bKey].total++;
+      // ผสานรายการแจ้งปัญหาใหม่จาก Pending Sync (กรณี IMPORTRANGE ยังซิงค์ไม่เสร็จ)
+      const pendingAddedProbs = pendingSyncList.filter(a => a && a.type === 'addProblem' && a.manager === managerName);
+      pendingAddedProbs.forEach(pa => {
+        const exists = rawProblemsRows.some(r =>
+          r.subject === pa.subject && (!pa.branch || r.branch === pa.branch)
+        );
+        if (!exists && (pa.subject || pa.colH || pa.colI)) {
+          rawProblemsRows.push({
+            rowIndex: pa.rowIndex || (rawProblemsRows.length + 2),
+            branch: pa.branch || '',
+            urgency: pa.urgency || 'ทั่วไป',
+            needsGmHelp: pa.needsGmHelp || '-',
+            status: pa.status || 'กำลังดำเนินการ',
+            category: pa.category || 'ทั่วไป',
+            subject: pa.subject || '',
+            colH: pa.colH || '',
+            colI: pa.colI || ''
+          });
+        }
+      });
 
-            // ตรวจสอบความต้องการให้ GM ช่วยเหลือ
-            let isNeedGm = false;
-            if (needsGmHelp && needsGmHelp !== '-' && needsGmHelp !== 'ไม่ระบุ') {
-              isNeedGm = true;
-            }
-
-            const probItem = {
-              rowIndex: r + 1,
-              manager: managerName,
-              branch: bKey,
-              urgency: urgency || 'ทั่วไป',
-              urgencyType: urgencyType,
-              needsGmHelp: needsGmHelp || '-',
-              isNeedGm: isNeedGm,
-              status: status || 'กำลังดำเนินการ',
-              category: category || 'ทั่วไป',
-              subject: subject || '(ไม่ได้ระบุหัวข้อ)',
-              colH: colH,
-              colI: colI,
-              content: colH,
-              solution: colI,
-              problemDetail: colH || '-',
-              initialFix: colI || '-'
-            };
-            managerProblems.push(probItem);
-            allProblemsList.push(probItem);
+      // ผสานการแก้ไขปัญหา (Col H, Col I, Status, Urgency) ล่าสุดจาก Pending Sync
+      const pendingUpdates = pendingSyncList.filter(a => a && a.type === 'updateProblem' && a.manager === managerName);
+      pendingUpdates.forEach(pu => {
+        for (let i = 0; i < rawProblemsRows.length; i++) {
+          const item = rawProblemsRows[i];
+          const matchBySubject = pu.subject && item.subject === pu.subject && (!pu.branch || item.branch === pu.branch);
+          const matchByRow = pu.rowIndex && item.rowIndex === pu.rowIndex && (!pu.subject || item.subject === pu.subject);
+          if (matchBySubject || matchByRow) {
+            if (pu.colH !== undefined) item.colH = String(pu.colH).trim();
+            if (pu.colI !== undefined) item.colI = String(pu.colI).trim();
+            if (pu.status) item.status = String(pu.status).trim();
+            if (pu.urgency) item.urgency = String(pu.urgency).trim();
           }
+        }
+      });
+
+      for (let i = 0; i < rawProblemsRows.length; i++) {
+        const pRow = rawProblemsRows[i];
+        const branch = pRow.branch;
+        const urgency = pRow.urgency;
+        const needsGmHelp = pRow.needsGmHelp;
+        const status = pRow.status;
+        const category = pRow.category;
+        const subject = pRow.subject;
+        const colH = pRow.colH;
+        const colI = pRow.colI;
+
+        if ((branch || subject) && status !== 'ปิดแล้ว') {
+          const bKey = branch || 'สาขาทั่วไป';
+          if (!problemsByBranch[bKey]) problemsByBranch[bKey] = { red: 0, yellow: 0, purple: 0, normal: 0, total: 0 };
+
+          let urgencyType = "normal";
+          const uLower = urgency.toLowerCase();
+
+          if (urgency.includes('Critical') || uLower.includes('critical') || urgency.includes('วิกฤต')) {
+            problemsByBranch[bKey].red++;
+            mRed++;
+            summaryTotals.problems.critical++;
+            urgencyType = "critical";
+          } else if (urgency.includes('High') || uLower.includes('high') || urgency.includes('ด่วน')) {
+            problemsByBranch[bKey].yellow++;
+            mYellow++;
+            summaryTotals.problems.high++;
+            urgencyType = "high";
+          } else if (urgency.includes('Overdue') || uLower.includes('overdue') || urgency.includes('เกินกำหนด')) {
+            problemsByBranch[bKey].purple++;
+            mPurple++;
+            summaryTotals.problems.overdue++;
+            urgencyType = "overdue";
+          } else {
+            problemsByBranch[bKey].normal++;
+            mNormal++;
+            summaryTotals.problems.normal++;
+            urgencyType = "normal";
+          }
+          problemsByBranch[bKey].total++;
+
+          let isNeedGm = false;
+          if (needsGmHelp && needsGmHelp !== '-' && needsGmHelp !== 'ไม่ระบุ') {
+            isNeedGm = true;
+          }
+
+          const probItem = {
+            rowIndex: pRow.rowIndex,
+            manager: managerName,
+            branch: bKey,
+            urgency: urgency || 'ทั่วไป',
+            urgencyType: urgencyType,
+            needsGmHelp: needsGmHelp || '-',
+            isNeedGm: isNeedGm,
+            status: status || 'กำลังดำเนินการ',
+            category: category || 'ทั่วไป',
+            subject: subject || '(ไม่ได้ระบุหัวข้อ)',
+            colH: colH,
+            colI: colI,
+            content: colH,
+            solution: colI,
+            problemDetail: colH || '-',
+            initialFix: colI || '-'
+          };
+          managerProblems.push(probItem);
+          allProblemsList.push(probItem);
         }
       }
 
@@ -911,17 +1194,26 @@ function getAccountingDashboardDataFast() {
 }
 
 // ==============================================================================
-// 5. HELPER: PARSE & FILTER MEETING DATES (กรองเฉพาะเดือนที่เลือกเท่านั้น ไม่สนใจปี)
+// 5. HELPER: PARSE & FILTER MEETING DATES (รองรับทั้งเดือนของรอบปัจจุบันและเดือนตามปฏิทินจริง เพื่อไม่ให้รายการที่เพิ่มช่วงวันที่ 1-10 หาย)
 // ==============================================================================
 function parseMeetingDateStr(val, targetMonth, targetYear) {
   if (val === null || val === undefined || val === '') return null;
 
+  var currentCalendarMonth = (new Date()).getMonth(); // 0 - 11
   var targetMonthNum = targetMonth + 1; // 1 - 12
+  var currentMonthNum = currentCalendarMonth + 1; // 1 - 12
   var yTh = targetYear ? targetYear + 543 : 2569;
+
+  function isAcceptedMonthIndex(mIdx) {
+    return mIdx === targetMonth || mIdx === currentCalendarMonth;
+  }
+  function isAcceptedMonthNum(mNum) {
+    return mNum === targetMonthNum || mNum === currentMonthNum;
+  }
 
   // 1. กรณีเป็น Date Object จาก Google Sheets
   if (val instanceof Date || Object.prototype.toString.call(val) === '[object Date]') {
-    if (val.getMonth() === targetMonth) {
+    if (isAcceptedMonthIndex(val.getMonth())) {
       var d = String(val.getDate()).padStart(2, '0');
       var mo = String(val.getMonth() + 1).padStart(2, '0');
       return d + '/' + mo + '/' + yTh;
@@ -932,7 +1224,7 @@ function parseMeetingDateStr(val, targetMonth, targetYear) {
   // 2. กรณีเป็น Excel Serial Number
   if (typeof val === 'number' && val > 40000 && val < 60000) {
     var dObj = new Date((val - 25569) * 86400 * 1000);
-    if (dObj.getMonth() === targetMonth) {
+    if (isAcceptedMonthIndex(dObj.getMonth())) {
       var d = String(dObj.getDate()).padStart(2, '0');
       var mo = String(dObj.getMonth() + 1).padStart(2, '0');
       return d + '/' + mo + '/' + yTh;
@@ -965,8 +1257,7 @@ function parseMeetingDateStr(val, targetMonth, targetYear) {
     var kws = thaiMonthKeywords[mIdx];
     for (var k = 0; k < kws.length; k++) {
       if (sLower.indexOf(kws[k]) !== -1) {
-        // ต้องตรงกับเดือนที่เลือกเท่านั้น
-        if (mIdx === targetMonth) {
+        if (isAcceptedMonthIndex(mIdx)) {
           var numMatch = s.match(/\b(\d{1,2})\b/);
           var dayStr = numMatch ? String(numMatch[1]).padStart(2, '0') : '01';
           var moStr = String(mIdx + 1).padStart(2, '0');
@@ -982,7 +1273,7 @@ function parseMeetingDateStr(val, targetMonth, targetYear) {
   if (mIso) {
     var mo = parseInt(mIso[2], 10);
     var d = parseInt(mIso[3], 10);
-    if (mo === targetMonthNum) {
+    if (isAcceptedMonthNum(mo)) {
       return String(d).padStart(2, '0') + '/' + String(mo).padStart(2, '0') + '/' + yTh;
     }
     return null;
@@ -997,21 +1288,24 @@ function parseMeetingDateStr(val, targetMonth, targetYear) {
     var matchDay = null;
     var matchMonth = null;
 
-    // ตรวจสอบว่าเป็นเดือนเป้าหมายหรือไม่ (เช่น เดือน 10)
-    if (p1 === targetMonthNum && p2 >= 1 && p2 <= 31) {
-      // รูปแบบ US Format (Month/Day) เช่น 10/18
-      matchMonth = p1;
-      matchDay = p2;
-    } else if (p2 === targetMonthNum && p1 >= 1 && p1 <= 31) {
-      // รูปแบบ Thai/UK Format (Day/Month) เช่น 18/10
+    if (p2 === targetMonthNum && p1 >= 1 && p1 <= 31) {
       matchMonth = p2;
       matchDay = p1;
+    } else if (p1 === targetMonthNum && p2 >= 1 && p2 <= 31) {
+      matchMonth = p1;
+      matchDay = p2;
+    } else if (p2 === currentMonthNum && p1 >= 1 && p1 <= 31) {
+      matchMonth = p2;
+      matchDay = p1;
+    } else if (p1 === currentMonthNum && p2 >= 1 && p2 <= 31) {
+      matchMonth = p1;
+      matchDay = p2;
     }
 
     if (matchDay !== null && matchMonth !== null) {
       return String(matchDay).padStart(2, '0') + '/' + String(matchMonth).padStart(2, '0') + '/' + yTh;
     }
-    return null; // คนละเดือน ไม่นับ
+    return null;
   }
 
   return null;
