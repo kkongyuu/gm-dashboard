@@ -22,13 +22,13 @@
           },
           colors: {
             brand: {
-              50: '#eff6ff',
-              100: '#dbeafe',
-              500: '#3b82f6',
-              600: '#2563eb',
-              700: '#1d4ed8',
-              800: '#1e40af',
-              900: '#1e3a8a',
+              50: '#f2f5f8',
+              100: '#e6edf3',
+              500: '#48637f',
+              600: '#2c435a',
+              700: '#213243',
+              800: '#182431',
+              900: '#111a23',
             }
           }
         }
@@ -42,64 +42,112 @@
   <script src="https://unpkg.com/lucide@latest"></script>
 
   <style>
-    body {
-      font-family: 'Prompt', 'Inter', sans-serif;
-      background-color: #f8fafc;
-      color: #0f172a;
-      -webkit-font-smoothing: antialiased;
-      font-variant-numeric: tabular-nums;
-    }
-    .custom-scrollbar::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
-    .custom-scrollbar::-webkit-scrollbar-track {
-      background: #f1f5f9;
-    }
-    .custom-scrollbar::-webkit-scrollbar-thumb {
-      background: #cbd5e1;
-      border-radius: 9999px;
-    }
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-      background: #94a3b8;
-    }
-    .glass-card {
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(10px);
-    }
-    .badge-pulse {
-      animation: pulse-ring 1.8s cubic-bezier(0.24, 0, 0.38, 1) infinite;
-    }
-    /* แผนที่: ห้ามมีแอนิเมชันใดๆ (ไม่มีการวูบ/ละอองกระจาย) */
-    #thailandVectorMap, #thailandVectorMap * {
-      animation: none !important;
-      transition: none !important;
-    }
-    @keyframes pulse-ring {
-      0% { transform: scale(0.95); opacity: 0.8; }
-      50% { transform: scale(1.05); opacity: 1; }
-      100% { transform: scale(0.95); opacity: 0.8; }
+    /* =========================================================================
+       ARCHITECTURAL & EDITORIAL MATTE DESIGN SYSTEM
+       - Base & Surfaces (80%): Matte Alabaster (#F4F5F6), Solid White (#FFFFFF), Deep Charcoal (#181A1C)
+       - Functional Pastels (15%): Dusty Sage, Muted Clay, Chalk Blue, Desert Sand, Muted Rust, Mauve
+       - Contrast Anchors (5%): Ink Black / Deep Charcoal Typography & Crisp 1px Borders (#D8DCE1)
+       - Texture: 100% Solid Flat Surfaces, NO Fuzzy Box-Shadows, NO Glassmorphism, NO Glossy Gradients
+       ========================================================================= */
+    :root {
+      --bg-base: #F4F5F6;
+      --surface-card: #FFFFFF;
+      --border-subtle: #D8DCE1;
+      --border-contrast: #B8BFC8;
+      --text-charcoal: #181A1C;
+      --text-umber: #454D56;
+      --text-muted: #6B7480;
+      interpolate-size: allow-keywords;
     }
 
-    /* 📱 Modern Shrinking Header on Scroll (Mobile-First) */
+    body {
+      font-family: 'Prompt', 'Inter', sans-serif;
+      background-color: var(--bg-base);
+      color: var(--text-charcoal);
+      -webkit-font-smoothing: antialiased;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.01em;
+    }
+
+    /* 1. Global Matte Texture Logic: Zero Box-Shadows, Zero Blur, Zero Glassmorphism */
+    *, *::before, *::after {
+      box-shadow: none !important;
+      text-shadow: none !important;
+    }
+
+    [class*="backdrop-blur"], .backdrop-blur, .glass-card {
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+    }
+
+    [class*="shadow"] {
+      box-shadow: none !important;
+    }
+
+    [class*="blur-"] {
+      filter: none !important;
+    }
+
+    .badge-pulse, .animate-pulse, .animate-ping {
+      animation: none !important;
+    }
+
+    /* 2. Architectural Sharpness: Refined Border Radii */
+    .rounded-3xl {
+      border-radius: 0.75rem !important; /* Crisp 12px architectural card */
+    }
+    .rounded-2xl {
+      border-radius: 0.625rem !important; /* 10px */
+    }
+    .rounded-xl {
+      border-radius: 0.5rem !important; /* 8px */
+    }
+
+    /* 3. Micro-Interaction: Matte Color Shifts instead of Bouncy Translation */
+    button:active, a:active, [class*="active:scale"] {
+      transform: none !important;
+    }
+    .branch-summary-card:hover, [class*="hover:scale"], [class*="group-hover:scale"] {
+      transform: none !important;
+    }
+
+    /* 4. Global Flattening of Gradients into Solid Architectural Tones */
+    .bg-gradient-to-r,
+    .bg-gradient-to-tr,
+    .bg-gradient-to-b,
+    .bg-gradient-to-br,
+    .bg-gradient-to-l {
+      background-image: none !important;
+    }
+
+    /* 5. Serious Editorial Typography & High-Contrast Anchors */
+    h1, h2, h3, h4, .font-black, .font-bold {
+      letter-spacing: -0.025em;
+      color: #181A1C;
+    }
+    .text-white, .text-white h1, .text-white h2, .text-white h3, .text-white h4,
+    #executivePeriodBanner h2, #tab-map h2, #tab-map .text-white {
+      color: #FFFFFF !important;
+    }
+
+    /* 6. Navigation Bar & Tabs */
     header#appHeader {
-      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      background-color: #FFFFFF !important;
+      border-bottom: 1px solid #D8DCE1 !important;
+      box-shadow: none !important;
+      transition: all 0.2s ease;
     }
     header#appHeader.is-condensed {
-      box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.08);
-      background-color: rgba(255, 255, 255, 0.97);
-      backdrop-filter: blur(14px);
+      background-color: #FFFFFF !important;
+      border-bottom: 1px solid #C5CBD2 !important;
+      box-shadow: none !important;
     }
     header#appHeader.is-condensed #headerTopRow {
-      height: 3rem; /* Shrinks to 48px */
+      height: 3rem;
     }
     header#appHeader.is-condensed #headerLogo {
       width: 2rem;
       height: 2rem;
-    }
-    header#appHeader.is-condensed #headerLogo i {
-      width: 1.1rem;
-      height: 1.1rem;
     }
     header#appHeader.is-condensed #headerSubtitle {
       display: none;
@@ -107,36 +155,59 @@
     header#appHeader.is-condensed #headerTitle {
       font-size: 0.925rem;
     }
-    header#appHeader.is-condensed nav button {
-      padding-top: 0.25rem;
-      padding-bottom: 0.25rem;
-      font-size: 0.75rem;
+
+    .tab-btn {
+      border: 1px solid transparent;
+      transition: all 0.15s ease;
+    }
+    .tab-btn.active {
+      background-color: #222E3C !important;
+      color: #FFFFFF !important;
+      border-color: #222E3C !important;
+    }
+    .tab-btn:hover:not(.active) {
+      background-color: #EAEFF4 !important;
+      color: #181A1C !important;
+    }
+
+    /* Solid Matte Hero / Banners */
+    #executivePeriodBanner,
+    #tab-map > div:first-child,
+    #mapSectionContainer {
+      background-color: #181A1C !important;
+      border: 1px solid #2B3138 !important;
+      color: #FFFFFF !important;
+    }
+
+    /* Custom Scrollbar */
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #F0F2F4;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #CBD0D6;
+      border-radius: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #9AA2AB;
     }
 
     /* Selected Row & Block Column Highlight */
     .case-row-selected {
-      background-color: #eff6ff !important;
-      border-left: 4px solid #2563eb !important;
+      background-color: #EBF0F5 !important;
+      border-left: 4px solid #2B4257 !important;
     }
     .block-column-card {
-      background: #ffffff;
-      border: 1px solid #e2e8f0;
-      border-radius: 1rem;
-      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04);
-      transition: all 0.2s ease;
+      background: #FFFFFF;
+      border: 1px solid #D8DCE1;
+      border-radius: 0.625rem;
+      transition: border-color 0.15s ease;
     }
     .block-column-card:hover {
-      box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.06);
-    }
-
-    /* Detail Card Glow Animation when selected */
-    @keyframes card-glow {
-      0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.5); border-color: #3b82f6; }
-      50% { box-shadow: 0 0 0 12px rgba(37, 99, 235, 0.18); border-color: #2563eb; }
-      100% { box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04); border-color: #e2e8f0; }
-    }
-    .detail-pulse-highlight {
-      animation: card-glow 1.5s ease-out;
+      border-color: #A8B2BD;
     }
 
     /* Stepper Timeline Connectors */
@@ -149,99 +220,62 @@
       top: 1rem;
       left: 50%;
       width: 100%;
-      height: 3px;
-      background-color: #e2e8f0;
+      height: 2px;
+      background-color: #D8DCE1;
       z-index: 1;
     }
     .timeline-step.completed:not(:last-child)::after {
-      background-color: #22c55e;
+      background-color: #3B5848;
     }
     .timeline-step.active:not(:last-child)::after {
-      background: linear-gradient(90deg, #22c55e 0%, #3b82f6 100%);
-    }
-
-    /* Interactive Card Micro-Interactions & Layout Containment */
-    .branch-summary-card {
-      content-visibility: auto;
-      contain-intrinsic-size: auto 300px auto 340px;
-      transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.2s ease, border-color 0.2s ease;
-    }
-    @supports not (content-visibility: auto) {
-      .branch-summary-card {
-        contain: layout style paint;
-      }
-    }
-    @media (prefers-reduced-motion: no-preference) {
-      .branch-summary-card:hover {
-        transform: translateY(-2px);
-      }
+      background-color: #2C435A;
     }
 
     /* Interactive Split-View Map & Expandable Branch Detail Panel */
+    #thailandVectorMap, #thailandVectorMap * {
+      animation: none !important;
+      transition: none !important;
+    }
     #mapSplitStage {
-      transition: gap 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+      transition: gap 0.3s ease;
     }
     #mapSvgColumn {
-      transition: width 0.35s cubic-bezier(0.22, 1, 0.36, 1), max-width 0.35s cubic-bezier(0.22, 1, 0.36, 1), transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+      transition: width 0.3s ease, max-width 0.3s ease;
     }
     .map-side-inspector {
       display: block;
       opacity: 1;
       translate: 0 0;
-      transition:
-        display 0.35s,
-        opacity 0.35s cubic-bezier(0.22, 1, 0.36, 1),
-        translate 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+      transition: display 0.3s, opacity 0.3s ease, translate 0.3s ease;
       transition-behavior: allow-discrete;
     }
     @starting-style {
       .map-side-inspector {
         opacity: 0;
-        translate: 24px 0;
+        translate: 20px 0;
       }
       .map-side-inspector[data-side="left"] {
         opacity: 0;
-        translate: -24px 0;
+        translate: -20px 0;
       }
     }
     .map-side-inspector:where([hidden], [data-closing]) {
       opacity: 0;
-      translate: 24px 0;
+      translate: 20px 0;
     }
     .map-side-inspector[data-side="left"]:where([hidden], [data-closing]) {
       opacity: 0;
-      translate: -24px 0;
+      translate: -20px 0;
     }
     .map-side-inspector[hidden] {
       display: none !important;
     }
-    @media (prefers-reduced-motion: reduce) {
-      #mapSplitStage,
-      #mapSvgColumn,
-      .map-side-inspector {
-        translate: none !important;
-        transition-duration: 0.05s !important;
-      }
-      @starting-style {
-        .map-side-inspector,
-        .map-side-inspector[data-side="left"] {
-          translate: none !important;
-        }
-      }
-      .map-side-inspector:where([hidden], [data-closing]),
-      .map-side-inspector[data-side="left"]:where([hidden], [data-closing]) {
-        translate: none !important;
-      }
-    }
 
-    /* Intrinsic Size Interpolation & Accounting Accordion / Responsive Table */
-    :root {
-      interpolate-size: allow-keywords;
-    }
+    /* Accounting Accordion & Responsive Table */
     .acct-group-details::details-content {
       block-size: 0;
       overflow: hidden;
-      transition: block-size 0.3s ease-out, content-visibility 0.3s allow-discrete;
+      transition: block-size 0.25s ease-out, content-visibility 0.25s allow-discrete;
     }
     .acct-group-details[open]::details-content {
       block-size: auto;
@@ -266,25 +300,128 @@
       position: sticky;
       inset-inline-start: 0;
       z-index: 1;
-      background: #ffffff;
-    }
-    @media (prefers-reduced-motion: reduce) {
-      .acct-group-details::details-content {
-        transition: none !important;
-      }
+      background: #FFFFFF;
     }
 
-    /* Respect Reduced Motion Preferences for View Transitions & Spinners */
+    /* 7. Functional Pastels Remapping (Low Saturation / Desaturated Dusty Pastels) */
+    /* Sage / Celadon (Positive / Compliant / Active) */
+    .bg-emerald-50, .bg-teal-50, .bg-green-50 {
+      background-color: #E4EBE6 !important;
+    }
+    .bg-emerald-100, .bg-teal-100, .bg-green-100 {
+      background-color: #D6E3D9 !important;
+      color: #243E30 !important;
+      border-color: #B2C7BA !important;
+    }
+    .text-emerald-600, .text-emerald-700, .text-emerald-800, .text-teal-700, .text-green-700 {
+      color: #2D4C3C !important;
+    }
+    .text-emerald-300, .text-emerald-400 {
+      color: #7DA48F !important;
+    }
+    .border-emerald-200, .border-emerald-300, .border-emerald-400\/30 {
+      border-color: #B2C7BA !important;
+    }
+    .bg-emerald-500, .bg-emerald-600, .bg-emerald-700 {
+      background-color: #3B5848 !important;
+      color: #FFFFFF !important;
+    }
+    .bg-emerald-500:hover, .bg-emerald-600:hover, .bg-emerald-700:hover {
+      background-color: #2D4438 !important;
+    }
+
+    /* Terracotta / Muted Clay (Warning / High Attention / In-Progress) */
+    .bg-amber-50, .bg-orange-50, .bg-yellow-50 {
+      background-color: #F6EEE8 !important;
+    }
+    .bg-amber-100, .bg-orange-100, .bg-yellow-100 {
+      background-color: #F0DFD5 !important;
+      color: #6C3A2A !important;
+      border-color: #D5B6A6 !important;
+    }
+    .text-amber-500, .text-amber-600, .text-amber-700, .text-amber-800, .text-orange-700 {
+      color: #7B3E2D !important;
+    }
+    .border-amber-200, .border-amber-300, .border-amber-400\/30 {
+      border-color: #D5B6A6 !important;
+    }
+    .bg-amber-500, .bg-amber-600 {
+      background-color: #7C402E !important;
+      color: #FFFFFF !important;
+    }
+    .bg-amber-500:hover, .bg-amber-600:hover {
+      background-color: #643122 !important;
+    }
+
+    /* Slate Blue / Chalk Blue (Primary Actions / Key Metric Highlights) */
+    .bg-blue-50, .bg-indigo-50, .bg-sky-50 {
+      background-color: #E7EEF4 !important;
+    }
+    .bg-blue-100, .bg-indigo-100, .bg-sky-100 {
+      background-color: #D9E4EF !important;
+      color: #23374B !important;
+      border-color: #B4C6D7 !important;
+    }
+    .text-blue-600, .text-blue-700, .text-blue-800, .text-indigo-600, .text-indigo-700, .text-sky-700 {
+      color: #2B4257 !important;
+    }
+    .text-blue-300, .text-blue-400, .text-sky-400, .text-indigo-300 {
+      color: #8CA4BC !important;
+    }
+    .border-blue-200, .border-blue-300, .border-indigo-200, .border-sky-200 {
+      border-color: #B4C6D7 !important;
+    }
+    .bg-blue-600, .bg-blue-700, .bg-indigo-600, .bg-indigo-700 {
+      background-color: #2C435A !important;
+      color: #FFFFFF !important;
+    }
+    .bg-blue-600:hover, .bg-blue-700:hover, .bg-indigo-600:hover, .bg-indigo-700:hover {
+      background-color: #213243 !important;
+    }
+
+    /* Muted Crimson / Brick Rust (Critical / Overdue / High Alert) */
+    .bg-rose-50, .bg-red-50 {
+      background-color: #F7EBEB !important;
+    }
+    .bg-rose-100, .bg-red-100 {
+      background-color: #EED6D6 !important;
+      color: #672323 !important;
+      border-color: #D5ACAC !important;
+    }
+    .text-rose-500, .text-rose-600, .text-rose-700, .text-rose-800, .text-red-600, .text-red-700 {
+      color: #722727 !important;
+    }
+    .border-rose-200, .border-rose-300, .border-red-200 {
+      border-color: #D5ACAC !important;
+    }
+    .bg-rose-600, .bg-rose-700, .bg-red-600 {
+      background-color: #722727 !important;
+      color: #FFFFFF !important;
+    }
+    .bg-rose-600:hover, .bg-rose-700:hover {
+      background-color: #581C1C !important;
+    }
+
+    /* Mauve / Plum (Overdue category) */
+    .bg-purple-50 {
+      background-color: #F1EBF0 !important;
+    }
+    .bg-purple-100 {
+      background-color: #E4D9E2 !important;
+      color: #492E46 !important;
+      border-color: #C0B0BE !important;
+    }
+    .text-purple-600, .text-purple-700, .text-purple-800 {
+      color: #51334E !important;
+    }
+    .border-purple-200, .border-purple-300 {
+      border-color: #C0B0BE !important;
+    }
+
+    /* Reduced Motion */
     @media (prefers-reduced-motion: reduce) {
-      ::view-transition-group(*),
-      ::view-transition-old(*),
-      ::view-transition-new(*) {
-        animation: none !important;
-      }
-      .animate-spin,
-      .animate-ping,
-      .animate-pulse,
-      .badge-pulse {
+      *, *::before, *::after {
+        transition-duration: 0.05s !important;
         animation: none !important;
       }
     }
@@ -294,65 +431,60 @@
   <!-- ===================================================================== -->
   <!-- 🌟 GLOBAL LOADING SCREEN (แสดงภาพเคลื่อนไหวขณะดึงข้อมูลจริง) -->
   <!-- ===================================================================== -->
-  <div id="globalLoadingScreen" class="fixed inset-0 z-50 bg-slate-950 flex flex-col items-center justify-center transition-all duration-500">
+  <div id="globalLoadingScreen" class="fixed inset-0 z-50 bg-[#181A1C] flex flex-col items-center justify-center transition-all duration-300">
     <div class="relative flex items-center justify-center">
-      <!-- Glow effect -->
-      <div class="absolute w-40 h-40 rounded-full bg-gradient-to-tr from-blue-600 via-indigo-600 to-emerald-400 opacity-60 blur-2xl animate-pulse"></div>
-      
-      <!-- Spinning outer ring -->
-      <div class="w-36 h-36 rounded-full p-1 bg-gradient-to-tr from-blue-500 via-indigo-500 to-teal-400 animate-spin">
-        <div class="w-full h-full bg-slate-950 rounded-full"></div>
-      </div>
+      <!-- Minimalist Architectural Spinner Ring -->
+      <div class="w-32 h-32 rounded-full border-2 border-[#2B3138] border-t-[#8FA4B5] animate-spin"></div>
 
       <!-- User Face Avatar -->
-      <div class="absolute w-28 h-28 rounded-full overflow-hidden border-4 border-white shadow-2xl flex items-center justify-center bg-slate-800">
+      <div class="absolute w-24 h-24 rounded-full overflow-hidden border border-[#3E454E] flex items-center justify-center bg-[#22262B]">
         <img src="data:image/png;base64,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" alt="Loading..." class="w-full h-full object-cover">
       </div>
     </div>
 
     <!-- Status text -->
-    <div class="mt-8 text-center space-y-2 px-4 max-w-md">
-      <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold">
-        <span class="w-2 h-2 rounded-full bg-blue-400 animate-ping"></span>
+    <div class="mt-6 text-center space-y-2 px-4 max-w-md">
+      <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-[#22262B] border border-[#3E454E] text-[#B4C6D7] text-xs font-semibold">
+        <span class="w-1.5 h-1.5 rounded-full bg-[#5B826D]"></span>
         <span id="loadingStatusBadge">กำลังซิงค์ข้อมูลระบบบริหารจัดการ...</span>
       </div>
-      <h3 class="text-xl font-bold text-white tracking-wide">GM & Branch Executive Portal</h3>
-      <p class="text-xs text-slate-400" id="loadingStatusDetail">กำลังประมวลผลข้อมูลการประชุม ผลประกอบการ KPI รายการปฏิบัติงานสาขา และการเบิกจ่ายงบประมาณ...</p>
+      <h3 class="text-base font-bold text-[#E6EDF3] tracking-wide">GM & Branch Executive Portal</h3>
+      <p class="text-xs text-[#8A95A0]" id="loadingStatusDetail">กำลังประมวลผลข้อมูลการประชุม ผลประกอบการ KPI รายการปฏิบัติงานสาขา และการเบิกจ่ายงบประมาณ...</p>
     </div>
   </div>
 
 
 
   <!-- TOP NAVIGATION BAR -->
-  <div id="mainAppWrapper" class="transition-opacity duration-500 opacity-0">
-  <header id="appHeader" class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm transition-all duration-300">
+  <div id="mainAppWrapper" class="transition-opacity duration-300 opacity-0">
+  <header id="appHeader" class="sticky top-0 z-40 bg-[#FFFFFF] border-b border-[#D8DCE1] transition-all duration-300">
     <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
       <div id="headerTopRow" class="flex items-center justify-between h-14 sm:h-16 transition-all duration-300">
         
         <!-- Logo & Title -->
         <div class="flex items-center space-x-2.5 sm:space-x-3">
-          <div id="headerLogo" class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20 transition-all duration-300 flex-shrink-0">
+          <div id="headerLogo" class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-[#181A1C] border border-[#2B3138] flex items-center justify-center text-[#E6EDF3] transition-all duration-300 flex-shrink-0">
             <i data-lucide="layout-dashboard" class="w-4 h-4 sm:w-5 sm:h-5"></i>
           </div>
           <div>
             <div class="flex items-center space-x-2">
-              <h1 id="headerTitle" class="text-base sm:text-lg font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent transition-all duration-300">GM Monitor & Branch Portal</h1>
-              <span id="dataSourceBadge" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xxs sm:text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/80">
-                <span class="w-1.5 h-1.5 mr-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <h1 id="headerTitle" class="text-base sm:text-lg font-bold text-[#181A1C] tracking-tight transition-all duration-300">GM Monitor & Branch Portal</h1>
+              <span id="dataSourceBadge" class="inline-flex items-center px-2 py-0.5 rounded-full text-xxs font-semibold bg-[#E4EBE6] text-[#264234] border border-[#B2C6BB]">
+                <span class="w-1.5 h-1.5 mr-1.5 rounded-full bg-[#4D6B5A]"></span>
                 Real-Time Sync
               </span>
             </div>
-            <p id="headerSubtitle" class="text-xxs sm:text-xs text-slate-500 transition-all duration-300">Executive Operations & Financial Analytics</p>
+            <p id="headerSubtitle" class="text-xxs sm:text-xs text-[#636E7B] transition-all duration-300">Executive Operations & Financial Analytics</p>
           </div>
         </div>
 
         <!-- Controls: Month Filter Selector & Refresh -->
         <div class="flex items-center space-x-2 sm:space-x-3">
           <!-- Global Month Filter Selector (กรองเดือนสำหรับการประชุมและปัญหา) -->
-          <div class="flex items-center bg-indigo-50 px-2.5 py-1.5 rounded-lg border border-indigo-200 text-indigo-800 text-xxs sm:text-xs font-bold">
-            <i data-lucide="calendar" class="w-3.5 h-3.5 text-indigo-600 mr-1.5 hidden sm:inline"></i>
-            <span class="mr-1 hidden md:inline text-indigo-600">เดือน:</span>
-            <select id="globalMonthFilter" onchange="onMonthFilterChange(this.value)" class="bg-transparent font-bold text-indigo-900 outline-none cursor-pointer">
+          <div class="flex items-center bg-[#F1ECE3] px-2.5 py-1.5 rounded-lg border border-[#CDC3B2] text-[#484032] text-xxs sm:text-xs font-bold">
+            <i data-lucide="calendar" class="w-3.5 h-3.5 text-[#5D5241] mr-1.5 hidden sm:inline"></i>
+            <span class="mr-1 hidden md:inline text-[#5D5241]">เดือน:</span>
+            <select id="globalMonthFilter" onchange="onMonthFilterChange(this.value)" class="bg-transparent font-bold text-[#2A241B] outline-none cursor-pointer">
               <option value="09">กันยายน 2569</option>
               <option value="10">ตุลาคม 2569</option>
               <option value="11">พฤศจิกายน 2569</option>
@@ -362,20 +494,20 @@
           </div>
 
           <!-- Manager Portals Link Button -->
-          <button id="btnManagerLinksHeader" onclick="openManagerLinksModal()" title="ลิงก์ประจำตัว ผจก. 12 ท่าน" class="flex items-center space-x-1.5 px-3 py-1.5 text-xs sm:text-sm font-semibold text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 hover:text-blue-800 transition shadow-sm active:scale-95">
-            <i data-lucide="share-2" class="w-4 h-4 text-blue-600"></i>
+          <button id="btnManagerLinksHeader" onclick="openManagerLinksModal()" title="ลิงก์ประจำตัว ผจก. 12 ท่าน" class="flex items-center space-x-1.5 px-3 py-1.5 text-xs sm:text-sm font-semibold text-[#25394D] bg-[#E6EDF3] border border-[#B4C6D7] rounded-lg hover:bg-[#D9E3EC] transition">
+            <i data-lucide="share-2" class="w-4 h-4 text-[#2C435A]"></i>
             <span class="hidden sm:inline">ลิงก์ ผจก. 12 ท่าน</span>
             <span class="sm:hidden">ผจก.</span>
           </button>
 
           <!-- Refresh Button -->
-          <button onclick="fetchDashboardData(true)" id="refreshBtn" title="รีเฟรชข้อมูล" class="flex items-center space-x-1.5 px-3 py-1.5 text-xs sm:text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 hover:text-blue-600 transition shadow-sm active:scale-95">
+          <button onclick="fetchDashboardData(true)" id="refreshBtn" title="รีเฟรชข้อมูล" class="flex items-center space-x-1.5 px-3 py-1.5 text-xs sm:text-sm font-medium text-[#181A1C] bg-white border border-[#D8DCE1] rounded-lg hover:bg-[#F4F5F6] transition">
             <i data-lucide="rotate-cw" id="refreshIcon" class="w-4 h-4"></i>
             <span class="hidden md:inline">รีเฟรช</span>
           </button>
 
           <!-- Settings Modal Trigger -->
-          <button id="btnSettingsHeader" onclick="openSettingsModal()" title="ตั้งค่าการเชื่อมต่อ API" class="p-2 text-slate-500 hover:text-slate-800 bg-slate-100 rounded-lg hover:bg-slate-200 transition">
+          <button id="btnSettingsHeader" onclick="openSettingsModal()" title="ตั้งค่าการเชื่อมต่อ API" class="p-2 text-[#636E7B] hover:text-[#181A1C] bg-[#F4F5F6] border border-[#D8DCE1] rounded-lg hover:bg-[#EBECEE] transition">
             <i data-lucide="settings" class="w-4 h-4"></i>
           </button>
         </div>
@@ -421,28 +553,27 @@
   <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
     <!-- CURRENT PERIOD BANNER -->
-    <div id="executivePeriodBanner" class="mb-6 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-2xl p-4 sm:p-6 text-white shadow-xl relative overflow-hidden">
-      <div class="absolute right-0 top-0 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
+    <div id="executivePeriodBanner" class="mb-6 bg-[#181A1C] border border-[#2B3138] rounded-xl p-4 sm:p-6 text-white relative overflow-hidden">
       <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div class="inline-flex items-center space-x-2 px-2.5 py-1 rounded-full bg-blue-500/20 text-blue-300 text-xs font-semibold mb-2">
-            <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+          <div class="inline-flex items-center space-x-2 px-2.5 py-1 rounded-full bg-[#25394D] text-[#B4C6D7] border border-[#3E5266] text-xs font-semibold mb-2">
+            <i data-lucide="sparkles" class="w-3.5 h-3.5 text-[#8FA4B5]"></i>
             <span>Executive Management Report</span>
           </div>
-          <h2 class="text-xl sm:text-2xl font-bold tracking-tight" id="heroPeriodText">กำลังโหลดข้อมูลรอบการประเมิน...</h2>
-          <p class="text-xs sm:text-sm text-slate-300 mt-1">อัปเดตข้อมูลการประชุมผู้จัดการ, ผลงาน KPI รายสาขา และรายการเบิกจ่ายบัญชี</p>
+          <h2 class="text-xl sm:text-2xl font-bold tracking-tight text-[#E6EDF3]" id="heroPeriodText">กำลังโหลดข้อมูลรอบการประเมิน...</h2>
+          <p class="text-xs sm:text-sm text-[#8A95A0] mt-1">อัปเดตข้อมูลการประชุมผู้จัดการ, ผลงาน KPI รายสาขา และรายการเบิกจ่ายบัญชี</p>
         </div>
         <div class="flex flex-wrap items-center gap-2">
           <div class="text-right hidden sm:block mr-1">
-            <div class="text-xs text-slate-400">อัปเดตล่าสุด</div>
-            <div class="text-xs font-medium text-slate-200" id="lastUpdatedText">-</div>
+            <div class="text-xs text-[#8A95A0]">อัปเดตล่าสุด</div>
+            <div class="text-xs font-medium text-[#D8DCE1]" id="lastUpdatedText">-</div>
           </div>
-          <button onclick="copyExecutiveSummaryToClipboard()" class="px-3.5 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-200 text-xs font-semibold backdrop-blur transition flex items-center space-x-1.5 border border-emerald-400/30 active:scale-95">
-            <i data-lucide="clipboard-copy" class="w-4 h-4"></i>
+          <button onclick="copyExecutiveSummaryToClipboard()" class="px-3.5 py-2 rounded-lg bg-[#2D4538] hover:bg-[#385546] text-[#D3E3D9] text-xs font-semibold transition flex items-center space-x-1.5 border border-[#436352]">
+            <i data-lucide="clipboard-copy" class="w-4 h-4 text-[#8CB39E]"></i>
             <span>คัดลอกสรุปส่ง LINE</span>
           </button>
-          <button onclick="exportCurrentView()" class="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-medium backdrop-blur transition flex items-center space-x-1.5 border border-white/10 active:scale-95">
-            <i data-lucide="download" class="w-4 h-4"></i>
+          <button onclick="exportCurrentView()" class="px-3.5 py-2 rounded-lg bg-[#22262B] hover:bg-[#2C323A] text-[#D8DCE1] text-xs font-medium transition flex items-center space-x-1.5 border border-[#3E454E]">
+            <i data-lucide="download" class="w-4 h-4 text-[#8FA4B5]"></i>
             <span>ส่งออก CSV</span>
           </button>
         </div>
@@ -455,52 +586,49 @@
     <section id="tab-map" class="tab-content space-y-6">
       
       <!-- 1. Map Header & Overall National Numbers -->
-      <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-5 sm:p-7 text-white shadow-xl relative overflow-hidden border border-slate-800">
-        <div class="absolute -right-12 -top-12 w-64 h-64 bg-blue-500/15 rounded-full blur-3xl pointer-events-none"></div>
-        <div class="absolute -left-12 -bottom-12 w-64 h-64 bg-indigo-500/15 rounded-full blur-3xl pointer-events-none"></div>
-
+      <div class="bg-[#181A1C] border border-[#2B3138] rounded-xl p-5 sm:p-7 text-white relative overflow-hidden">
         <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div>
-            <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 text-xs font-semibold mb-3 border border-blue-400/20">
-              <i data-lucide="map-pin" class="w-3.5 h-3.5 text-blue-400"></i>
+            <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-[#25394D] text-[#B4C6D7] text-xs font-semibold mb-3 border border-[#3E5266]">
+              <i data-lucide="map-pin" class="w-3.5 h-3.5 text-[#8FA4B5]"></i>
               <span>National Branch Network & Geographic Operations</span>
             </div>
-            <h2 class="text-2xl sm:text-3xl font-black tracking-tight text-white flex items-center space-x-3">
+            <h2 class="text-2xl sm:text-3xl font-black tracking-tight text-[#E6EDF3] flex items-center space-x-3">
               <span>แผนที่และสรุปผลการดำเนินงานสาขาทั่วประเทศ</span>
             </h2>
-            <p class="text-xs sm:text-sm text-slate-300 mt-1.5 max-w-2xl leading-relaxed">
+            <p class="text-xs sm:text-sm text-[#8A95A0] mt-1.5 max-w-2xl leading-relaxed">
               ภาพรวมผลการดำเนินงานเครือข่ายสาขา 5 ภูมิภาค ติดตาม <strong>เป้าหมายรายได้ (Target Revenue), งบประมาณการเบิกจ่าย</strong> และ <strong>สถานะการปฏิบัติงาน</strong> แบบเรียลไทม์
             </p>
           </div>
 
           <!-- Quick Stat Capsules on Hero -->
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div class="bg-white/10 backdrop-blur-md rounded-2xl p-3 border border-white/10 text-center">
-              <span class="text-xxs text-slate-300 block font-medium">สาขาในเครือข่าย</span>
-              <span class="text-xl sm:text-2xl font-black text-white" id="mapHeroBranchCount">0 สาขา</span>
-              <span class="text-xxs text-slate-300 block mt-0.5" id="mapHeroBranchSub">รายงานผลแล้ว 0 สาขา</span>
+            <div class="bg-[#22262B] rounded-xl p-3 border border-[#2E353D] text-center">
+              <span class="text-xxs text-[#8A95A0] block font-medium">สาขาในเครือข่าย</span>
+              <span class="text-xl sm:text-2xl font-black text-[#E6EDF3]" id="mapHeroBranchCount">0 สาขา</span>
+              <span class="text-xxs text-[#8A95A0] block mt-0.5" id="mapHeroBranchSub">รายงานผลแล้ว 0 สาขา</span>
             </div>
-            <div class="bg-white/10 backdrop-blur-md rounded-2xl p-3 border border-white/10 text-center">
-              <span class="text-xxs text-slate-300 block font-medium" id="mapHeroSalesLabel">🎯 ยอดสะสมเทียบเป้า</span>
-              <span class="text-lg sm:text-xl font-black text-emerald-400 block" id="mapHeroTotalSales">฿0</span>
-              <span class="text-xxs text-slate-200 font-semibold block mt-0.5" id="mapHeroSalesStatusSummary">🟢 0 | 🟡 0 | 🔴 0</span>
+            <div class="bg-[#22262B] rounded-xl p-3 border border-[#2E353D] text-center">
+              <span class="text-xxs text-[#8A95A0] block font-medium" id="mapHeroSalesLabel">🎯 ยอดสะสมเทียบเป้า</span>
+              <span class="text-lg sm:text-xl font-black text-[#8CB39E] block" id="mapHeroTotalSales">฿0</span>
+              <span class="text-xxs text-[#D8DCE1] font-semibold block mt-0.5" id="mapHeroSalesStatusSummary">🟢 0 | 🟡 0 | 🔴 0</span>
             </div>
-            <div class="bg-white/10 backdrop-blur-md rounded-2xl p-3 border border-white/10 text-center">
-              <span class="text-xxs text-slate-300 block font-medium">ยอดเบิกรวมเดือนนี้</span>
-              <span class="text-xl sm:text-2xl font-black text-teal-300" id="mapHeroTotalWithdraw">฿0</span>
-              <span class="text-xxs text-slate-300 block mt-0.5" id="mapHeroWithdrawSub">ยอดสะสมประจำเดือน</span>
+            <div class="bg-[#22262B] rounded-xl p-3 border border-[#2E353D] text-center">
+              <span class="text-xxs text-[#8A95A0] block font-medium">ยอดเบิกรวมเดือนนี้</span>
+              <span class="text-xl sm:text-2xl font-black text-[#8FA4B5]" id="mapHeroTotalWithdraw">฿0</span>
+              <span class="text-xxs text-[#8A95A0] block mt-0.5" id="mapHeroWithdrawSub">ยอดสะสมประจำเดือน</span>
             </div>
-            <div class="bg-white/10 backdrop-blur-md rounded-2xl p-3 border border-white/10 text-center">
-              <span class="text-xxs text-slate-300 block font-medium">รายการติดตามหน้างาน</span>
-              <span class="text-xl sm:text-2xl font-black text-rose-400" id="mapHeroTotalIssues">0 เคส</span>
-              <span class="text-xxs text-slate-300 block mt-0.5" id="mapHeroIssuesSub">อยู่ระหว่างดำเนินการ</span>
+            <div class="bg-[#22262B] rounded-xl p-3 border border-[#2E353D] text-center">
+              <span class="text-xxs text-[#8A95A0] block font-medium">รายการติดตามหน้างาน</span>
+              <span class="text-xl sm:text-2xl font-black text-[#C58569]" id="mapHeroTotalIssues">0 เคส</span>
+              <span class="text-xxs text-[#8A95A0] block mt-0.5" id="mapHeroIssuesSub">อยู่ระหว่างดำเนินการ</span>
             </div>
           </div>
         </div>
       </div>
 
       <!-- 2. Interactive Thailand Map with Pointer Arrows & Live Callouts -->
-      <div id="mapSectionContainer" class="bg-slate-900 rounded-3xl border border-slate-800 shadow-2xl p-4 sm:p-6 relative overflow-hidden">
+      <div id="mapSectionContainer" class="bg-[#181A1C] rounded-xl border border-[#2B3138] p-4 sm:p-6 relative overflow-hidden">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4 border-b border-slate-800 pb-4">
           <div>
             <div class="flex items-center space-x-2">
@@ -3716,7 +3844,7 @@
       }
       const mgrLabels = data.gmReport.managers.map(m => m.manager);
       const mgrActuals = data.gmReport.managers.map(m => m.actualMeetings);
-      const barColors = data.gmReport.managers.map(m => m.actualMeetings >= 8 ? '#10B981' : '#F43F5E');
+      const barColors = data.gmReport.managers.map(m => m.actualMeetings >= 8 ? '#5B826D' : '#B55D5D');
 
       if (dashboardState.charts.meeting) dashboardState.charts.meeting.destroy();
       const ctxMeeting = document.getElementById('meetingChart').getContext('2d');
@@ -3728,7 +3856,7 @@
             label: 'จำนวนประชุมจริง',
             data: mgrActuals,
             backgroundColor: barColors,
-            borderRadius: 6
+            borderRadius: 4
           }]
         },
         options: {
@@ -3748,9 +3876,7 @@
               },
               formatter: function(val) {
                 return val + ' ครั้ง';
-              },
-              textShadowBlur: 4,
-              textShadowColor: 'rgba(0, 0, 0, 0.5)'
+              }
             }
           },
           scales: {
@@ -3783,10 +3909,10 @@
           labels: ['เป็นไปตามเป้า', 'เสี่ยงต่ำกว่าเป้า', 'ไม่เป็นไปตามเป้า'],
           datasets: [{
             data: kpiCounts,
-            backgroundColor: ['#10B981', '#F59E0B', '#EF4444'],
-            borderWidth: 2,
+            backgroundColor: ['#5B826D', '#C58569', '#B55D5D'],
+            borderWidth: 1,
             borderColor: '#FFFFFF',
-            hoverOffset: 4
+            hoverOffset: 2
           }]
         },
         options: {
@@ -3806,12 +3932,9 @@
               formatter: function(val) {
                 if (!val || val === 0) return '';
                 const pct = Math.round((val / kpiTotal) * 100);
-                return `${val}
-(${pct}%)`;
+                return `${val}\n(${pct}%)`;
               },
-              textAlign: 'center',
-              textShadowBlur: 4,
-              textShadowColor: 'rgba(0, 0, 0, 0.5)'
+              textAlign: 'center'
             }
           }
         }
@@ -3962,29 +4085,29 @@
             ${PERIOD_KEYS.map(pk => {
               const s = pStats[pk];
               const borderCls = s.status === 'green'
-                ? 'border-emerald-500/40 bg-emerald-950/30'
-                : (s.status === 'yellow' ? 'border-amber-500/40 bg-amber-950/30' : (s.status === 'red' ? 'border-rose-500/40 bg-rose-950/30' : 'border-slate-700 bg-slate-900/90'));
+                ? 'border-[#435C4E] bg-[#1E2722]'
+                : (s.status === 'yellow' ? 'border-[#6A493B] bg-[#291F1A]' : (s.status === 'red' ? 'border-[#683636] bg-[#271818]' : 'border-[#2D333B] bg-[#16181B]'));
               return `
-                <div class="rounded-xl p-2 border ${borderCls} space-y-1">
-                  <div class="flex items-center justify-between font-extrabold text-white border-b border-white/10 pb-1">
+                <div class="rounded-lg p-2 border ${borderCls} space-y-1">
+                  <div class="flex items-center justify-between font-bold text-white border-b border-white/10 pb-1">
                     <span>รอบ ${pk}</span>
                     <span>${statusIcon(s.status)}</span>
                   </div>
                   <div>
-                    <span class="text-xxxs text-slate-400 block">🎯 ยอดสะสม/เป้า</span>
+                    <span class="text-xxxs text-slate-400 block font-medium">🎯 ยอดสะสม/เป้า</span>
                     <span class="font-bold text-white text-xxs break-words leading-tight block">${escapeHtml(s.targetRevenue)}</span>
                   </div>
                   <div class="flex items-center justify-between pt-0.5">
-                    <span class="text-xxxs text-pink-300">❤️ CRM:</span>
-                    <span class="font-bold text-pink-200">${escapeHtml(s.crm)}</span>
+                    <span class="text-xxxs text-stone-300">❤️ CRM:</span>
+                    <span class="font-bold text-stone-200">${escapeHtml(s.crm)}</span>
                   </div>
                   <div class="flex items-center justify-between">
-                    <span class="text-xxxs text-sky-300">👥 NCM:</span>
-                    <span class="font-bold text-sky-200">${escapeHtml(s.nrm)}</span>
+                    <span class="text-xxxs text-slate-300">👥 NCM:</span>
+                    <span class="font-bold text-slate-200">${escapeHtml(s.nrm)}</span>
                   </div>
                   <div class="flex items-center justify-between">
-                    <span class="text-xxxs text-indigo-300">📅 นัด:</span>
-                    <span class="font-bold text-indigo-200">${escapeHtml(s.appointment)}</span>
+                    <span class="text-xxxs text-slate-300">📅 นัด:</span>
+                    <span class="font-bold text-slate-200">${escapeHtml(s.appointment)}</span>
                   </div>
                 </div>
               `;
@@ -3998,29 +4121,29 @@
           ${PERIOD_KEYS.map(pk => {
             const s = pStats[pk];
             const boxCls = s.status === 'green'
-              ? 'bg-emerald-50/70 border-emerald-200'
-              : (s.status === 'yellow' ? 'bg-amber-50/70 border-amber-200' : (s.status === 'red' ? 'bg-rose-50/70 border-rose-200' : 'bg-white border-slate-200'));
+              ? 'bg-[#E8EFEA] border-[#B5C8BC]'
+              : (s.status === 'yellow' ? 'bg-[#F6EEE8] border-[#D9BEB0]' : (s.status === 'red' ? 'bg-[#F7EBEB] border-[#DEC1C1]' : 'bg-[#F4F6F8] border-[#D5D9DD]'));
             return `
-              <div class="rounded-xl p-2 border ${boxCls} space-y-1">
-                <div class="flex items-center justify-between font-extrabold text-slate-800 border-b border-slate-200/70 pb-1">
+              <div class="rounded-lg p-2 border ${boxCls} space-y-1">
+                <div class="flex items-center justify-between font-bold text-slate-900 border-b border-black/10 pb-1">
                   <span>รอบ ${pk}</span>
                   <span>${statusIcon(s.status)}</span>
                 </div>
                 <div>
-                  <span class="text-xxxs text-slate-400 block">🎯 Target Revenue</span>
-                  <span class="font-extrabold text-slate-900 text-xxs break-words leading-tight block">${escapeHtml(s.targetRevenue)}</span>
+                  <span class="text-xxxs text-slate-600 block font-medium">🎯 Target Revenue</span>
+                  <span class="font-bold text-slate-950 text-xxs break-words leading-tight block">${escapeHtml(s.targetRevenue)}</span>
                 </div>
-                <div class="flex items-center justify-between pt-0.5 border-t border-slate-100">
-                  <span class="text-xxxs text-slate-500">❤️ CRM:</span>
-                  <span class="font-bold text-slate-800">${escapeHtml(s.crm)}</span>
-                </div>
-                <div class="flex items-center justify-between">
-                  <span class="text-xxxs text-slate-500">👥 NCM:</span>
-                  <span class="font-bold text-slate-800">${escapeHtml(s.nrm)}</span>
+                <div class="flex items-center justify-between pt-0.5 border-t border-black/5">
+                  <span class="text-xxxs text-slate-600">❤️ CRM:</span>
+                  <span class="font-bold text-slate-900">${escapeHtml(s.crm)}</span>
                 </div>
                 <div class="flex items-center justify-between">
-                  <span class="text-xxxs text-slate-500">📅 การนัด:</span>
-                  <span class="font-bold text-indigo-700">${escapeHtml(s.appointment)}</span>
+                  <span class="text-xxxs text-slate-600">👥 NCM:</span>
+                  <span class="font-bold text-slate-900">${escapeHtml(s.nrm)}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-xxxs text-slate-600">📅 การนัด:</span>
+                  <span class="font-bold text-[#2A435B]">${escapeHtml(s.appointment)}</span>
                 </div>
               </div>
             `;
@@ -4249,10 +4372,10 @@
           labels: ['กำลังติดตาม', 'กำลังดำเนินการ'],
           datasets: [{
             data: [trackingCount, actionCount],
-            backgroundColor: ['#F59E0B', '#3B82F6'],
-            borderWidth: 2,
+            backgroundColor: ['#C58569', '#4A6580'],
+            borderWidth: 1,
             borderColor: '#FFFFFF',
-            hoverOffset: 4
+            hoverOffset: 2
           }]
         },
         options: {
@@ -4267,16 +4390,14 @@
               font: {
                 family: 'Prompt',
                 weight: 'bold',
-                size: 12
+                size: 11
               },
               formatter: function(val, context) {
                 if (!val || val === 0) return '';
                 const p = Math.round((val / total) * 100);
                 return `${val} เคส\n(${p}%)`;
               },
-              textAlign: 'center',
-              textShadowBlur: 4,
-              textShadowColor: 'rgba(0, 0, 0, 0.65)'
+              textAlign: 'center'
             },
             tooltip: {
               callbacks: {
@@ -5114,10 +5235,10 @@
             const bLabels = dayBranches.map(b => b.branch.replace('สาขา', ''));
             const bAmounts = dayBranches.map(b => b.amount);
             const bColors = dayBranches.map((b, i) => {
-              if (accountingFilterState.branch !== 'ALL' && accountingFilterState.branch === b.branch) return '#f59e0b';
-              if (i === 0) return '#0d9488';
-              if (i === 1) return '#14b8a6';
-              return '#2dd4bf';
+              if (accountingFilterState.branch !== 'ALL' && accountingFilterState.branch === b.branch) return '#C58569';
+              if (i === 0) return '#3B5848';
+              if (i === 1) return '#4E715E';
+              return '#6B8E7D';
             });
 
             dashboardState.charts.accountingDaily = new Chart(ctxDaily, {
@@ -5128,8 +5249,8 @@
                   label: `ยอดเบิกวันที่ ${selectedDay} (บาท)`,
                   data: bAmounts,
                   backgroundColor: bColors,
-                  hoverBackgroundColor: '#f59e0b',
-                  borderRadius: 8,
+                  hoverBackgroundColor: '#8C4D39',
+                  borderRadius: 4,
                   maxBarThickness: 54
                 }]
               },
@@ -5249,8 +5370,8 @@
                 label: 'ยอดเบิก (บาท)',
                 data: dailyAmounts,
                 backgroundColor: barBgColors,
-                hoverBackgroundColor: '#0f766e',
-                borderRadius: 5,
+                hoverBackgroundColor: '#2F455C',
+                borderRadius: 4,
                 borderSkipped: false
               }]
             },
@@ -5474,8 +5595,8 @@
               datasets: [{
                 label: 'ยอดเบิกรวม (บาท)',
                 data: bAmounts,
-                backgroundColor: topBranches.map(b => accountingFilterState.branch === b.branch ? '#f59e0b' : '#14B8A6'),
-                borderRadius: 6
+                backgroundColor: topBranches.map(b => accountingFilterState.branch === b.branch ? '#C58569' : '#4E715E'),
+                borderRadius: 4
               }]
             },
             options: {
@@ -6237,30 +6358,30 @@
         const hasHigh = problems.some(p => p.urgency === 'High');
 
         let probSeverity = 'NORMAL';
-        let pinColor = '#10b981'; // Emerald
+        let pinColor = '#5B826D'; // Dusty Celadon / Sage
         let arrowMarker = 'url(#mapArrowEmerald)';
-        let boxStroke = '#059669';
+        let boxStroke = '#759B87';
 
         if (hasCrit) {
           probSeverity = 'CRITICAL';
-          pinColor = '#f43f5e'; // Rose
+          pinColor = '#B55D5D'; // Muted Crimson / Brick
           arrowMarker = 'url(#mapArrowRose)';
-          boxStroke = '#e11d48';
+          boxStroke = '#C97777';
         } else if (hasOverdue) {
           probSeverity = 'OVERDUE';
-          pinColor = '#a855f7'; // Purple
+          pinColor = '#7F677C'; // Dusty Mauve
           arrowMarker = 'url(#mapArrowSky)';
-          boxStroke = '#9333ea';
+          boxStroke = '#9B8298';
         } else if (hasHigh) {
           probSeverity = 'HIGH';
-          pinColor = '#f59e0b'; // Amber
+          pinColor = '#C58569'; // Muted Terracotta / Clay
           arrowMarker = 'url(#mapArrowSky)';
-          boxStroke = '#d97706';
+          boxStroke = '#D89F88';
         } else if (problems.length > 0) {
           probSeverity = 'NORMAL_ISSUE';
-          pinColor = '#38bdf8'; // Sky
+          pinColor = '#4A6580'; // Slate Blue
           arrowMarker = 'url(#mapArrowSky)';
-          boxStroke = '#0284c7';
+          boxStroke = '#6B85A0';
         }
 
         const managerNames = Array.from(entry.managersSet).join(', ') || '-';
@@ -7925,32 +8046,32 @@
                 const expMeet = mObj ? (mObj.expectedMeetings || 8) : 8;
                 const pCount = allProblems.filter(p => p.manager === mName).length;
                 return `
-                  <div onclick="selectManagerPortal('${escapeHtml(mName)}')" class="group cursor-pointer p-4 rounded-2xl border border-slate-200 bg-slate-50/50 hover:bg-white hover:border-indigo-400 hover:shadow-md transition flex flex-col justify-between gap-3">
+                  <div onclick="selectManagerPortal('${escapeHtml(mName)}')" class="group cursor-pointer p-4 rounded-xl border border-[#D8DCE1] bg-[#FFFFFF] hover:bg-[#F9FAFB] hover:border-[#9AA7B4] transition flex flex-col justify-between gap-3">
                     <div class="flex items-center justify-between">
                       <div class="flex items-center space-x-3">
-                        <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-indigo-600 to-blue-500 text-white font-black text-base flex items-center justify-center shadow-sm group-hover:scale-105 transition">
+                        <div class="w-11 h-11 rounded-lg bg-[#2C435A] text-[#E6EDF3] font-bold text-base flex items-center justify-center border border-[#3E556E] transition">
                           ${escapeHtml(mName.substring(0, 1))}
                         </div>
                         <div>
-                          <h3 class="font-bold text-slate-900 text-sm sm:text-base group-hover:text-indigo-700 transition">ผจก. ${escapeHtml(mName)}</h3>
-                          <span class="text-xxs text-slate-500">ดูแล ${bCount} สาขา</span>
+                          <h3 class="font-bold text-[#181A1C] text-sm sm:text-base group-hover:text-[#2C435A] transition">ผจก. ${escapeHtml(mName)}</h3>
+                          <span class="text-xxs text-[#636E7B]">ดูแล ${bCount} สาขา</span>
                         </div>
                       </div>
-                      <span class="text-xxs font-bold px-2 py-0.5 rounded-full bg-slate-200/70 text-slate-600">#${idx + 1}</span>
+                      <span class="text-xxs font-bold px-2 py-0.5 rounded bg-[#F4F5F6] text-[#636E7B] border border-[#D8DCE1]">#${idx + 1}</span>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100 text-xxs">
-                      <div class="bg-white p-2 rounded-xl border border-slate-100">
-                        <span class="text-slate-400 block">การประชุม</span>
-                        <span class="font-bold ${actMeet >= expMeet ? 'text-emerald-600' : 'text-amber-600'} text-xs">${actMeet}/${expMeet} ครั้ง</span>
+                    <div class="grid grid-cols-2 gap-2 pt-2 border-t border-[#EDEFF2] text-xxs">
+                      <div class="bg-[#F9FAFB] p-2 rounded-lg border border-[#EDEFF2]">
+                        <span class="text-[#636E7B] block">การประชุม</span>
+                        <span class="font-bold ${actMeet >= expMeet ? 'text-[#264234]' : 'text-[#6F3B2C]'} text-xs">${actMeet}/${expMeet} ครั้ง</span>
                       </div>
-                      <div class="bg-white p-2 rounded-xl border border-slate-100">
-                        <span class="text-slate-400 block">ปัญหาในเขต</span>
-                        <span class="font-bold ${pCount > 0 ? 'text-rose-600' : 'text-emerald-600'} text-xs">${pCount} เคส</span>
+                      <div class="bg-[#F9FAFB] p-2 rounded-lg border border-[#EDEFF2]">
+                        <span class="text-[#636E7B] block">ปัญหาในเขต</span>
+                        <span class="font-bold ${pCount > 0 ? 'text-[#692424]' : 'text-[#264234]'} text-xs">${pCount} เคส</span>
                       </div>
                     </div>
 
-                    <div class="pt-1 flex items-center justify-between text-xs font-bold text-indigo-600 group-hover:text-indigo-700">
+                    <div class="pt-1 flex items-center justify-between text-xs font-bold text-[#2C435A] group-hover:text-[#181A1C]">
                       <span>เข้าสู่พื้นที่งาน</span>
                       <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
                     </div>
@@ -8010,50 +8131,50 @@
 
       container.innerHTML = `
         <!-- 1. MANAGER HERO BANNER & QUICK ACTIONS -->
-        <div class="bg-gradient-to-br from-indigo-950 via-blue-900 to-slate-900 text-white rounded-3xl p-5 sm:p-7 shadow-xl border border-indigo-800/60">
+        <div class="bg-[#181A1C] border border-[#2B3138] text-white rounded-xl p-5 sm:p-7">
           <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
             <div class="flex items-start sm:items-center space-x-4">
-              <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-tr from-blue-500 to-indigo-400 text-white font-black text-2xl flex items-center justify-center shadow-lg border border-white/20 flex-shrink-0">
+              <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-xl bg-[#22262B] text-[#E6EDF3] font-bold text-2xl flex items-center justify-center border border-[#3E454E] flex-shrink-0">
                 ${escapeHtml(mgrName.substring(0, 1))}
               </div>
               <div>
                 <div class="flex flex-wrap items-center gap-2">
-                  <span class="px-2.5 py-0.5 rounded-full text-xxs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 flex items-center gap-1">
-                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                  <span class="px-2.5 py-0.5 rounded-full text-xxs font-bold bg-[#25394D] text-[#B4C6D7] border border-[#3E5266] flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#5B826D]"></span>
                     <span>เชื่อมต่อ Google Sheets สด</span>
                   </span>
-                  <span class="text-xxs text-indigo-200 font-medium">ประจำเดือน${escapeHtml(activeMonthText)}</span>
+                  <span class="text-xxs text-[#8A95A0] font-medium">ประจำเดือน${escapeHtml(activeMonthText)}</span>
                 </div>
-                <h2 class="text-xl sm:text-2xl font-black tracking-tight mt-1">พื้นที่ปฏิบัติงาน: ผู้จัดการ${escapeHtml(mgrName)}</h2>
-                <p class="text-xs text-indigo-200/90 mt-0.5">ดูแลรับผิดชอบ ${branches.length} สาขา • บันทึกข้อมูลลงชีทของ ผจก.${escapeHtml(mgrName)} โดยตรง</p>
+                <h2 class="text-xl sm:text-2xl font-black tracking-tight mt-1 text-[#E6EDF3]">พื้นที่ปฏิบัติงาน: ผู้จัดการ${escapeHtml(mgrName)}</h2>
+                <p class="text-xs text-[#8A95A0] mt-0.5">ดูแลรับผิดชอบ ${branches.length} สาขา • บันทึกข้อมูลลงชีทของ ผจก.${escapeHtml(mgrName)} โดยตรง</p>
               </div>
             </div>
 
             <!-- Action Buttons -->
             <div class="flex flex-wrap items-center gap-2.5">
-              <button type="button" onclick="openMeetingInputModal('${escapeHtml(mgrName)}')" class="px-4 py-2.5 bg-blue-500 hover:bg-blue-400 text-white text-xs sm:text-sm font-bold rounded-xl shadow-lg transition flex items-center gap-2 active:scale-95">
-                <i data-lucide="calendar-plus" class="w-4 h-4"></i>
+              <button type="button" onclick="openMeetingInputModal('${escapeHtml(mgrName)}')" class="px-4 py-2.5 bg-[#2C435A] hover:bg-[#37526D] text-white text-xs sm:text-sm font-bold rounded-lg border border-[#45617D] transition flex items-center gap-2">
+                <i data-lucide="calendar-plus" class="w-4 h-4 text-[#B4C6D7]"></i>
                 <span>+ บันทึกการประชุม</span>
               </button>
-              <button type="button" onclick="openUpdateReportGmModal('${escapeHtml(mgrName)}')" class="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs sm:text-sm font-black rounded-xl shadow-lg transition flex items-center gap-2 active:scale-95">
-                <i data-lucide="bar-chart-3" class="w-4 h-4"></i>
+              <button type="button" onclick="openUpdateReportGmModal('${escapeHtml(mgrName)}')" class="px-4 py-2.5 bg-[#3B5848] hover:bg-[#4A6D5A] text-white text-xs sm:text-sm font-bold rounded-lg border border-[#527964] transition flex items-center gap-2">
+                <i data-lucide="bar-chart-3" class="w-4 h-4 text-[#B5C8BC]"></i>
                 <span>📊 บันทึก/แก้ไข ReportGM (3 รอบ)</span>
               </button>
-              <button type="button" onclick="openProblemInputModal('${escapeHtml(mgrName)}')" class="px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs sm:text-sm font-black rounded-xl shadow-lg transition flex items-center gap-2 active:scale-95">
-                <i data-lucide="alert-circle" class="w-4 h-4"></i>
+              <button type="button" onclick="openProblemInputModal('${escapeHtml(mgrName)}')" class="px-4 py-2.5 bg-[#7C402E] hover:bg-[#924D38] text-white text-xs sm:text-sm font-bold rounded-lg border border-[#A45942] transition flex items-center gap-2">
+                <i data-lucide="alert-circle" class="w-4 h-4 text-[#E8C5B8]"></i>
                 <span>+ แจ้งปัญหาหน้างาน</span>
               </button>
               ${MANAGER_SHEET_URLS[mgrName] ? `
-              <a href="${escapeHtml(MANAGER_SHEET_URLS[mgrName])}" target="_blank" rel="noopener noreferrer" class="px-3.5 py-2.5 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-200 border border-emerald-400/30 text-xs font-semibold rounded-xl transition flex items-center gap-1.5 active:scale-95" title="เปิดไฟล์ Google Sheets ของ ผจก.${escapeHtml(mgrName)}">
-                <i data-lucide="external-link" class="w-4 h-4 text-emerald-300"></i>
+              <a href="${escapeHtml(MANAGER_SHEET_URLS[mgrName])}" target="_blank" rel="noopener noreferrer" class="px-3.5 py-2.5 bg-[#22262B] hover:bg-[#2C323A] text-[#B5C8BC] border border-[#3E454E] text-xs font-semibold rounded-lg transition flex items-center gap-1.5" title="เปิดไฟล์ Google Sheets ของ ผจก.${escapeHtml(mgrName)}">
+                <i data-lucide="external-link" class="w-4 h-4 text-[#5B826D]"></i>
                 <span>เปิดชีทของฉัน</span>
               </a>
               ` : ''}
-              <button type="button" onclick="copySingleManagerLink('${escapeHtml(mgrName)}')" class="px-3.5 py-2.5 bg-white/10 hover:bg-white/20 text-white border border-white/15 text-xs font-semibold rounded-xl transition flex items-center gap-1.5 active:scale-95" title="คัดลอกลิงก์ส่วนตัวส่ง LINE">
-                <i data-lucide="share-2" class="w-4 h-4 text-indigo-200"></i>
+              <button type="button" onclick="copySingleManagerLink('${escapeHtml(mgrName)}')" class="px-3.5 py-2.5 bg-[#22262B] hover:bg-[#2C323A] text-[#D8DCE1] border border-[#3E454E] text-xs font-semibold rounded-lg transition flex items-center gap-1.5" title="คัดลอกลิงก์ส่วนตัวส่ง LINE">
+                <i data-lucide="share-2" class="w-4 h-4 text-[#8FA4B5]"></i>
                 <span>ลิงก์ส่วนตัว</span>
               </button>
-              <button type="button" onclick="logoutManagerPortal()" class="px-3.5 py-2.5 bg-white/10 hover:bg-rose-500/30 text-indigo-100 hover:text-white border border-white/15 text-xs font-semibold rounded-xl transition flex items-center gap-1.5 active:scale-95" title="${dashboardState.isLockedManagerMode ? 'ล็อกหน้าจอ' : 'สลับผู้จัดการท่านอื่น'}">
+              <button type="button" onclick="logoutManagerPortal()" class="px-3.5 py-2.5 bg-[#22262B] hover:bg-[#3E2323] text-[#D8DCE1] hover:text-[#F6E7E7] border border-[#3E454E] hover:border-[#8C3838] text-xs font-semibold rounded-lg transition flex items-center gap-1.5" title="${dashboardState.isLockedManagerMode ? 'ล็อกหน้าจอ' : 'สลับผู้จัดการท่านอื่น'}">
                 <i data-lucide="${dashboardState.isLockedManagerMode ? 'lock' : 'users'}" class="w-4 h-4"></i>
                 <span>${dashboardState.isLockedManagerMode ? 'ล็อกหน้าจอ' : 'สลับ ผจก.'}</span>
               </button>
@@ -8061,37 +8182,37 @@
           </div>
 
           <!-- 4 Summary KPI Pills -->
-          <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-6 pt-5 border-t border-indigo-800/60">
-            <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-3.5 border border-white/10">
-              <div class="flex items-center justify-between text-xxs text-indigo-200">
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-6 pt-5 border-t border-[#2B3138]">
+            <div class="bg-[#22262B] rounded-xl p-3.5 border border-[#2E353D]">
+              <div class="flex items-center justify-between text-xxs text-[#8A95A0]">
                 <span>📅 การประชุม (${escapeHtml(activeMonthText)})</span>
-                <span class="font-bold px-2 py-0.5 rounded-full ${mgrObj.compliance >= 80 ? 'bg-emerald-500/30 text-emerald-200' : 'bg-amber-500/30 text-amber-200'}">${mgrObj.compliance || 0}%</span>
+                <span class="font-bold px-2 py-0.5 rounded ${mgrObj.compliance >= 80 ? 'bg-[#2D4538] text-[#B5C8BC] border border-[#436352]' : 'bg-[#4D3327] text-[#D9BEB0] border border-[#6F3B2C]'}">${mgrObj.compliance || 0}%</span>
               </div>
-              <div class="text-xl sm:text-2xl font-black mt-1">${mgrObj.actualMeetings || 0} / ${mgrObj.expectedMeetings || 8} <span class="text-xs font-medium text-indigo-200">ครั้ง</span></div>
+              <div class="text-xl sm:text-2xl font-black mt-1 text-[#E6EDF3]">${mgrObj.actualMeetings || 0} / ${mgrObj.expectedMeetings || 8} <span class="text-xs font-medium text-[#8A95A0]">ครั้ง</span></div>
             </div>
 
-            <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-3.5 border border-white/10">
-              <div class="flex items-center justify-between text-xxs text-indigo-200">
+            <div class="bg-[#22262B] rounded-xl p-3.5 border border-[#2E353D]">
+              <div class="flex items-center justify-between text-xxs text-[#8A95A0]">
                 <span>🏢 ผลประกอบการสาขา (3 รอบ)</span>
                 <span>🟢 ${kpiGreen} 🟡 ${kpiYellow} 🔴 ${kpiRed}</span>
               </div>
-              <div class="text-xl sm:text-2xl font-black mt-1">${branches.length} <span class="text-xs font-medium text-indigo-200">สาขา</span></div>
+              <div class="text-xl sm:text-2xl font-black mt-1 text-[#E6EDF3]">${branches.length} <span class="text-xs font-medium text-[#8A95A0]">สาขา</span></div>
             </div>
 
-            <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-3.5 border border-white/10">
-              <div class="flex items-center justify-between text-xxs text-indigo-200">
+            <div class="bg-[#22262B] rounded-xl p-3.5 border border-[#2E353D]">
+              <div class="flex items-center justify-between text-xxs text-[#8A95A0]">
                 <span>⚠️ ปัญหาหน้างานในเขต</span>
                 <span>🔴 ${critProbs} • 🟡 ${highProbs}</span>
               </div>
-              <div class="text-xl sm:text-2xl font-black mt-1">${myProblems.length} <span class="text-xs font-medium text-indigo-200">เคส</span></div>
+              <div class="text-xl sm:text-2xl font-black mt-1 text-[#E6EDF3]">${myProblems.length} <span class="text-xs font-medium text-[#8A95A0]">เคส</span></div>
             </div>
 
-            <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-3.5 border border-white/10">
-              <div class="flex items-center justify-between text-xxs text-indigo-200">
-                <span>🟣 ขอความช่วยเหลือ GM</span>
+            <div class="bg-[#22262B] rounded-xl p-3.5 border border-[#2E353D]">
+              <div class="flex items-center justify-between text-xxs text-[#8A95A0]">
+                <span>ขอความช่วยเหลือ GM</span>
                 <span>จากทั้งหมด ${myProblems.length} เคส</span>
               </div>
-              <div class="text-xl sm:text-2xl font-black mt-1 text-amber-300">${gmHelpProbs} <span class="text-xs font-medium text-indigo-200">เคส</span></div>
+              <div class="text-xl sm:text-2xl font-black mt-1 text-[#D9BEB0]">${gmHelpProbs} <span class="text-xs font-medium text-[#8A95A0]">เคส</span></div>
             </div>
           </div>
         </div>
