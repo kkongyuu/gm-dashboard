@@ -348,14 +348,10 @@
 
         <!-- Controls: Period Selector & Refresh -->
         <div class="flex items-center space-x-2 sm:space-x-3">
-          <!-- Period Selector -->
-          <div class="flex items-center bg-slate-100 p-1 rounded-lg border border-slate-200">
-            <i data-lucide="calendar" class="w-4 h-4 text-slate-500 ml-1 mr-1.5 hidden sm:inline"></i>
-            <select id="periodSelect" onchange="onPeriodChange(this.value)" class="bg-transparent text-xs sm:text-sm font-medium text-slate-700 outline-none cursor-pointer pr-1">
-              <option value="0">รอบ 1-10 (ต้นเดือน)</option>
-              <option value="1">รอบ 11-20 (กลางเดือน)</option>
-              <option value="2">รอบ 21-31 (ปลายเดือน)</option>
-            </select>
+          <!-- All 3 Periods Active Badge -->
+          <div class="flex items-center bg-indigo-50 px-2.5 py-1.5 rounded-lg border border-indigo-200 text-indigo-700 text-xxs sm:text-xs font-bold">
+            <i data-lucide="calendar-range" class="w-3.5 h-3.5 text-indigo-600 mr-1.5 hidden sm:inline"></i>
+            <span>ครบ 3 รอบ (1-10 • 1-20 • 1-31)</span>
           </div>
 
           <!-- Manager Portals Link Button -->
@@ -671,14 +667,20 @@
                 </div>
               </div>
 
-              <!-- Highlight Block 1: 🎯 Target Revenue (ยอดสะสมเทียบเป้า 10 วัน จากการ์ดขาวครบถ้วน) -->
-              <div id="mapFloatRevenueBox" class="rounded-2xl p-3.5 sm:p-4 bg-slate-900/95 border border-slate-800 space-y-2">
+              <!-- Highlight Block 1: 🎯 Target Revenue & เปรียบเทียบครบทั้ง 3 รอบ (1-10, 1-20, 1-31) -->
+              <div id="mapFloatRevenueBox" class="rounded-2xl p-3.5 sm:p-4 bg-slate-900/95 border border-slate-800 space-y-2.5">
                 <div class="flex items-center justify-between text-xs">
                   <span class="font-bold text-slate-300 flex items-center space-x-1.5">
                     <span>🎯</span>
-                    <span id="mapFloatSalesSub">ยอดสะสมเทียบเป้า 10 วัน</span>
+                    <span id="mapFloatSalesSub">สรุปผลงานครบทั้ง 3 รอบ (1-10 • 1-20 • 1-31)</span>
                   </span>
-                  <span class="font-extrabold text-emerald-400 text-xs" id="mapFloatSalesPct">-</span>
+                  <div class="flex items-center gap-2">
+                    <span class="font-extrabold text-emerald-400 text-xs" id="mapFloatSalesPct">-</span>
+                    <button type="button" id="btnMapEditReportGM" onclick="openUpdateReportGmModalFromMap()" class="px-2 py-0.5 rounded-lg bg-indigo-500/25 hover:bg-indigo-500/40 text-indigo-200 border border-indigo-400/40 text-xxs font-bold transition flex items-center gap-1">
+                      <i data-lucide="edit-3" class="w-3 h-3"></i>
+                      <span>แก้ไข ReportGM</span>
+                    </button>
+                  </div>
                 </div>
                 <div class="flex items-baseline justify-between gap-2">
                   <span class="text-xl sm:text-2xl font-black text-white tracking-tight" id="mapFloatSales">-</span>
@@ -688,6 +690,8 @@
                   <div id="mapFloatSalesBar" class="bg-emerald-400 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
                 </div>
                 <p id="mapFloatSalesCriteria" class="text-xxs text-slate-400 leading-relaxed pt-0.5">-</p>
+                <!-- ตารางเปรียบเทียบ 3 รอบ (1-10, 1-20, 1-31) -->
+                <div id="mapFloatAllPeriodsContainer" class="pt-2 border-t border-slate-800"></div>
               </div>
 
               <!-- Highlight Block 2: 4 Core Branch Metrics Grid (รวมจากการ์ดขาว: CRM, ลูกค้าใหม่ NCM, % การนัด, การเบิกบัญชี) -->
@@ -987,7 +991,7 @@
                 <th class="py-3 px-3 text-center">การประชุม (Actual/Target)</th>
                 <th class="py-3 px-3 text-center">% Compliance</th>
                 <th class="py-3 px-3 text-center">สถานะประชุม</th>
-                <th class="py-3 px-3 text-center">เป้าหมายธุรกิจ</th>
+                <th class="py-3 px-3 text-center">เป้าหมายธุรกิจ (3 รอบ: 1-10 • 1-20 • 1-31)</th>
                 <th class="py-3 px-3 text-center">ปัญหาคงค้าง (🔴 🟡 🟣)</th>
                 <th class="py-3 px-4 text-right">รายละเอียด</th>
               </tr>
@@ -1068,14 +1072,9 @@
 
         <!-- Filter Dropdowns (ช่วงเวลา, สาขา, ผู้จัดการ, ความเร่งด่วน) -->
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 w-full lg:w-auto">
-          <!-- ช่วงเวลา -->
-          <div class="flex items-center bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2">
-            <span class="text-xxs font-bold text-slate-400 mr-1.5 whitespace-nowrap">รอบ:</span>
-            <select id="probFilterPeriod" onchange="onPeriodChange(this.value)" class="bg-transparent text-xs font-semibold text-slate-800 outline-none w-full cursor-pointer">
-              <option value="0">รอบ 1-10</option>
-              <option value="1">รอบ 11-20</option>
-              <option value="2">รอบ 21-31</option>
-            </select>
+          <!-- ช่วงเวลา (แสดงครบ 3 รอบ) -->
+          <div class="flex items-center bg-indigo-50 border border-indigo-200 rounded-xl px-2.5 py-2">
+            <span class="text-xxs font-bold text-indigo-700 whitespace-nowrap">📅 แสดงครบ 3 รอบ (1-10 • 1-20 • 1-31)</span>
           </div>
 
           <!-- ผู้จัดการ -->
@@ -2219,7 +2218,7 @@
   </div>
 
   <!-- ===================================================================== -->
-  <!-- ✏️ UPDATE PROBLEM MODAL (อัปเดต Col H & Col I และสถานะ) -->
+  <!-- ✏️ UPDATE PROBLEM MODAL (อัปเดตทุกฟิลด์ของรายการปัญหาใน Problem List) -->
   <!-- ===================================================================== -->
   <div id="updateProblemModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 hidden">
     <div class="bg-white rounded-3xl max-w-lg w-full p-5 sm:p-6 shadow-2xl border border-slate-200 max-h-[92vh] overflow-y-auto custom-scrollbar">
@@ -2229,8 +2228,8 @@
             <i data-lucide="edit-3" class="w-4 h-4"></i>
           </div>
           <div>
-            <h3 class="font-bold text-slate-800 text-base">อัปเดตแนวทางแก้ไข / ข้อมูลปัญหา</h3>
-            <p class="text-xs text-slate-500" id="updateProblemSubtitle">แก้ไขคอลัมน์ H และ I ใน Google Sheets</p>
+            <h3 class="font-bold text-slate-800 text-base">แก้ไขข้อมูลปัญหา & แนวทางแก้ไข</h3>
+            <p class="text-xs text-slate-500" id="updateProblemSubtitle">บันทึกลงชีท Problem List ของผู้จัดการโดยตรง</p>
           </div>
         </div>
         <button onclick="closeUpdateProblemModal()" class="text-slate-400 hover:text-slate-600 p-1">
@@ -2241,6 +2240,8 @@
       <form id="updateProblemForm" onsubmit="event.preventDefault(); submitUpdateProblemForm();" class="mt-4 space-y-3.5">
         <input type="hidden" id="updateProblemRowIndex">
         <input type="hidden" id="updateProblemManager">
+        <input type="hidden" id="updateProblemOldBranch">
+        <input type="hidden" id="updateProblemOldSubject">
 
         <div class="p-3 bg-slate-50 rounded-2xl border border-slate-200 space-y-1">
           <div class="flex items-center justify-between">
@@ -2251,6 +2252,33 @@
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">สาขา</label>
+            <input type="text" id="updateProblemBranchInput" placeholder="ระบุชื่อสาขา..." class="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">หมวดหมู่ปัญหา</label>
+            <select id="updateProblemCategorySelect" class="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none">
+              <option value="ทั่วไป">ทั่วไป</option>
+              <option value="งานระบบ">งานระบบ</option>
+              <option value="คนไข้">คนไข้</option>
+              <option value="บัญชี">บัญชี</option>
+              <option value="พนักงาน">พนักงาน / บุคลากร</option>
+              <option value="บุคลากร">บุคลากร</option>
+              <option value="สถานที่และอุปกรณ์">สถานที่และอุปกรณ์</option>
+              <option value="CRM และยอดขาย">CRM และยอดขาย</option>
+              <option value="ระบบและเทคโนโลยี">ระบบและเทคโนโลยี</option>
+              <option value="อื่นๆ">อื่นๆ</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">หัวข้อปัญหา (Subject)</label>
+          <input type="text" id="updateProblemSubjectInput" required placeholder="ระบุหัวข้อปัญหา..." class="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none">
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">สถานะการแก้ไข</label>
             <select id="updateProblemStatusSelect" class="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none">
@@ -2266,6 +2294,17 @@
               <option value="ทั่วไป">⚪ ทั่วไป</option>
               <option value="High">🟡 ด่วน High</option>
               <option value="Critical">🔴 วิกฤต Critical</option>
+              <option value="Overdue">🟣 เกินกำหนด Overdue</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">ขอ GM ช่วยเหลือ</label>
+            <select id="updateProblemNeedsGmSelect" class="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none">
+              <option value="-">- จัดการเองได้</option>
+              <option value="ต้องการ">🟣 ต้องการ GM ช่วย</option>
+              <option value="ต้องการให้ GM เข้าไป Support">🚨 ขอ GM เข้า Support</option>
+              <option value="ต้องการให้ GM อนุมัติ">✅ ขอ GM อนุมัติ</option>
+              <option value="แจ้งเพื่อทราบ">ℹ️ แจ้งเพื่อทราบ</option>
             </select>
           </div>
         </div>
@@ -2285,6 +2324,249 @@
           <button type="submit" id="updateProblemSubmitBtn" class="px-5 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 active:scale-95 rounded-xl shadow transition flex items-center gap-1.5">
             <i data-lucide="check" class="w-3.5 h-3.5"></i>
             <span>บันทึกการแก้ไข</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- ✏️ UPDATE MEETING MODAL (แก้ไขบันทึกการประชุมในหน้าเว็บ) -->
+  <!-- ===================================================================== -->
+  <div id="updateMeetingModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-5 sm:p-6 shadow-2xl border border-slate-200 max-h-[92vh] overflow-y-auto custom-scrollbar">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div class="flex items-center space-x-2">
+          <div class="w-8 h-8 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-bold">
+            <i data-lucide="edit-3" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-slate-800 text-base">แก้ไขบันทึกการประชุม</h3>
+            <p class="text-xs text-slate-500" id="updateMeetingModalSubtitle">อัปเดตลงชีท Meeting ของผู้จัดการโดยตรง</p>
+          </div>
+        </div>
+        <button onclick="closeUpdateMeetingModal()" class="text-slate-400 hover:text-slate-600 p-1">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form id="updateMeetingForm" onsubmit="event.preventDefault(); submitUpdateMeetingForm();" class="mt-4 space-y-3.5">
+        <input type="hidden" id="updateMeetingManager">
+        <input type="hidden" id="updateMeetingRowIndex">
+        <input type="hidden" id="updateMeetingOldBranch">
+        <input type="hidden" id="updateMeetingOldContent">
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">วันที่ประชุม <span class="text-red-500">*</span></label>
+            <input type="date" id="updateMeetingDateInput" required class="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">สาขาที่ประชุม <span class="text-red-500">*</span></label>
+            <input type="text" id="updateMeetingBranchInput" required placeholder="ระบุชื่อสาขา..." class="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">เนื้อหาการประชุม / สรุปประเด็น <span class="text-red-500">*</span></label>
+          <textarea id="updateMeetingContentInput" required rows="3" placeholder="ระบุเนื้อหาการประชุม..." class="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"></textarea>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">ผู้รับผิดชอบ</label>
+            <input type="text" id="updateMeetingResponsibleInput" placeholder="ผจก. ..." class="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">ผู้ไม่เข้าร่วม / ผู้เข้าร่วม</label>
+            <input type="text" id="updateMeetingAttendeesInput" placeholder="ครบทุกคน หรือ ขาดคุณ..." class="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
+          </div>
+        </div>
+
+        <div class="mt-5 pt-3 border-t border-slate-100 flex items-center justify-end space-x-2">
+          <button type="button" onclick="closeUpdateMeetingModal()" class="px-4 py-2 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl">ยกเลิก</button>
+          <button type="submit" id="updateMeetingSubmitBtn" class="px-5 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 active:scale-95 rounded-xl shadow transition flex items-center gap-1.5">
+            <i data-lucide="save" class="w-3.5 h-3.5"></i>
+            <span>บันทึกการแก้ไขการประชุม</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- 📊 UPDATE REPORT GM MODAL (บันทึก/แก้ไข KPI สาขาทั้ง 3 รอบ: 1-10, 1-20, 1-31) -->
+  <!-- ===================================================================== -->
+  <div id="updateReportGmModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-4xl w-full p-5 sm:p-6 shadow-2xl border border-slate-200 max-h-[92vh] overflow-y-auto custom-scrollbar">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div class="flex items-center space-x-2.5">
+          <div class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
+            <i data-lucide="trending-up" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-slate-800 text-base sm:text-lg" id="updateReportGmTitle">บันทึก / แก้ไขผลประกอบการ ReportGM (ครบ 3 รอบ)</h3>
+            <p class="text-xs text-slate-500" id="updateReportGmSubtitle">บันทึกลงชีท ReportGM ของผู้จัดการโดยตรงทั้ง 3 รอบ (1-10, 1-20, 1-31)</p>
+          </div>
+        </div>
+        <button onclick="closeUpdateReportGmModal()" class="text-slate-400 hover:text-slate-600 p-1">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form id="updateReportGmForm" onsubmit="event.preventDefault(); submitUpdateReportGmForm();" class="mt-4 space-y-4">
+        <input type="hidden" id="updateReportGmManager">
+
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 bg-slate-50 rounded-2xl border border-slate-200">
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-bold text-slate-700">เลือกสาขาที่ต้องการอัปเดต:</span>
+            <select id="updateReportGmBranchSelect" onchange="onReportGmBranchSelectChange(this.value)" class="px-3 py-1.5 text-xs font-bold bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-slate-900">
+              <!-- Populated via JS -->
+            </select>
+          </div>
+          <span class="text-xxs text-slate-500">💡 รูปแบบยอดขายตัวอย่าง: <strong>461,588 (30.77%)</strong> หรือ <strong>1,250,000 (92%)</strong></span>
+        </div>
+
+        <!-- 3-Column Grid for Rounds 1-10, 1-20, 1-31 -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <!-- รอบ 1-10 -->
+          <div class="p-4 rounded-2xl border-2 border-blue-200 bg-blue-50/30 space-y-3">
+            <div class="flex items-center justify-between border-b border-blue-200/80 pb-2">
+              <span class="font-black text-blue-900 text-sm">📅 รอบที่ 1: วันที่ 1-10</span>
+              <span class="text-xxs px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 font-bold">10 วัน</span>
+            </div>
+            <div>
+              <label class="block text-xxs font-bold text-slate-700 mb-1">🎯 Target Revenue (ยอดสะสม 10 วัน)</label>
+              <input type="text" id="rgm_1_10_targetVal" placeholder="เช่น 461,588 (30.77%)" class="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+              <label class="block text-xxs font-bold text-slate-700 mb-1">สถานะ / เกณฑ์ประเมิน Target</label>
+              <select id="rgm_1_10_targetCrit" class="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="">-- ประเมินอัตโนมัติจาก % --</option>
+                <option value="มีโอกาสเป็นไปตามเป้า">🟢 มีโอกาสเป็นไปตามเป้า</option>
+                <option value="เสี่ยงต่ำกว่าเป้าหมาย">🟡 เสี่ยงต่ำกว่าเป้าหมาย</option>
+                <option value="มีโอกาสเป็นไม่เป็นไปตามเป้า หากไม่มีมาตรการเพิ่มเติม">🔴 มีโอกาสเป็นไม่เป็นไปตามเป้า</option>
+              </select>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-xxs font-bold text-slate-700 mb-1">👥 ลูกค้าใหม่ (NCM)</label>
+                <input type="text" id="rgm_1_10_nrmVal" placeholder="เช่น 25" class="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500">
+              </div>
+              <div>
+                <label class="block text-xxs font-bold text-slate-700 mb-1">📅 % การนัด</label>
+                <input type="text" id="rgm_1_10_apptVal" placeholder="เช่น 65% หรือ 0.65" class="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500">
+              </div>
+            </div>
+            <div>
+              <label class="block text-xxs font-bold text-slate-700 mb-1">❤️ CRM Performance (% CRM ต่อเป้า)</label>
+              <input type="text" id="rgm_1_10_crmVal" placeholder="เช่น 154,050 (33.37%)" class="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+              <label class="block text-xxs font-bold text-slate-700 mb-1">สถานะ / เกณฑ์ประเมิน CRM</label>
+              <select id="rgm_1_10_crmCrit" class="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="">-- ประเมินอัตโนมัติจาก % --</option>
+                <option value="มีโอกาสเป็นไปตามเป้า">🟢 มีโอกาสเป็นไปตามเป้า</option>
+                <option value="เสี่ยงต่ำกว่าเป้าหมาย">🟡 เสี่ยงต่ำกว่าเป้าหมาย</option>
+                <option value="มีโอกาสเป็นไม่เป็นไปตามเป้า หากไม่มีมาตรการเพิ่มเติม">🔴 มีโอกาสเป็นไม่เป็นไปตามเป้า</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- รอบ 1-20 -->
+          <div class="p-4 rounded-2xl border-2 border-indigo-200 bg-indigo-50/30 space-y-3">
+            <div class="flex items-center justify-between border-b border-indigo-200/80 pb-2">
+              <span class="font-black text-indigo-900 text-sm">📅 รอบที่ 2: วันที่ 1-20</span>
+              <span class="text-xxs px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 font-bold">20 วัน</span>
+            </div>
+            <div>
+              <label class="block text-xxs font-bold text-slate-700 mb-1">🎯 Target Revenue (ยอดสะสม 20 วัน)</label>
+              <input type="text" id="rgm_1_20_targetVal" placeholder="เช่น 920,000 (61.33%)" class="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+            <div>
+              <label class="block text-xxs font-bold text-slate-700 mb-1">สถานะ / เกณฑ์ประเมิน Target</label>
+              <select id="rgm_1_20_targetCrit" class="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
+                <option value="">-- ประเมินอัตโนมัติจาก % --</option>
+                <option value="มีโอกาสเป็นไปตามเป้า">🟢 มีโอกาสเป็นไปตามเป้า</option>
+                <option value="เสี่ยงต่ำกว่าเป้าหมาย">🟡 เสี่ยงต่ำกว่าเป้าหมาย</option>
+                <option value="มีโอกาสเป็นไม่เป็นไปตามเป้า หากไม่มีมาตรการเพิ่มเติม">🔴 มีโอกาสเป็นไม่เป็นไปตามเป้า</option>
+              </select>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-xxs font-bold text-slate-700 mb-1">👥 ลูกค้าใหม่ (NCM)</label>
+                <input type="text" id="rgm_1_20_nrmVal" placeholder="เช่น 48" class="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
+              </div>
+              <div>
+                <label class="block text-xxs font-bold text-slate-700 mb-1">📅 % การนัด</label>
+                <input type="text" id="rgm_1_20_apptVal" placeholder="เช่น 70% หรือ 0.70" class="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
+              </div>
+            </div>
+            <div>
+              <label class="block text-xxs font-bold text-slate-700 mb-1">❤️ CRM Performance (% CRM ต่อเป้า)</label>
+              <input type="text" id="rgm_1_20_crmVal" placeholder="เช่น 310,000 (67.15%)" class="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+            <div>
+              <label class="block text-xxs font-bold text-slate-700 mb-1">สถานะ / เกณฑ์ประเมิน CRM</label>
+              <select id="rgm_1_20_crmCrit" class="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
+                <option value="">-- ประเมินอัตโนมัติจาก % --</option>
+                <option value="มีโอกาสเป็นไปตามเป้า">🟢 มีโอกาสเป็นไปตามเป้า</option>
+                <option value="เสี่ยงต่ำกว่าเป้าหมาย">🟡 เสี่ยงต่ำกว่าเป้าหมาย</option>
+                <option value="มีโอกาสเป็นไม่เป็นไปตามเป้า หากไม่มีมาตรการเพิ่มเติม">🔴 มีโอกาสเป็นไม่เป็นไปตามเป้า</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- รอบ 1-31 -->
+          <div class="p-4 rounded-2xl border-2 border-emerald-200 bg-emerald-50/30 space-y-3">
+            <div class="flex items-center justify-between border-b border-emerald-200/80 pb-2">
+              <span class="font-black text-emerald-900 text-sm">📅 รอบที่ 3: วันที่ 1-31</span>
+              <span class="text-xxs px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold">30 วัน</span>
+            </div>
+            <div>
+              <label class="block text-xxs font-bold text-slate-700 mb-1">🎯 Target Revenue (ยอดสะสม 30 วัน)</label>
+              <input type="text" id="rgm_1_31_targetVal" placeholder="เช่น 1,520,000 (101.33%)" class="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500">
+            </div>
+            <div>
+              <label class="block text-xxs font-bold text-slate-700 mb-1">สถานะ / เกณฑ์ประเมิน Target</label>
+              <select id="rgm_1_31_targetCrit" class="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500">
+                <option value="">-- ประเมินอัตโนมัติจาก % --</option>
+                <option value="มีโอกาสเป็นไปตามเป้า">🟢 มีโอกาสเป็นไปตามเป้า</option>
+                <option value="เสี่ยงต่ำกว่าเป้าหมาย">🟡 เสี่ยงต่ำกว่าเป้าหมาย</option>
+                <option value="มีโอกาสเป็นไม่เป็นไปตามเป้า หากไม่มีมาตรการเพิ่มเติม">🔴 มีโอกาสเป็นไม่เป็นไปตามเป้า</option>
+              </select>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-xxs font-bold text-slate-700 mb-1">👥 ลูกค้าใหม่ (NCM)</label>
+                <input type="text" id="rgm_1_31_nrmVal" placeholder="เช่น 75" class="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500">
+              </div>
+              <div>
+                <label class="block text-xxs font-bold text-slate-700 mb-1">📅 % การนัด</label>
+                <input type="text" id="rgm_1_31_apptVal" placeholder="เช่น 75% หรือ 0.75" class="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500">
+              </div>
+            </div>
+            <div>
+              <label class="block text-xxs font-bold text-slate-700 mb-1">❤️ CRM Performance (% CRM ต่อเป้า)</label>
+              <input type="text" id="rgm_1_31_crmVal" placeholder="เช่น 480,000 (103.9%)" class="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500">
+            </div>
+            <div>
+              <label class="block text-xxs font-bold text-slate-700 mb-1">สถานะ / เกณฑ์ประเมิน CRM</label>
+              <select id="rgm_1_31_crmCrit" class="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500">
+                <option value="">-- ประเมินอัตโนมัติจาก % --</option>
+                <option value="มีโอกาสเป็นไปตามเป้า">🟢 มีโอกาสเป็นไปตามเป้า</option>
+                <option value="เสี่ยงต่ำกว่าเป้าหมาย">🟡 เสี่ยงต่ำกว่าเป้าหมาย</option>
+                <option value="มีโอกาสเป็นไม่เป็นไปตามเป้า หากไม่มีมาตรการเพิ่มเติม">🔴 มีโอกาสเป็นไม่เป็นไปตามเป้า</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-5 pt-3 border-t border-slate-100 flex items-center justify-end space-x-2">
+          <button type="button" onclick="closeUpdateReportGmModal()" class="px-4 py-2 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl">ยกเลิก</button>
+          <button type="submit" id="updateReportGmSubmitBtn" class="px-5 py-2.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 active:scale-95 rounded-xl shadow transition flex items-center gap-1.5">
+            <i data-lucide="save" class="w-4 h-4"></i>
+            <span>บันทึก ReportGM ทั้ง 3 รอบ</span>
           </button>
         </div>
       </form>
@@ -2448,13 +2730,84 @@
       return s;
     }
 
+    // ฟังก์ชันช่วยคำนวณสถานะรวมของสาขาจากรายการ KPI ในรอบนั้น
+    function evaluateBranchKpiStatusClient(kpisList) {
+      if (!Array.isArray(kpisList) || kpisList.length === 0) return 'pending';
+      let hasData = false;
+      let hasRed = false;
+      let hasYellow = false;
+      let hasGreen = false;
+      kpisList.forEach(k => {
+        if (!k) return;
+        const val = String(k.value || '').trim();
+        if (val && val !== '-' && val !== 'รอสรุป') hasData = true;
+        if (k.status === 'red') hasRed = true;
+        else if (k.status === 'yellow') hasYellow = true;
+        else if (k.status === 'green') hasGreen = true;
+      });
+      if (!hasData && !hasRed && !hasYellow && !hasGreen) return 'pending';
+      if (hasRed) return 'red';
+      if (hasYellow) return 'yellow';
+      if (hasGreen) return 'green';
+      return 'pending';
+    }
+
+    function cloneDefaultPeriodKpisClient() {
+      return [
+        { rawTitle: 'Target Revenue (ยอดสะสมเทียบเป้า)', title: 'Target Revenue', subTitle: 'ยอดสะสมเทียบเป้า 10 วัน', value: '-', criteria: '', status: 'pending' },
+        { rawTitle: 'CRM Performance (% CRM ต่อเป้า)', title: 'CRM', subTitle: '% CRM ต่อเป้า', value: '-', criteria: '', status: 'pending' },
+        { rawTitle: 'NCM / New Case Management (จำนวนลูกค้าใหม่)', title: 'NRM', subTitle: 'จำนวนลูกค้าใหม่', value: '-', criteria: '', status: 'pending' },
+        { rawTitle: 'การนัด (เปอร์เซ็นการนัด)', title: 'การนัด', subTitle: 'เปอร์เซ็นการนัด', value: '-', criteria: '', status: 'pending' }
+      ];
+    }
+
+    function applyReportGmPatchToPeriodObj(pObj, patch) {
+      if (!pObj || !patch) return;
+      if (!Array.isArray(pObj.kpis) || pObj.kpis.length === 0) {
+        pObj.kpis = cloneDefaultPeriodKpisClient();
+      }
+      const ensureKpi = (titleKey, defaultTitle, defaultSub) => {
+        let item = pObj.kpis.find(k => k && (String(k.title || '').includes(titleKey) || String(k.rawTitle || '').includes(titleKey)));
+        if (!item) {
+          item = { rawTitle: defaultTitle, title: defaultTitle, subTitle: defaultSub, value: '-', criteria: '', status: 'pending' };
+          pObj.kpis.push(item);
+        }
+        return item;
+      };
+      if (patch.targetRevenue !== undefined) {
+        const k = ensureKpi('Target Revenue', 'Target Revenue', 'ยอดสะสมเทียบเป้า 10 วัน');
+        k.value = String(patch.targetRevenue || '-').trim() || '-';
+        if (patch.status) k.status = patch.status;
+        if (patch.criteria !== undefined) k.criteria = patch.criteria;
+      }
+      if (patch.crm !== undefined) {
+        const k = ensureKpi('CRM', 'CRM', '% CRM ต่อเป้า');
+        k.value = String(patch.crm || '-').trim() || '-';
+        if (patch.crmStatus) k.status = patch.crmStatus;
+      }
+      if (patch.nrm !== undefined) {
+        const k = ensureKpi('NRM', 'NRM', 'จำนวนลูกค้าใหม่');
+        k.value = String(patch.nrm || '-').trim() || '-';
+      }
+      if (patch.appointment !== undefined) {
+        const k = ensureKpi('การนัด', 'การนัด', 'เปอร์เซ็นการนัด');
+        k.value = String(patch.appointment || '-').trim() || '-';
+      }
+      if (patch.status) {
+        pObj.status = patch.status;
+      } else {
+        pObj.status = evaluateBranchKpiStatusClient(pObj.kpis);
+      }
+    }
+
     function sanitizeDashboardData(data) {
       if (!data || !data.gmReport) return data;
 
       const pendingSync = getPendingSyncRecords();
+      const PERIOD_KEYS = ['1-10', '1-20', '1-31'];
 
       // 1. ลบสาขาผีที่เป็นวันที่ (Sat Jan 10 2026...) และตัวเลขหัวคอลัมน์วันที่ (เช่น 46032) ออกจากทุกผู้จัดการ
-      // พร้อมผสานรายการประชุมที่เพิ่งบันทึกใหม่จากฟอร์ม (ให้แสดงผลทันทีแม้ IMPORTRANGE ยังซิงค์ไม่เสร็จ)
+      // พร้อมผสานรายการประชุม (addMeeting + updateMeeting) และ ReportGM ครบทั้ง 3 รอบ (1-10, 1-20, 1-31)
       let validBranchesCount = 0;
       let kpiGreen = 0, kpiYellow = 0, kpiRed = 0, kpiPending = 0;
       let totalMeetingsDoneCount = 0;
@@ -2464,12 +2817,13 @@
           if (!Array.isArray(m.meetingLogs)) m.meetingLogs = [];
           if (!Array.isArray(m.meetingDates)) m.meetingDates = [];
 
-          // ผสานรายการประชุมที่เพิ่งเพิ่มใหม่ของ ผจก. ท่านนี้
+          // 1.1 ผสานรายการประชุมที่เพิ่งเพิ่มใหม่ของ ผจก. ท่านนี้
           const addedMeetings = pendingSync.filter(r => r.type === 'addMeeting' && r.manager === m.manager);
           addedMeetings.forEach(pm => {
             const exists = m.meetingLogs.some(log =>
-              String(log.content || '').trim() === String(pm.content || '').trim() &&
-              (!pm.branch || String(log.branch || '').trim() === String(pm.branch || '').trim())
+              (pm.rowIndex && log.rowIndex && String(log.rowIndex) === String(pm.rowIndex)) ||
+              (String(log.content || '').trim() === String(pm.content || '').trim() &&
+               (!pm.branch || String(log.branch || '').trim() === String(pm.branch || '').trim()))
             );
             if (!exists && pm.content) {
               const dFormatted = pm.date || formatInputDateToThaiSlash('');
@@ -2486,6 +2840,26 @@
             }
           });
 
+          // 1.2 ผสานรายการแก้ไขบันทึกการประชุม (updateMeeting)
+          const updatedMeetings = pendingSync.filter(r => r.type === 'updateMeeting' && r.manager === m.manager);
+          updatedMeetings.forEach(um => {
+            m.meetingLogs.forEach((log, idx) => {
+              const matchRow = um.rowIndex && log.rowIndex && String(log.rowIndex) === String(um.rowIndex);
+              const matchOld = um.oldContent && String(log.content || '').trim() === String(um.oldContent || '').trim();
+              if (matchRow || matchOld) {
+                if (um.date) {
+                  log.date = um.date;
+                  log.rawDate = um.date;
+                  if (m.meetingDates[idx] !== undefined) m.meetingDates[idx] = um.date;
+                }
+                if (um.branch !== undefined) log.branch = um.branch;
+                if (um.content !== undefined) log.content = um.content;
+                if (um.responsible !== undefined) log.responsible = um.responsible;
+                if (um.attendees !== undefined) log.attendees = um.attendees;
+              }
+            });
+          });
+
           m.actualMeetings = Math.max(m.meetingLogs.length, m.meetingDates.length, m.actualMeetings || 0);
           m.expectedMeetings = m.expectedMeetings || 8;
           m.compliance = Math.round((m.actualMeetings / m.expectedMeetings) * 100);
@@ -2494,18 +2868,112 @@
 
           if (Array.isArray(m.branches)) {
             m.branches = m.branches.filter(b => !isInvalidBranchName(b.name));
+
+            // ผสานรายการแก้ไข ReportGM (updateReportGM) ของ ผจก. ท่านนี้
+            const updatedReportGmList = pendingSync.filter(r => r.type === 'updateReportGM' && r.manager === m.manager);
+            updatedReportGmList.forEach(ur => {
+              if (!ur.branch || isInvalidBranchName(ur.branch)) return;
+              const targetKey = normalizeBranchKey(ur.branch);
+              let bObj = m.branches.find(b => normalizeBranchKey(b.name) === targetKey);
+              if (!bObj) {
+                bObj = {
+                  name: ur.branch,
+                  status: 'pending',
+                  kpis: cloneDefaultPeriodKpisClient(),
+                  periods: {
+                    '1-10': { kpis: cloneDefaultPeriodKpisClient(), status: 'pending' },
+                    '1-20': { kpis: cloneDefaultPeriodKpisClient(), status: 'pending' },
+                    '1-31': { kpis: cloneDefaultPeriodKpisClient(), status: 'pending' }
+                  },
+                  problems: { red: 0, yellow: 0, purple: 0, total: 0 }
+                };
+                m.branches.push(bObj);
+              }
+              if (!bObj.periods) {
+                bObj.periods = {
+                  '1-10': { kpis: Array.isArray(bObj.kpis) ? JSON.parse(JSON.stringify(bObj.kpis)) : cloneDefaultPeriodKpisClient(), status: bObj.status || 'pending' },
+                  '1-20': { kpis: cloneDefaultPeriodKpisClient(), status: 'pending' },
+                  '1-31': { kpis: cloneDefaultPeriodKpisClient(), status: 'pending' }
+                };
+              }
+              if (ur.periods && typeof ur.periods === 'object') {
+                PERIOD_KEYS.forEach(pk => {
+                  if (ur.periods[pk]) {
+                    if (!bObj.periods[pk]) bObj.periods[pk] = { kpis: cloneDefaultPeriodKpisClient(), status: 'pending' };
+                    applyReportGmPatchToPeriodObj(bObj.periods[pk], ur.periods[pk]);
+                  }
+                });
+              }
+            });
+
             m.allBranchNames = m.branches.map(b => b.name);
             validBranchesCount += m.branches.length;
 
+            // จัดการข้อมูลทั้ง 3 รอบ (1-10, 1-20, 1-31) ของทุกสาขา
             m.branches.forEach(b => {
               if (Array.isArray(b.kpis)) {
                 b.kpis = b.kpis.filter(k => k && k.title && !/^\d+$/.test(String(k.title).trim()));
+              } else {
+                b.kpis = cloneDefaultPeriodKpisClient();
               }
+
+              if (!b.periods || typeof b.periods !== 'object') {
+                b.periods = {
+                  '1-10': { kpis: JSON.parse(JSON.stringify(b.kpis)), status: b.status || 'pending' },
+                  '1-20': { kpis: cloneDefaultPeriodKpisClient(), status: 'pending' },
+                  '1-31': { kpis: cloneDefaultPeriodKpisClient(), status: 'pending' }
+                };
+              } else {
+                PERIOD_KEYS.forEach(pk => {
+                  if (!b.periods[pk] || !Array.isArray(b.periods[pk].kpis)) {
+                    b.periods[pk] = { kpis: cloneDefaultPeriodKpisClient(), status: 'pending' };
+                  } else {
+                    b.periods[pk].kpis = b.periods[pk].kpis.filter(k => k && k.title && !/^\d+$/.test(String(k.title).trim()));
+                    if (!b.periods[pk].status || b.periods[pk].status === 'pending') {
+                      b.periods[pk].status = evaluateBranchKpiStatusClient(b.periods[pk].kpis);
+                    }
+                  }
+                });
+              }
+
+              // เลือกรอบล่าสุดที่มีการกรอกข้อมูลจริงเป็นสถานะหลักของสาขา (1-31 -> 1-20 -> 1-10)
+              let activePeriodKey = '1-10';
+              for (let i = PERIOD_KEYS.length - 1; i >= 0; i--) {
+                const pk = PERIOD_KEYS[i];
+                const pData = b.periods[pk];
+                const hasVal = pData && Array.isArray(pData.kpis) && pData.kpis.some(k => k && k.value && String(k.value).trim() !== '-' && String(k.value).trim() !== '');
+                if (hasVal || (pData && pData.status && pData.status !== 'pending')) {
+                  activePeriodKey = pk;
+                  break;
+                }
+              }
+              b.activePeriodKey = activePeriodKey;
+              if (b.periods[activePeriodKey] && Array.isArray(b.periods[activePeriodKey].kpis) && b.periods[activePeriodKey].kpis.length > 0) {
+                b.kpis = b.periods[activePeriodKey].kpis;
+                b.status = b.periods[activePeriodKey].status || b.status || 'pending';
+              }
+
               if (b.status === 'green') kpiGreen++;
               else if (b.status === 'yellow') kpiYellow++;
               else if (b.status === 'red') kpiRed++;
               else kpiPending++;
             });
+
+            // คำนวณสถานะเป้าหมายธุรกิจแยกทั้ง 3 รอบของผู้จัดการท่านนี้
+            m.busStatusByPeriod = {};
+            PERIOD_KEYS.forEach(pk => {
+              let hasR = false, hasY = false, hasG = false;
+              m.branches.forEach(b => {
+                const st = b.periods && b.periods[pk] ? b.periods[pk].status : 'pending';
+                if (st === 'red') hasR = true;
+                else if (st === 'yellow') hasY = true;
+                else if (st === 'green') hasG = true;
+              });
+              m.busStatusByPeriod[pk] = hasR ? 'red' : (hasY ? 'yellow' : (hasG ? 'green' : 'pending'));
+            });
+            m.busStatus = m.busStatusByPeriod['1-31'] !== 'pending'
+              ? m.busStatusByPeriod['1-31']
+              : (m.busStatusByPeriod['1-20'] !== 'pending' ? m.busStatusByPeriod['1-20'] : m.busStatusByPeriod['1-10']);
           }
         });
       }
@@ -2552,16 +3020,22 @@
           }
         });
 
-        // ผสานรายการอัปเดตปัญหา (Col H, Col I, Status, Urgency) ที่เพิ่งกดแก้ไข
+        // ผสานรายการอัปเดตปัญหาครบทุกฟิลด์ (Branch, Category, Subject, NeedsGM, Col H, Col I, Status, Urgency)
         const updatedProblems = pendingSync.filter(r => r.type === 'updateProblem' && r.manager);
         updatedProblems.forEach(pu => {
           data.gmReport.problemsList.forEach(p => {
             if (!p || p.manager !== pu.manager) return;
             const matchSubject = pu.subject && String(p.subject || '').trim() === String(pu.subject || '').trim() &&
               (!pu.branch || String(p.branch || '').trim() === String(pu.branch || '').trim());
-            const matchRow = pu.rowIndex && String(p.rowIndex || '') === String(pu.rowIndex || '') &&
-              (!pu.subject || String(p.subject || '').trim() === String(pu.subject || '').trim());
+            const matchRow = pu.rowIndex && String(p.rowIndex || '') === String(pu.rowIndex || '');
             if (matchSubject || matchRow) {
+              if (pu.newBranch) p.branch = pu.newBranch;
+              if (pu.newSubject) p.subject = pu.newSubject;
+              if (pu.category) p.category = pu.category;
+              if (pu.needsGmHelp !== undefined && pu.needsGmHelp !== '') {
+                p.needsGmHelp = pu.needsGmHelp;
+                p.isNeedGm = pu.needsGmHelp !== '-' && pu.needsGmHelp !== 'ไม่ระบุ';
+              }
               if (pu.colH !== undefined) {
                 p.colH = pu.colH;
                 p.problemDetail = pu.colH || '-';
@@ -2656,8 +3130,98 @@
       return data;
     }
 
+    // ฟังก์ชันรวมข้อมูลทั้ง 3 รอบ (1-10, 1-20, 1-31) กรณีที่ API ฝั่ง GAS ยังเป็นเวอร์ชันเดิมที่ส่งทีละรอบ
+    function mergeThreePeriodsPayloads(p0Data, p1Data, p2Data) {
+      const base = p0Data || p1Data || p2Data;
+      if (!base || !base.gmReport || !Array.isArray(base.gmReport.managers)) return base;
+
+      const periodMap = [
+        { key: '1-10', payload: p0Data },
+        { key: '1-20', payload: p1Data },
+        { key: '1-31', payload: p2Data }
+      ];
+
+      base.gmReport.managers.forEach(mgr => {
+        if (!Array.isArray(mgr.branches)) mgr.branches = [];
+
+        // รวบรวมรายชื่อสาขาทั้งหมดจากทั้ง 3 รอบ
+        periodMap.forEach(({ payload }) => {
+          if (!payload || !payload.gmReport || !Array.isArray(payload.gmReport.managers)) return;
+          const srcMgr = payload.gmReport.managers.find(x => x.manager === mgr.manager);
+          if (!srcMgr) return;
+          // รวมวันประชุมให้ครบไม่ตกหล่น
+          if (Array.isArray(srcMgr.meetingLogs)) {
+            if (!Array.isArray(mgr.meetingLogs)) mgr.meetingLogs = [];
+            srcMgr.meetingLogs.forEach(log => {
+              const dup = mgr.meetingLogs.some(l => l.date === log.date && l.content === log.content && l.branch === log.branch);
+              if (!dup) mgr.meetingLogs.push(log);
+            });
+          }
+          if (Array.isArray(srcMgr.meetingDates)) {
+            if (!Array.isArray(mgr.meetingDates)) mgr.meetingDates = [];
+            srcMgr.meetingDates.forEach(d => {
+              if (!mgr.meetingDates.includes(d)) mgr.meetingDates.push(d);
+            });
+          }
+          (srcMgr.branches || []).forEach(sb => {
+            if (isInvalidBranchName(sb.name)) return;
+            const exists = mgr.branches.some(b => normalizeBranchKey(b.name) === normalizeBranchKey(sb.name));
+            if (!exists) {
+              mgr.branches.push({
+                name: sb.name,
+                status: 'pending',
+                kpis: cloneDefaultPeriodKpisClient(),
+                problems: sb.problems || { red: 0, yellow: 0, purple: 0, total: 0 }
+              });
+            }
+          });
+        });
+
+        // ใส่ข้อมูลแต่ละรอบ (1-10, 1-20, 1-31) ลงใน b.periods
+        mgr.branches.forEach(b => {
+          if (!b.periods) b.periods = {};
+          const bKey = normalizeBranchKey(b.name);
+          periodMap.forEach(({ key, payload }) => {
+            let matchedBranch = null;
+            if (payload && payload.gmReport && Array.isArray(payload.gmReport.managers)) {
+              const srcMgr = payload.gmReport.managers.find(x => x.manager === mgr.manager);
+              if (srcMgr && Array.isArray(srcMgr.branches)) {
+                matchedBranch = srcMgr.branches.find(sb => normalizeBranchKey(sb.name) === bKey);
+              }
+            }
+            if (matchedBranch) {
+              // ถ้า matchedBranch มี periods[key] อยู่แล้วให้ใช้เลย
+              if (matchedBranch.periods && matchedBranch.periods[key]) {
+                b.periods[key] = matchedBranch.periods[key];
+              } else {
+                const clonedKpis = Array.isArray(matchedBranch.kpis)
+                  ? JSON.parse(JSON.stringify(matchedBranch.kpis))
+                  : cloneDefaultPeriodKpisClient();
+                b.periods[key] = {
+                  kpis: clonedKpis,
+                  status: matchedBranch.status || evaluateBranchKpiStatusClient(clonedKpis)
+                };
+              }
+            } else if (!b.periods[key]) {
+              b.periods[key] = { kpis: cloneDefaultPeriodKpisClient(), status: 'pending' };
+            }
+          });
+        });
+      });
+
+      if (base.periodInfo) {
+        base.periodInfo.label = 'ครบทั้ง 3 รอบ (1-10 • 1-20 • 1-31)';
+        const mText = (base.periodInfo.monthName && base.periodInfo.yearTh)
+          ? `ประจำเดือน${base.periodInfo.monthName} ${base.periodInfo.yearTh}`
+          : '';
+        base.periodInfo.displayText = `${mText} (ครบทั้ง 3 รอบ: 1-10 • 1-20 • 1-31)`.trim();
+      }
+
+      return base;
+    }
+
     // =========================================================================
-    // 3. FETCH & LOAD DATA (100% LIVE GOOGLE SHEETS ONLY)
+    // 3. FETCH & LOAD DATA (100% LIVE GOOGLE SHEETS ONLY - ALL 3 PERIODS AT ONCE)
     // =========================================================================
     async function fetchDashboardData(isForcedRefresh = false) {
       const refreshIcon = document.getElementById('refreshIcon');
@@ -2665,14 +3229,14 @@
 
       // Clear any older cache versions
       const CACHE_PREFIX = dashboardState.isLockedManagerMode && dashboardState.currentManager
-        ? `gm_dash_cache_v9_mgr_${dashboardState.currentManager}_p`
-        : 'gm_dash_cache_v9_live_p';
+        ? `gm_dash_cache_v10_all3_mgr_${dashboardState.currentManager}`
+        : 'gm_dash_cache_v10_all3_live';
       try {
         Object.keys(localStorage)
           .filter(k => k.startsWith('gm_dash_cache') && !k.startsWith(CACHE_PREFIX))
           .forEach(k => localStorage.removeItem(k));
       } catch (e) { /* ignore */ }
-      const cacheKey = CACHE_PREFIX + dashboardState.currentPeriodIndex;
+      const cacheKey = CACHE_PREFIX;
       let hasLocalCache = false;
 
       // ⚡ ขั้นตอนที่ 1: ตรวจสอบแคชข้อมูลจริงจาก Google Sheet ในเบราว์เซอร์
@@ -2694,7 +3258,7 @@
       }
 
       if (!hasLocalCache) {
-        showGlobalLoader('กำลังซิงค์ข้อมูลระบบบริหารจัดการ...', 'ประมวลผลข้อมูลการประชุม ผลประกอบการ KPI และสถานะการปฏิบัติงานสาขา...');
+        showGlobalLoader('กำลังซิงค์ข้อมูลทั้ง 3 รอบ (1-10 • 1-20 • 1-31)...', 'ประมวลผลข้อมูลการประชุม ผลประกอบการ KPI ครบทั้ง 3 รอบ และสถานะการปฏิบัติงานสาขา...');
       }
 
       try {
@@ -2720,28 +3284,48 @@
               if (refreshIcon) refreshIcon.classList.remove('animate-spin');
               hideGlobalLoader();
             })
-            .getAllDashboardData(dashboardState.currentPeriodIndex);
+            .getAllDashboardData(0);
           return;
         }
 
         // -------------------------------------------------------------
-        // กรณี B: เชื่อมต่อผ่าน API URL (Live Only)
+        // กรณี B: เชื่อมต่อผ่าน API URL (ดึงครบทั้ง 3 รอบ 1-10, 1-20, 1-31 พร้อมกัน)
         // -------------------------------------------------------------
         const activeApiUrl = dashboardState.apiUrl || DEFAULT_LIVE_API_URL;
-        let fetchUrl = `${activeApiUrl}?action=api&period=${dashboardState.currentPeriodIndex}`;
-        if (isForcedRefresh) fetchUrl += '&refresh=true';
-
-        const response = await fetch(fetchUrl);
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
+        const refreshSuffix = isForcedRefresh ? '&refresh=true' : '';
+        const response0 = await fetch(`${activeApiUrl}?action=api&period=0${refreshSuffix}`);
+        if (!response0.ok) {
+          throw new Error(`HTTP ${response0.status}`);
         }
-        const result = await response.json();
-        if (result.status === 'success' && result.data) {
-          dashboardState.data = sanitizeDashboardData(result.data);
+        const result0 = await response0.json();
+        if (result0.status === 'success' && result0.data) {
+          let finalData = result0.data;
+          // ตรวจสอบว่า API ส่ง b.periods ครบทั้ง 3 รอบมาแล้วหรือยัง หากยัง (เช่น GAS ยังเป็นเวอร์ชันเดิม) ให้ดึง period=1 และ period=2 พร้อมกันทันที
+          const hasNativeAllPeriods = finalData.gmReport &&
+            Array.isArray(finalData.gmReport.managers) &&
+            finalData.gmReport.managers.some(m => Array.isArray(m.branches) && m.branches.some(b => b.periods && b.periods['1-20'] && b.periods['1-31']));
+
+          if (!hasNativeAllPeriods) {
+            try {
+              const [res1, res2] = await Promise.all([
+                fetch(`${activeApiUrl}?action=api&period=1${refreshSuffix}`).then(r => r.ok ? r.json() : null).catch(() => null),
+                fetch(`${activeApiUrl}?action=api&period=2${refreshSuffix}`).then(r => r.ok ? r.json() : null).catch(() => null)
+              ]);
+              finalData = mergeThreePeriodsPayloads(
+                result0.data,
+                res1 && res1.status === 'success' ? res1.data : null,
+                res2 && res2.status === 'success' ? res2.data : null
+              );
+            } catch (parallelErr) {
+              console.warn('Parallel 3-period fetch fallback warning:', parallelErr);
+            }
+          }
+
+          dashboardState.data = sanitizeDashboardData(finalData);
           localStorage.setItem(cacheKey, JSON.stringify(dashboardState.data));
           renderDashboard();
         } else {
-          throw new Error(result.message || 'API Error');
+          throw new Error(result0.message || 'API Error');
         }
 
       } catch (err) {
@@ -2759,9 +3343,6 @@
       const data = dashboardState.data;
       if (!data) return;
 
-      const periodSelect = document.getElementById('periodSelect');
-      if (periodSelect) periodSelect.value = data.periodInfo.index;
-
       // Update Mode Badge
       const modeBadge = document.getElementById('dataSourceBadge');
       if (modeBadge) {
@@ -2776,22 +3357,16 @@
         return;
       }
 
-      // Update Period Banner & Sync Period Dropdowns (สำหรับโหมด GM)
+      // Update Period Banner (แสดงครบทั้ง 3 รอบ: 1-10 • 1-20 • 1-31)
       const heroPeriodEl = document.getElementById('heroPeriodText');
-      if (heroPeriodEl) heroPeriodEl.textContent = `รายงานผลการดำเนินงาน ${data.periodInfo.displayText}`;
+      if (heroPeriodEl) {
+        const monthPart = (data.periodInfo && data.periodInfo.monthName && data.periodInfo.yearTh)
+          ? `ประจำเดือน${data.periodInfo.monthName} ${data.periodInfo.yearTh}`
+          : (data.periodInfo && data.periodInfo.displayText ? data.periodInfo.displayText : '');
+        heroPeriodEl.textContent = `รายงานผลการดำเนินงาน ${monthPart} • แสดงครบทั้ง 3 รอบ (1-10 • 1-20 • 1-31)`;
+      }
       const lastUpdatedEl = document.getElementById('lastUpdatedText');
       if (lastUpdatedEl) lastUpdatedEl.textContent = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ' น.';
-
-      const probPeriodSelect = document.getElementById('probFilterPeriod');
-      if (probPeriodSelect) {
-        probPeriodSelect.value = data.periodInfo.index;
-        const mLabel = data.periodInfo.monthName && data.periodInfo.yearTh
-          ? ` (${data.periodInfo.monthName} ${data.periodInfo.yearTh})`
-          : '';
-        if (probPeriodSelect.options[0]) probPeriodSelect.options[0].textContent = `รอบ 1-10${mLabel}`;
-        if (probPeriodSelect.options[1]) probPeriodSelect.options[1].textContent = `รอบ 11-20${mLabel}`;
-        if (probPeriodSelect.options[2]) probPeriodSelect.options[2].textContent = `รอบ 21-31${mLabel}`;
-      }
 
       // Render Tab 0 (Thailand Map & Branch Summary)
       renderMapAndBranchSummary();
@@ -2959,10 +3534,17 @@
       });
     }
 
-    // 4.3 Render Manager Matrix Table
+    // 4.3 Render Manager Matrix Table (แสดงสถานะเป้าหมายธุรกิจครบทั้ง 3 รอบ: 1-10, 1-20, 1-31)
     function renderManagerTable(managers) {
       const tbody = document.getElementById('managerTableBody');
       tbody.innerHTML = '';
+
+      const renderMiniPeriodBadge = (label, st) => {
+        if (st === 'green') return `<span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-xxs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">${label}: 🟢</span>`;
+        if (st === 'yellow') return `<span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-xxs font-bold bg-amber-100 text-amber-800 border border-amber-200">${label}: 🟡</span>`;
+        if (st === 'red') return `<span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-xxs font-bold bg-rose-100 text-rose-800 border border-rose-200">${label}: 🔴</span>`;
+        return `<span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-xxs font-semibold bg-slate-100 text-slate-500 border border-slate-200">${label}: ⏳</span>`;
+      };
 
       managers.forEach(m => {
         const tr = document.createElement('tr');
@@ -2972,10 +3554,14 @@
           ? `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">🟢 ผ่านเกณฑ์</span>`
           : `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-rose-100 text-rose-800">🔴 ต่ำกว่าเกณฑ์</span>`;
 
-        let busBadge = `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-600">⏳ รอสรุป</span>`;
-        if (m.busStatus === 'green') busBadge = `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">🟢 ตามเป้า</span>`;
-        if (m.busStatus === 'yellow') busBadge = `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">🟡 เสี่ยงต่ำ</span>`;
-        if (m.busStatus === 'red') busBadge = `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-rose-100 text-rose-800">🔴 ต่ำกว่าเป้า</span>`;
+        const byP = m.busStatusByPeriod || { '1-10': m.busStatus || 'pending', '1-20': 'pending', '1-31': 'pending' };
+        const busBadge3Rounds = `
+          <div class="flex flex-wrap items-center justify-center gap-1">
+            ${renderMiniPeriodBadge('1-10', byP['1-10'])}
+            ${renderMiniPeriodBadge('1-20', byP['1-20'])}
+            ${renderMiniPeriodBadge('1-31', byP['1-31'])}
+          </div>
+        `;
 
         tr.innerHTML = `
           <td class="py-3 px-4">
@@ -2999,7 +3585,7 @@
             ${m.compliance}%
           </td>
           <td class="py-3 px-3 text-center">${meetingBadge}</td>
-          <td class="py-3 px-3 text-center">${busBadge}</td>
+          <td class="py-3 px-3 text-center">${busBadge3Rounds}</td>
           <td class="py-3 px-3 text-center">
             <span class="font-bold text-xs space-x-1">
               <span class="text-rose-600">(${m.totalProblems.red})</span>
@@ -3008,9 +3594,14 @@
             </span>
           </td>
           <td class="py-3 px-4 text-right">
-            <button onclick="openManagerDetails('${m.manager}')" class="px-2.5 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 rounded-lg transition">
-              ดูประวัติ
-            </button>
+            <div class="flex items-center justify-end gap-1.5">
+              <button onclick="openUpdateReportGmModal('${escapeHtml(m.manager)}')" class="px-2 py-1 text-xxs font-bold text-emerald-700 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition">
+                ✏️ ReportGM
+              </button>
+              <button onclick="openManagerDetails('${escapeHtml(m.manager)}')" class="px-2.5 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 rounded-lg transition">
+                ดูประวัติ
+              </button>
+            </div>
           </td>
         `;
         tbody.appendChild(tr);
@@ -3027,7 +3618,7 @@
       });
     }
 
-    // 4.5 Branch KPI Cards (Tab 2)
+    // 4.5 Branch KPI Cards (Tab 2 - แสดงผลประกอบการเปรียบเทียบครบทั้ง 3 รอบ: 1-10 • 1-20 • 1-31)
     function populateManagerFilter(managers) {
       const select = document.getElementById('kpiManagerFilter');
       const current = select.value;
@@ -3039,6 +3630,118 @@
         select.appendChild(opt);
       });
       select.value = current || 'ALL';
+    }
+
+    function extractFourMetricsFromPeriodObj(pObj) {
+      const kpis = (pObj && Array.isArray(pObj.kpis)) ? pObj.kpis : [];
+      const findVal = (key) => {
+        const item = kpis.find(k => k && (String(k.title || '').includes(key) || String(k.rawTitle || '').includes(key)));
+        return item ? { value: String(item.value || '-').trim() || '-', status: item.status || 'pending', criteria: item.criteria || '' } : { value: '-', status: 'pending', criteria: '' };
+      };
+      const rev = findVal('Target Revenue');
+      const crm = findVal('CRM');
+      const nrm = {
+        value: (kpis.find(k => k && (String(k.title || '').includes('NRM') || String(k.rawTitle || '').includes('NCM') || String(k.rawTitle || '').includes('New Case'))) || {}).value || '-'
+      };
+      const appItem = kpis.find(k => k && (String(k.title || '').includes('การนัด') || String(k.rawTitle || '').includes('การนัด')));
+      const appVal = appItem && appItem.value ? formatAppointmentPercent(appItem.value) : '-';
+      const status = (pObj && pObj.status && pObj.status !== 'pending') ? pObj.status : rev.status;
+      return {
+        status: status || 'pending',
+        targetRevenue: rev.value,
+        crm: crm.value,
+        crmStatus: crm.status,
+        nrm: String(nrm.value || '-').trim() || '-',
+        appointment: appVal,
+        criteria: rev.criteria
+      };
+    }
+
+    function renderThreePeriodsComparisonHtml(periodsMap, darkTheme = false) {
+      const PERIOD_KEYS = ['1-10', '1-20', '1-31'];
+      const pStats = {};
+      PERIOD_KEYS.forEach(pk => {
+        pStats[pk] = extractFourMetricsFromPeriodObj(periodsMap ? periodsMap[pk] : null);
+      });
+
+      const statusIcon = (st) => {
+        if (st === 'green') return '🟢';
+        if (st === 'yellow') return '🟡';
+        if (st === 'red') return '🔴';
+        return '⏳';
+      };
+
+      if (darkTheme) {
+        return `
+          <div class="grid grid-cols-3 gap-1.5 text-xxs">
+            ${PERIOD_KEYS.map(pk => {
+              const s = pStats[pk];
+              const borderCls = s.status === 'green'
+                ? 'border-emerald-500/40 bg-emerald-950/30'
+                : (s.status === 'yellow' ? 'border-amber-500/40 bg-amber-950/30' : (s.status === 'red' ? 'border-rose-500/40 bg-rose-950/30' : 'border-slate-700 bg-slate-900/90'));
+              return `
+                <div class="rounded-xl p-2 border ${borderCls} space-y-1">
+                  <div class="flex items-center justify-between font-extrabold text-white border-b border-white/10 pb-1">
+                    <span>รอบ ${pk}</span>
+                    <span>${statusIcon(s.status)}</span>
+                  </div>
+                  <div>
+                    <span class="text-xxxs text-slate-400 block">🎯 ยอดสะสม/เป้า</span>
+                    <span class="font-bold text-white text-xxs break-words leading-tight block">${escapeHtml(s.targetRevenue)}</span>
+                  </div>
+                  <div class="flex items-center justify-between pt-0.5">
+                    <span class="text-xxxs text-pink-300">❤️ CRM:</span>
+                    <span class="font-bold text-pink-200">${escapeHtml(s.crm)}</span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span class="text-xxxs text-sky-300">👥 NCM:</span>
+                    <span class="font-bold text-sky-200">${escapeHtml(s.nrm)}</span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span class="text-xxxs text-indigo-300">📅 นัด:</span>
+                    <span class="font-bold text-indigo-200">${escapeHtml(s.appointment)}</span>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        `;
+      }
+
+      return `
+        <div class="grid grid-cols-3 gap-1.5 text-xxs">
+          ${PERIOD_KEYS.map(pk => {
+            const s = pStats[pk];
+            const boxCls = s.status === 'green'
+              ? 'bg-emerald-50/70 border-emerald-200'
+              : (s.status === 'yellow' ? 'bg-amber-50/70 border-amber-200' : (s.status === 'red' ? 'bg-rose-50/70 border-rose-200' : 'bg-white border-slate-200'));
+            return `
+              <div class="rounded-xl p-2 border ${boxCls} space-y-1">
+                <div class="flex items-center justify-between font-extrabold text-slate-800 border-b border-slate-200/70 pb-1">
+                  <span>รอบ ${pk}</span>
+                  <span>${statusIcon(s.status)}</span>
+                </div>
+                <div>
+                  <span class="text-xxxs text-slate-400 block">🎯 Target Revenue</span>
+                  <span class="font-extrabold text-slate-900 text-xxs break-words leading-tight block">${escapeHtml(s.targetRevenue)}</span>
+                </div>
+                <div class="flex items-center justify-between pt-0.5 border-t border-slate-100">
+                  <span class="text-xxxs text-slate-500">❤️ CRM:</span>
+                  <span class="font-bold text-slate-800">${escapeHtml(s.crm)}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-xxxs text-slate-500">👥 NCM:</span>
+                  <span class="font-bold text-slate-800">${escapeHtml(s.nrm)}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-xxxs text-slate-500">📅 การนัด:</span>
+                  <span class="font-bold text-indigo-700">${escapeHtml(s.appointment)}</span>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
     }
 
     function renderBranchCards() {
@@ -3090,26 +3793,7 @@
           cardBorder = 'border-rose-200';
         }
 
-        const kpisHtml = b.kpis.map(k => {
-          let icon = "⏳";
-          if (k.status === 'green') icon = "🟢";
-          if (k.status === 'yellow') icon = "🟡";
-          if (k.status === 'red') icon = "🔴";
-          if (k.title === 'NRM') icon = "-";
-
-          return `
-            <div class="flex items-center justify-between text-xs py-1.5 border-b border-slate-100 last:border-0">
-              <div>
-                <span class="font-semibold text-slate-800">${k.title}</span>
-                ${k.subTitle ? `<span class="text-xxs text-slate-400 ml-1">(${k.subTitle})</span>` : ''}
-              </div>
-              <div class="flex items-center space-x-2">
-                <span class="font-bold text-slate-900">${k.value}</span>
-                <span class="text-xs">${icon}</span>
-              </div>
-            </div>
-          `;
-        }).join('');
+        const threePeriodsHtml = renderThreePeriodsComparisonHtml(b.periods, false);
 
         const probCount = b.problems.red + b.problems.yellow + b.problems.purple;
         const probBadge = probCount > 0
@@ -3120,15 +3804,24 @@
         card.className = `bg-white rounded-2xl p-5 border ${cardBorder} shadow-sm hover:shadow-md transition flex flex-col justify-between`;
         card.innerHTML = `
           <div>
-            <div class="flex items-start justify-between mb-3">
+            <div class="flex items-start justify-between mb-3 gap-2">
               <div>
-                <h4 class="font-bold text-slate-900 text-base leading-tight">${b.name}</h4>
-                <p class="text-xs text-slate-500 mt-0.5">ผู้จัดการ: <span class="font-semibold text-slate-700">${b.manager}</span></p>
+                <h4 class="font-bold text-slate-900 text-base leading-tight">${escapeHtml(b.name)}</h4>
+                <p class="text-xs text-slate-500 mt-0.5">ผู้จัดการ: <span class="font-semibold text-slate-700">${escapeHtml(b.manager)}</span></p>
               </div>
-              ${statusBadge}
+              <div class="flex flex-col items-end gap-1">
+                ${statusBadge}
+                <button type="button" onclick="openUpdateReportGmModal('${escapeHtml(b.manager)}', '${escapeHtml(b.name)}')" class="px-2 py-0.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xxs font-bold transition flex items-center gap-1">
+                  <i data-lucide="edit-3" class="w-3 h-3"></i>
+                  <span>แก้ไข ReportGM</span>
+                </button>
+              </div>
             </div>
-            <div class="bg-slate-50 rounded-xl p-3 my-3">
-              ${kpisHtml}
+            <div class="bg-slate-50 rounded-xl p-2.5 my-2.5 border border-slate-100">
+              <div class="text-xxs font-bold text-slate-600 mb-1.5 flex items-center justify-between">
+                <span>📊 ผลประกอบการทั้ง 3 รอบ (1-10 • 1-20 • 1-31)</span>
+              </div>
+              ${threePeriodsHtml}
             </div>
           </div>
           <div class="pt-2 border-t border-slate-100 flex items-center justify-between">
@@ -5129,6 +5822,23 @@
           }
           if (m.manager) entry.managersSet.add(m.manager);
 
+          // 1.0 เก็บข้อมูลทั้ง 3 รอบ (1-10, 1-20, 1-31) ของสาขานี้ไว้ใน entry.periods
+          if (b.periods && typeof b.periods === 'object') {
+            if (!entry.periods) {
+              entry.periods = JSON.parse(JSON.stringify(b.periods));
+            } else {
+              ['1-10', '1-20', '1-31'].forEach(pk => {
+                const srcP = b.periods[pk];
+                const dstP = entry.periods[pk];
+                const srcHasVal = srcP && Array.isArray(srcP.kpis) && srcP.kpis.some(k => k && k.value && String(k.value).trim() !== '-');
+                const dstHasVal = dstP && Array.isArray(dstP.kpis) && dstP.kpis.some(k => k && k.value && String(k.value).trim() !== '-');
+                if (srcHasVal && !dstHasVal) {
+                  entry.periods[pk] = JSON.parse(JSON.stringify(srcP));
+                }
+              });
+            }
+          }
+
           const kpis = Array.isArray(b.kpis) ? b.kpis : [];
 
           // 1.1 🎯 Target Revenue (ยอดสะสมเทียบเป้า)
@@ -5674,8 +6384,8 @@
         }
       }
 
-      // 3. Target Revenue Block (จากการ์ดขาวครบถ้วน)
-      setVal('mapFloatSalesSub', b.salesSubTitle || 'ยอดสะสมเทียบเป้า 10 วัน');
+      // 3. Target Revenue Block (จากการ์ดขาวครบถ้วน + ตารางเปรียบเทียบครบทั้ง 3 รอบ: 1-10 • 1-20 • 1-31)
+      setVal('mapFloatSalesSub', 'ยอดสะสมเทียบเป้าครบทั้ง 3 รอบ (1-10 • 1-20 • 1-31)');
       const salesPctEl = document.getElementById('mapFloatSalesPct');
       if (salesPctEl) {
         salesPctEl.textContent = b.salesPct !== null ? `${b.salesPct}% ของเป้า` : 'รอสรุปผล';
@@ -5697,6 +6407,11 @@
       else if (b.salesStatus === 'yellow') defaultCriteria = '🟡 ผลประกอบการใกล้เคียงเป้าหมาย ควรเร่งติดตามยอด';
       else if (b.salesStatus === 'red') defaultCriteria = '🔴 ผลประกอบการต่ำกว่าเกณฑ์เป้าหมาย ต้องเร่งวางแผนกระตุ้นยอด';
       setVal('mapFloatSalesCriteria', b.salesCriteria || defaultCriteria);
+
+      const allPeriodsBox = document.getElementById('mapFloatAllPeriodsContainer');
+      if (allPeriodsBox) {
+        allPeriodsBox.innerHTML = renderThreePeriodsComparisonHtml(b.periods, true);
+      }
 
       // 4. 4 Core Metrics Grid (CRM, ลูกค้าใหม่ NCM, % การนัด, การเบิกบัญชี)
       const crmEl = document.getElementById('mapFloatCrm');
@@ -5931,11 +6646,13 @@
         }
 
         const pctWidth = b.salesPct !== null ? Math.min(Math.max(b.salesPct, 4), 100) : 0;
+        const firstMgr = String(b.manager || '').split(',')[0].trim() || '';
+        const threePeriodsMiniHtml = renderThreePeriodsComparisonHtml(b.periods, false);
 
         const targetRevenueBlockHtml = b.hasSales ? `
           <div class="rounded-xl p-2.5 border ${kpiBoxCls} mb-2.5">
             <div class="flex items-center justify-between text-xxs text-slate-500 font-semibold mb-1">
-              <span>🎯 ${b.salesSubTitle || 'ยอดสะสมเทียบเป้า 10 วัน'}</span>
+              <span>🎯 ยอดขายสะสมล่าสุด</span>
               ${b.salesPct !== null ? `<span class="font-extrabold ${kpiPctCls}">${b.salesPct}% ของเป้า</span>` : ''}
             </div>
             <div class="flex items-baseline justify-between">
@@ -5984,34 +6701,20 @@
               </div>
             </div>
 
-            <!-- กล่องไฮไลต์ 1: 🎯 Target Revenue (ยอดสะสมเทียบเป้า 10 วัน) -->
+            <!-- กล่องไฮไลต์ 1: 🎯 Target Revenue -->
             ${targetRevenueBlockHtml}
 
-            <!-- รายละเอียด KPI เสริมจากผลประกอบการสาขา + บัญชี & ปัญหา -->
+            <!-- กล่องไฮไลต์ 2: เปรียบเทียบครบทั้ง 3 รอบ (1-10 • 1-20 • 1-31) -->
+            <div class="mb-2.5">
+              <div class="flex items-center justify-between text-xxxs font-bold text-slate-500 mb-1">
+                <span>📊 ผลประกอบการทั้ง 3 รอบ (1-10 • 1-20 • 1-31)</span>
+                <button type="button" onclick="event.stopPropagation(); openUpdateReportGmModal('${escapeHtml(firstMgr)}', '${escapeHtml(b.name)}')" class="text-emerald-700 hover:text-emerald-900 font-extrabold underline">✏️ แก้ไข ReportGM</button>
+              </div>
+              ${threePeriodsMiniHtml}
+            </div>
+
+            <!-- รายละเอียดบัญชี & ปัญหา -->
             <div class="space-y-1.5 text-xs">
-              
-              <!-- ❤️ CRM Performance (% CRM ต่อเป้า) -->
-              <div class="flex justify-between items-center py-1 border-b border-slate-50">
-                <span class="text-slate-500 text-xxs font-medium flex items-center space-x-1">
-                  <span>❤️ CRM ต่อเป้า:</span>
-                </span>
-                <span class="font-bold text-xs ${b.crmStatus === 'green' ? 'text-emerald-700' : (b.crmStatus === 'yellow' ? 'text-amber-700' : (b.crmStatus === 'red' ? 'text-rose-700' : 'text-slate-700'))}">
-                  ${b.crmValue}
-                </span>
-              </div>
-
-              <!-- 👥 NRM ลูกค้าใหม่ & 📅 การนัด -->
-              <div class="grid grid-cols-2 gap-1.5 py-1 border-b border-slate-50">
-                <div class="bg-slate-50/80 rounded-lg px-2 py-1 border border-slate-100">
-                  <span class="text-xxxs text-slate-400 block font-medium">👥 ลูกค้าใหม่ (NCM)</span>
-                  <span class="font-bold text-slate-800 text-xs">${b.nrmValue !== '-' ? `${b.nrmValue} ราย` : '-'}</span>
-                </div>
-                <div class="bg-slate-50/80 rounded-lg px-2 py-1 border border-slate-100">
-                  <span class="text-xxxs text-slate-400 block font-medium">📅 เปอร์เซ็นต์การนัด</span>
-                  <span class="font-bold text-indigo-700 text-xs">${b.appointValue}</span>
-                </div>
-              </div>
-
               <!-- 💰 ยอดการเบิกบัญชี -->
               <div class="flex justify-between items-center py-1 border-b border-slate-50">
                 <span class="text-slate-500 text-xxs font-medium flex items-center space-x-1">
@@ -6039,18 +6742,22 @@
           </div>
 
           <!-- Quick Action Buttons -->
-          <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center space-x-2">
+          <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center space-x-1.5">
             <button onclick="event.stopPropagation(); selectMapBranch('${b.id}', { scrollToMap: true })" class="flex-1 py-1.5 px-2 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xxs font-bold rounded-lg transition border border-blue-200 flex items-center justify-center space-x-1">
               <i data-lucide="map-pin" class="w-3 h-3 text-blue-600"></i>
-              <span>ขยายดูข้างแผนที่</span>
+              <span>ดูข้างแผนที่</span>
+            </button>
+            <button onclick="event.stopPropagation(); openUpdateReportGmModal('${escapeHtml(firstMgr)}', '${escapeHtml(b.name)}')" class="py-1.5 px-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xxs font-bold rounded-lg transition border border-emerald-200 flex items-center space-x-1" title="บันทึก/แก้ไข ReportGM ทั้ง 3 รอบ">
+              <i data-lucide="edit-3" class="w-3 h-3 text-emerald-600"></i>
+              <span>ReportGM</span>
             </button>
             ${b.probCount > 0 ? `
-              <button onclick="event.stopPropagation(); jumpToBranchProblems('${b.name}')" class="py-1.5 px-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xxs font-bold rounded-lg transition border border-rose-200 flex items-center space-x-1" title="ดูรายละเอียดปัญหาสาขานี้">
+              <button onclick="event.stopPropagation(); jumpToBranchProblems('${b.name}')" class="py-1.5 px-2 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xxs font-bold rounded-lg transition border border-rose-200 flex items-center space-x-1" title="ดูรายละเอียดปัญหาสาขานี้">
                 <i data-lucide="alert-triangle" class="w-3 h-3 text-rose-600"></i>
                 <span>${b.probCount}</span>
               </button>
             ` : ''}
-            <button onclick="event.stopPropagation(); jumpToBranchAccounting('${b.name}')" class="py-1.5 px-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xxs font-semibold rounded-lg transition" title="ดูการเบิกจ่ายสาขานี้">
+            <button onclick="event.stopPropagation(); jumpToBranchAccounting('${b.name}')" class="py-1.5 px-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xxs font-semibold rounded-lg transition" title="ดูการเบิกจ่ายสาขานี้">
               <i data-lucide="wallet" class="w-3 h-3"></i>
             </button>
           </div>
@@ -6238,7 +6945,7 @@
       fetchDashboardData();
     }
 
-    // Manager Details Modal
+    // Manager Details Modal (แสดงประวัติการประชุมพร้อมปุ่มแก้ไข + สาขาครบทั้ง 3 รอบพร้อมปุ่มแก้ไข ReportGM)
     function openManagerDetails(managerName) {
       const mgr = dashboardState.data.gmReport.managers.find(m => m.manager === managerName);
       if (!mgr) return;
@@ -6248,9 +6955,32 @@
       document.getElementById('modalMgrSub').textContent = `ดูแลทั้งหมด ${mgr.branches.length} สาขา | อัตราประชุม ${mgr.compliance}%`;
 
       const content = document.getElementById('modalMgrContent');
-      let datesHtml = mgr.meetingDates.length > 0
-        ? mgr.meetingDates.map((d, i) => `<span class="inline-block px-2.5 py-1 bg-slate-100 rounded-lg text-xs font-medium text-slate-700 mr-2 mb-2">นัดที่ ${i + 1}: ${d}</span>`).join('')
-        : '<p class="text-xs text-slate-400">ไม่มีบันทึกวันที่ประชุม</p>';
+      const meetingLogs = Array.isArray(mgr.meetingLogs) ? mgr.meetingLogs : [];
+      let meetingsHtml = '';
+      if (meetingLogs.length > 0) {
+        meetingsHtml = meetingLogs.map((log, i) => `
+          <div class="p-3 bg-white rounded-xl border border-blue-200/80 mb-2 last:mb-0 space-y-1">
+            <div class="flex items-center justify-between text-xs">
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">ครั้งที่ ${i + 1}: ${escapeHtml(log.date)}</span>
+                <span class="font-bold text-slate-800">${escapeHtml(log.branch || 'ไม่ระบุสาขา')}</span>
+              </div>
+              <button type="button" onclick="openUpdateMeetingModal('${escapeHtml(mgr.manager)}', ${log.rowIndex || 0}, ${i})" class="px-2 py-0.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xxs font-bold transition">
+                ✏️ แก้ไข
+              </button>
+            </div>
+            <p class="text-xs text-slate-700 whitespace-pre-line">${escapeHtml(log.content || '-')}</p>
+            <div class="text-xxs text-slate-400 flex items-center justify-between pt-1 border-t border-slate-100">
+              <span>ผู้รับผิดชอบ: ${escapeHtml(log.responsible || `ผจก.${mgr.manager}`)}</span>
+              <span>ผู้เข้าร่วม: ${escapeHtml(log.attendees || 'ครบทุกคน')}</span>
+            </div>
+          </div>
+        `).join('');
+      } else if (Array.isArray(mgr.meetingDates) && mgr.meetingDates.length > 0) {
+        meetingsHtml = mgr.meetingDates.map((d, i) => `<span class="inline-block px-2.5 py-1 bg-slate-100 rounded-lg text-xs font-medium text-slate-700 mr-2 mb-2">นัดที่ ${i + 1}: ${escapeHtml(d)}</span>`).join('');
+      } else {
+        meetingsHtml = '<p class="text-xs text-slate-400">ไม่มีบันทึกการประชุม</p>';
+      }
 
       let branchesHtml = mgr.branches.map(b => {
         let statusLabel = '⏳ รอสรุป';
@@ -6259,30 +6989,41 @@
         else if (b.status === 'red') statusLabel = '🔴 ต่ำเป้า';
 
         return `
-          <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
-            <div class="flex items-center justify-between font-bold text-slate-800 text-xs mb-1">
-              <span>🏢 ${b.name}</span>
-              <span>สถานะ: ${statusLabel}</span>
+          <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+            <div class="flex items-center justify-between font-bold text-slate-800 text-xs">
+              <span>🏢 ${escapeHtml(b.name)} (${statusLabel})</span>
+              <button type="button" onclick="openUpdateReportGmModal('${escapeHtml(mgr.manager)}', '${escapeHtml(b.name)}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xxs font-bold transition">
+                ✏️ แก้ไข ReportGM (3 รอบ)
+              </button>
             </div>
-            <div class="text-xxs text-slate-500">
-              ${b.kpis.map(k => `${k.title}: ${k.value}`).join(' | ')}
-            </div>
+            ${renderThreePeriodsComparisonHtml(b.periods, false)}
           </div>
         `;
       }).join('');
 
       content.innerHTML = `
         <div>
-          <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">📅 ประวัติการประชุมรอบนี้ (${mgr.actualMeetings}/${mgr.expectedMeetings} ครั้ง)</h4>
-          <div class="p-3 bg-blue-50/50 rounded-xl border border-blue-100">${datesHtml}</div>
+          <div class="flex items-center justify-between mb-2">
+            <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">📅 ประวัติการประชุม (${mgr.actualMeetings}/${mgr.expectedMeetings} ครั้ง)</h4>
+            <button type="button" onclick="openMeetingInputModal('${escapeHtml(mgr.manager)}')" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xxs font-bold transition">
+              + เพิ่มการประชุม
+            </button>
+          </div>
+          <div class="p-3 bg-blue-50/50 rounded-xl border border-blue-100 max-h-60 overflow-y-auto custom-scrollbar">${meetingsHtml}</div>
         </div>
         <div>
-          <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">🏢 สาขาในการดูแล (${mgr.branches.length} สาขา)</h4>
-          <div class="space-y-2">${branchesHtml}</div>
+          <div class="flex items-center justify-between mb-2">
+            <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">🏢 สาขาในการดูแลครบทั้ง 3 รอบ (${mgr.branches.length} สาขา)</h4>
+            <button type="button" onclick="openUpdateReportGmModal('${escapeHtml(mgr.manager)}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xxs font-bold transition">
+              + เพิ่ม/แก้ไขสาขาใน ReportGM
+            </button>
+          </div>
+          <div class="space-y-2.5 max-h-80 overflow-y-auto custom-scrollbar">${branchesHtml}</div>
         </div>
       `;
 
       document.getElementById('managerModal').classList.remove('hidden');
+      lucide.createIcons();
     }
 
     function closeManagerModal() {
@@ -6952,6 +7693,10 @@
                 <i data-lucide="calendar-plus" class="w-4 h-4"></i>
                 <span>+ บันทึกการประชุม</span>
               </button>
+              <button type="button" onclick="openUpdateReportGmModal('${escapeHtml(mgrName)}')" class="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs sm:text-sm font-black rounded-xl shadow-lg transition flex items-center gap-2 active:scale-95">
+                <i data-lucide="bar-chart-3" class="w-4 h-4"></i>
+                <span>📊 บันทึก/แก้ไข ReportGM (3 รอบ)</span>
+              </button>
               <button type="button" onclick="openProblemInputModal('${escapeHtml(mgrName)}')" class="px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs sm:text-sm font-black rounded-xl shadow-lg transition flex items-center gap-2 active:scale-95">
                 <i data-lucide="alert-circle" class="w-4 h-4"></i>
                 <span>+ แจ้งปัญหาหน้างาน</span>
@@ -6977,7 +7722,7 @@
           <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-6 pt-5 border-t border-indigo-800/60">
             <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-3.5 border border-white/10">
               <div class="flex items-center justify-between text-xxs text-indigo-200">
-                <span>📅 การประชุมรอบนี้</span>
+                <span>📅 การประชุมทั้งหมด</span>
                 <span class="font-bold px-2 py-0.5 rounded-full ${mgrObj.compliance >= 80 ? 'bg-emerald-500/30 text-emerald-200' : 'bg-amber-500/30 text-amber-200'}">${mgrObj.compliance || 0}%</span>
               </div>
               <div class="text-xl sm:text-2xl font-black mt-1">${mgrObj.actualMeetings || 0} / ${mgrObj.expectedMeetings || 8} <span class="text-xs font-medium text-indigo-200">ครั้ง</span></div>
@@ -6985,7 +7730,7 @@
 
             <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-3.5 border border-white/10">
               <div class="flex items-center justify-between text-xxs text-indigo-200">
-                <span>🏢 สาขาที่ดูแล</span>
+                <span>🏢 สาขาที่ดูแล (3 รอบ)</span>
                 <span>🟢 ${kpiGreen} 🟡 ${kpiYellow} 🔴 ${kpiRed}</span>
               </div>
               <div class="text-xl sm:text-2xl font-black mt-1">${branches.length} <span class="text-xs font-medium text-indigo-200">สาขา</span></div>
@@ -7009,13 +7754,13 @@
           </div>
         </div>
 
-        <!-- 2. TWO-COLUMN WORKSPACE: MEETINGS & PROBLEMS LIST -->
+        <!-- 2. TWO-COLUMN WORKSPACE: MEETINGS + REPORTGM (3 ROUNDS) & PROBLEMS LIST -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
           
-          <!-- LEFT COLUMN (5 cols): ประวัติการประชุม & สาขาในความดูแล -->
-          <div class="lg:col-span-5 space-y-6">
+          <!-- LEFT COLUMN (6 cols): ประวัติการประชุม & สาขาในความดูแล (ReportGM ครบทั้ง 3 รอบ) -->
+          <div class="lg:col-span-6 space-y-6">
             
-            <!-- ประวัติการประชุม -->
+            <!-- ประวัติการประชุม (พร้อมปุ่มแก้ไขทุกแถว) -->
             <div class="bg-white rounded-3xl p-5 border border-slate-200 shadow-sm space-y-4">
               <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div class="flex items-center space-x-2">
@@ -7024,7 +7769,7 @@
                   </div>
                   <div>
                     <h3 class="font-bold text-slate-900 text-sm sm:text-base">บันทึกการประชุม (${mgrObj.actualMeetings || 0}/${mgrObj.expectedMeetings || 8})</h3>
-                    <p class="text-xxs text-slate-500">ชีท: ${escapeHtml(mgrName)} - Meeting</p>
+                    <p class="text-xxs text-slate-500">ชีท: ${escapeHtml(mgrName)} - Meeting • คลิก "แก้ไข" เพื่อปรับปรุงข้อมูลได้ทันที</p>
                   </div>
                 </div>
                 <button type="button" onclick="openMeetingInputModal('${escapeHtml(mgrName)}')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition flex items-center gap-1 shadow-sm active:scale-95">
@@ -7034,12 +7779,18 @@
               </div>
 
               ${meetingLogs.length > 0 ? `
-                <div class="space-y-2.5 max-h-[380px] overflow-y-auto custom-scrollbar pr-1">
-                  ${meetingLogs.slice().reverse().map((log, idx) => `
-                    <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1.5">
-                      <div class="flex items-center justify-between text-xs">
-                        <span class="font-bold text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-lg border border-blue-200">📅 ${escapeHtml(log.date)}</span>
-                        <span class="font-bold text-slate-800">${escapeHtml(log.branch || 'ไม่ระบุสาขา')}</span>
+                <div class="space-y-2.5 max-h-[420px] overflow-y-auto custom-scrollbar pr-1">
+                  ${meetingLogs.map((log, origIdx) => ({ log, origIdx })).reverse().map(({ log, origIdx }) => `
+                    <div class="p-3.5 rounded-2xl bg-slate-50 hover:bg-white border border-slate-200/80 hover:border-blue-300 transition space-y-1.5">
+                      <div class="flex items-center justify-between gap-2 text-xs">
+                        <div class="flex flex-wrap items-center gap-1.5">
+                          <span class="font-bold text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-lg border border-blue-200">📅 ${escapeHtml(log.date)}</span>
+                          <span class="font-bold text-slate-800">🏢 ${escapeHtml(log.branch || 'ไม่ระบุสาขา')}</span>
+                        </div>
+                        <button type="button" onclick="openUpdateMeetingModal('${escapeHtml(mgrName)}', ${log.rowIndex || 0}, ${origIdx})" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xxs font-bold rounded-lg transition flex items-center gap-1 shadow-2xs active:scale-95">
+                          <i data-lucide="edit-3" class="w-3 h-3"></i>
+                          <span>แก้ไข</span>
+                        </button>
                       </div>
                       <p class="text-xs text-slate-800 font-medium leading-relaxed whitespace-pre-line">${escapeHtml(log.content || '-')}</p>
                       <div class="flex items-center justify-between text-xxs text-slate-500 pt-1 border-t border-slate-200/60">
@@ -7051,7 +7802,7 @@
                 </div>
               ` : (meetingDates.length > 0 ? `
                 <div class="p-3.5 bg-blue-50/50 rounded-2xl border border-blue-100 space-y-2">
-                  <p class="text-xs font-bold text-slate-700">วันที่บันทึกการประชุมในรอบนี้:</p>
+                  <p class="text-xs font-bold text-slate-700">วันที่บันทึกการประชุมทั้งหมด:</p>
                   <div class="flex flex-wrap gap-1.5">
                     ${meetingDates.map((d, i) => `<span class="px-2.5 py-1 bg-white rounded-lg border border-blue-200 text-xs font-semibold text-blue-800">ครั้งที่ ${i + 1}: ${escapeHtml(d)}</span>`).join('')}
                   </div>
@@ -7059,7 +7810,7 @@
               ` : `
                 <div class="py-8 text-center text-slate-400 space-y-2">
                   <i data-lucide="calendar-x" class="w-8 h-8 mx-auto text-slate-300"></i>
-                  <p class="text-xs font-medium">ยังไม่มีบันทึกการประชุมในรอบนี้</p>
+                  <p class="text-xs font-medium">ยังไม่มีบันทึกการประชุม</p>
                   <button type="button" onclick="openMeetingInputModal('${escapeHtml(mgrName)}')" class="mt-1 px-3.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold rounded-xl border border-blue-200 transition">
                     + บันทึกการประชุมครั้งแรก
                   </button>
@@ -7067,21 +7818,25 @@
               `)}
             </div>
 
-            <!-- สาขาในความดูแล -->
+            <!-- สาขาในความดูแล & ReportGM (แสดงครบทั้ง 3 รอบ: 1-10 • 1-20 • 1-31 พร้อมปุ่มแก้ไข) -->
             <div class="bg-white rounded-3xl p-5 border border-slate-200 shadow-sm space-y-4">
               <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div class="flex items-center space-x-2">
                   <div class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
-                    <i data-lucide="building-2" class="w-4 h-4"></i>
+                    <i data-lucide="bar-chart-3" class="w-4 h-4"></i>
                   </div>
                   <div>
-                    <h3 class="font-bold text-slate-900 text-sm sm:text-base">สาขาในความดูแล (${branches.length} สาขา)</h3>
-                    <p class="text-xxs text-slate-500">สรุปสถานะ KPI ประจำรอบ</p>
+                    <h3 class="font-bold text-slate-900 text-sm sm:text-base">ReportGM: ผลประกอบการสาขาทั้ง 3 รอบ (${branches.length} สาขา)</h3>
+                    <p class="text-xxs text-slate-500">แสดงครบทั้ง 3 รอบ (1-10 • 1-20 • 1-31) • คลิก "แก้ไข ReportGM" เพื่อบันทึก/อัปเดต KPI</p>
                   </div>
                 </div>
+                <button type="button" onclick="openUpdateReportGmModal('${escapeHtml(mgrName)}')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition flex items-center gap-1 shadow-sm active:scale-95">
+                  <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                  <span>บันทึก/แก้ไข ReportGM</span>
+                </button>
               </div>
 
-              <div class="space-y-2.5 max-h-[380px] overflow-y-auto custom-scrollbar pr-1">
+              <div class="space-y-3 max-h-[520px] overflow-y-auto custom-scrollbar pr-1">
                 ${branches.length > 0 ? branches.map(b => {
                   let badge = '<span class="px-2 py-0.5 rounded-full text-xxs font-bold bg-slate-100 text-slate-600">⏳ รอสรุป</span>';
                   if (b.status === 'green') badge = '<span class="px-2 py-0.5 rounded-full text-xxs font-bold bg-emerald-100 text-emerald-800">🟢 ตามเป้า</span>';
@@ -7089,24 +7844,35 @@
                   else if (b.status === 'red') badge = '<span class="px-2 py-0.5 rounded-full text-xxs font-bold bg-rose-100 text-rose-800">🔴 ต่ำเป้า</span>';
 
                   return `
-                    <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1.5">
-                      <div class="flex items-center justify-between">
-                        <span class="font-bold text-slate-900 text-xs sm:text-sm">🏢 ${escapeHtml(b.name)}</span>
-                        ${badge}
+                    <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2">
+                      <div class="flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-2">
+                          <span class="font-bold text-slate-900 text-xs sm:text-sm">🏢 ${escapeHtml(b.name)}</span>
+                          ${badge}
+                        </div>
+                        <button type="button" onclick="openUpdateReportGmModal('${escapeHtml(mgrName)}', '${escapeHtml(b.name)}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xxs font-bold rounded-lg transition flex items-center gap-1 shadow-2xs active:scale-95">
+                          <i data-lucide="edit-3" class="w-3 h-3"></i>
+                          <span>แก้ไข ReportGM</span>
+                        </button>
                       </div>
-                      <div class="flex flex-wrap gap-1.5 text-xxs text-slate-600">
-                        ${(b.kpis || []).map(k => `<span class="bg-white px-2 py-0.5 rounded border border-slate-200/80">${escapeHtml(k.title)}: <strong>${escapeHtml(k.value)}</strong></span>`).join('')}
-                      </div>
+                      ${renderThreePeriodsComparisonHtml(b.periods, false)}
                     </div>
                   `;
-                }).join('') : '<p class="text-xs text-slate-400 text-center py-4">ไม่พบข้อมูลสาขา</p>'}
+                }).join('') : `
+                  <div class="py-8 text-center text-slate-400 space-y-2">
+                    <p class="text-xs font-medium">ยังไม่มีข้อมูลสาขาใน ReportGM</p>
+                    <button type="button" onclick="openUpdateReportGmModal('${escapeHtml(mgrName)}')" class="px-3.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold rounded-xl border border-emerald-200 transition">
+                      + บันทึกข้อมูลสาขาใน ReportGM
+                    </button>
+                  </div>
+                `}
               </div>
             </div>
 
           </div>
 
-          <!-- RIGHT COLUMN (7 cols): รายการปัญหาหน้างาน & อัปเดตคอลัมน์ H / I -->
-          <div class="lg:col-span-7">
+          <!-- RIGHT COLUMN (6 cols): รายการปัญหาหน้างาน & อัปเดตครบทุกฟิลด์ -->
+          <div class="lg:col-span-6">
             <div class="bg-white rounded-3xl p-5 border border-slate-200 shadow-sm space-y-4">
               <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3.5">
                 <div class="flex items-center space-x-2.5">
@@ -7453,7 +8219,7 @@
     }
 
     // -------------------------------------------------------------------------
-    // F. ฟอร์มอัปเดตข้อมูลปัญหา คอลัมน์ H, I และสถานะ (Update Problem Modal)
+    // F. ฟอร์มอัปเดตข้อมูลปัญหาครบทุกฟิลด์ (Update Problem Modal)
     // -------------------------------------------------------------------------
     function openUpdateProblemModal(problemCode) {
       const allProblems = (dashboardState.data && dashboardState.data.gmReport && Array.isArray(dashboardState.data.gmReport.problemsList))
@@ -7472,13 +8238,26 @@
       document.getElementById('updateProblemBranchBadge').textContent = `${item.branch} (ผจก.${item.manager})`;
       document.getElementById('updateProblemSubjectText').textContent = item.subject || '';
 
+      const branchInp = document.getElementById('updateProblemBranchInput');
+      if (branchInp) branchInp.value = item.branch || '';
+
+      const catSel = document.getElementById('updateProblemCategorySelect');
+      if (catSel) catSel.value = item.category || 'ทั่วไป';
+
+      const subjInp = document.getElementById('updateProblemSubjectInput');
+      if (subjInp) subjInp.value = item.subject || '';
+
       const statusSel = document.getElementById('updateProblemStatusSelect');
       if (statusSel) {
         statusSel.value = item.status || 'กำลังดำเนินการ';
       }
       const urgSel = document.getElementById('updateProblemUrgencySelect');
       if (urgSel) {
-        urgSel.value = (item.urgency === 'Critical' || item.urgency === 'High') ? item.urgency : 'ทั่วไป';
+        urgSel.value = (item.urgency === 'Critical' || item.urgency === 'High' || item.urgency === 'Overdue') ? item.urgency : 'ทั่วไป';
+      }
+      const gmSel = document.getElementById('updateProblemNeedsGmSelect');
+      if (gmSel) {
+        gmSel.value = item.needsGmHelp || '-';
       }
 
       const detailInput = document.getElementById('updateProblemDetailInput');
@@ -7503,9 +8282,13 @@
       const rowIndex = document.getElementById('updateProblemRowIndex')?.value || '';
       const manager = document.getElementById('updateProblemManager')?.value || dashboardState.currentManager || '';
       const code = document.getElementById('updateProblemCode')?.textContent || '';
-      const subject = document.getElementById('updateProblemSubjectText')?.textContent || '';
+      const oldSubject = document.getElementById('updateProblemSubjectText')?.textContent || '';
+      const newBranch = document.getElementById('updateProblemBranchInput')?.value.trim() || '';
+      const category = document.getElementById('updateProblemCategorySelect')?.value || '';
+      const newSubject = document.getElementById('updateProblemSubjectInput')?.value.trim() || oldSubject;
       const status = document.getElementById('updateProblemStatusSelect')?.value || '';
       const urgency = document.getElementById('updateProblemUrgencySelect')?.value || '';
+      const needsGmHelp = document.getElementById('updateProblemNeedsGmSelect')?.value || '-';
       const colH = document.getElementById('updateProblemDetailInput')?.value.trim() || '';
       const colI = document.getElementById('updateProblemSolutionInput')?.value.trim() || '';
       const submitBtn = document.getElementById('updateProblemSubmitBtn');
@@ -7514,7 +8297,7 @@
         ? dashboardState.data.gmReport.problemsList
         : [];
       const item = allProblems.find(p => p.code === code);
-      const branch = item ? item.branch : '';
+      const oldBranch = item ? item.branch : newBranch;
 
       if (!manager) {
         showToast('⚠️ ไม่พบชื่อผู้จัดการของรายการนี้');
@@ -7530,8 +8313,12 @@
         const res = await callManagerApi('updateProblem', {
           manager,
           rowIndex,
-          branch,
-          subject,
+          branch: oldBranch,
+          newBranch,
+          subject: oldSubject,
+          newSubject,
+          category,
+          needsGmHelp,
           status,
           urgency,
           colH,
@@ -7543,8 +8330,12 @@
             type: 'updateProblem',
             manager,
             rowIndex,
-            branch,
-            subject,
+            branch: oldBranch,
+            newBranch,
+            subject: oldSubject,
+            newSubject,
+            category,
+            needsGmHelp,
             status,
             urgency,
             colH,
@@ -7552,6 +8343,13 @@
           });
           // อัปเดตข้อมูลในหน่วยความจำทันทีเพื่อให้หน้าเว็บเปลี่ยนทันที
           if (item) {
+            if (newBranch) item.branch = newBranch;
+            if (newSubject) item.subject = newSubject;
+            if (category) item.category = category;
+            if (needsGmHelp !== undefined) {
+              item.needsGmHelp = needsGmHelp;
+              item.isNeedGm = needsGmHelp !== '-' && needsGmHelp !== 'ไม่ระบุ';
+            }
             if (colH !== undefined) {
               item.colH = colH;
               item.problemDetail = colH || '-';
@@ -7587,6 +8385,341 @@
         if (submitBtn) {
           submitBtn.disabled = false;
           submitBtn.innerHTML = '<i data-lucide="check" class="w-3.5 h-3.5"></i><span>บันทึกการแก้ไข</span>';
+          lucide.createIcons();
+        }
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // G. ฟอร์มแก้ไขบันทึกการประชุมในหน้าเว็บ (Update Meeting Modal)
+    // -------------------------------------------------------------------------
+    function convertThaiSlashDateToIsoInput(dStr) {
+      if (!dStr) return '';
+      const s = String(dStr).trim();
+      if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+      const m = s.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})/);
+      if (m) {
+        const dd = String(parseInt(m[1], 10)).padStart(2, '0');
+        const mm = String(parseInt(m[2], 10)).padStart(2, '0');
+        let yyyy = parseInt(m[3], 10);
+        if (yyyy > 2400) yyyy -= 543;
+        else if (yyyy < 100) yyyy += 2000;
+        return `${yyyy}-${mm}-${dd}`;
+      }
+      const now = new Date();
+      return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    }
+
+    function openUpdateMeetingModal(managerName, rowIndex, logIdx) {
+      const mgr = managerName || dashboardState.currentManager;
+      if (!mgr) return;
+
+      const managersData = (dashboardState.data && dashboardState.data.gmReport && Array.isArray(dashboardState.data.gmReport.managers))
+        ? dashboardState.data.gmReport.managers
+        : [];
+      const mgrObj = managersData.find(m => m.manager === mgr);
+      const logs = (mgrObj && Array.isArray(mgrObj.meetingLogs)) ? mgrObj.meetingLogs : [];
+      const logItem = (typeof logIdx === 'number' && logs[logIdx])
+        ? logs[logIdx]
+        : logs.find(l => Number(l.rowIndex) === Number(rowIndex));
+
+      if (!logItem) {
+        showToast('⚠️ ไม่พบรายการบันทึกการประชุมที่ต้องการแก้ไข');
+        return;
+      }
+
+      document.getElementById('updateMeetingModalSubtitle').textContent = `ชีท: ${mgr} - Meeting`;
+      document.getElementById('updateMeetingRowIndex').value = logItem.rowIndex || '';
+      document.getElementById('updateMeetingManager').value = mgr;
+      document.getElementById('updateMeetingOldDate').value = logItem.date || '';
+      document.getElementById('updateMeetingOldContent').value = logItem.content || '';
+
+      document.getElementById('updateMeetingDateInput').value = convertThaiSlashDateToIsoInput(logItem.date);
+      document.getElementById('updateMeetingBranchInput').value = logItem.branch || '';
+      document.getElementById('updateMeetingContentInput').value = logItem.content || '';
+      document.getElementById('updateMeetingResponsibleInput').value = logItem.responsible || `ผจก. ${mgr}`;
+      document.getElementById('updateMeetingAttendeesInput').value = logItem.attendees || 'ครบทุกคน';
+
+      const modal = document.getElementById('updateMeetingModal');
+      if (modal) modal.classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeUpdateMeetingModal() {
+      const modal = document.getElementById('updateMeetingModal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    async function submitUpdateMeetingForm() {
+      const manager = document.getElementById('updateMeetingManager')?.value || dashboardState.currentManager || '';
+      const rowIndex = document.getElementById('updateMeetingRowIndex')?.value || '';
+      const oldDate = document.getElementById('updateMeetingOldDate')?.value || '';
+      const oldContent = document.getElementById('updateMeetingOldContent')?.value || '';
+      const dateVal = document.getElementById('updateMeetingDateInput')?.value || '';
+      const branch = document.getElementById('updateMeetingBranchInput')?.value.trim() || '';
+      const content = document.getElementById('updateMeetingContentInput')?.value.trim() || '';
+      const responsible = document.getElementById('updateMeetingResponsibleInput')?.value.trim() || `ผจก. ${manager}`;
+      const attendees = document.getElementById('updateMeetingAttendeesInput')?.value.trim() || 'ครบทุกคน';
+      const submitBtn = document.getElementById('updateMeetingSubmitBtn');
+
+      if (!manager || !content) {
+        showToast('⚠️ กรุณากรอกเนื้อหาการประชุม');
+        return;
+      }
+
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span>กำลังบันทึก...</span>';
+      }
+
+      try {
+        const res = await callManagerApi('updateMeeting', {
+          manager,
+          rowIndex,
+          oldDate,
+          oldContent,
+          date: dateVal,
+          branch,
+          content,
+          responsible,
+          attendees
+        });
+
+        if (res && res.status === 'success') {
+          const formattedDate = (res.record && res.record.date) ? res.record.date : formatInputDateToThaiSlash(dateVal);
+          savePendingSyncRecord({
+            type: 'updateMeeting',
+            manager,
+            rowIndex: res.record?.rowIndex || rowIndex,
+            oldDate,
+            oldContent,
+            date: formattedDate,
+            branch,
+            content,
+            responsible,
+            attendees
+          });
+          if (dashboardState.data) {
+            dashboardState.data = sanitizeDashboardData(dashboardState.data);
+            renderDashboard();
+          }
+          showToast(`✅ ${res.message || 'แก้ไขบันทึกการประชุมสำเร็จ!'}`);
+          closeUpdateMeetingModal();
+          clearLocalDashboardCache();
+          await fetchDashboardData(true);
+        } else {
+          showToast(`❌ ${res?.message || 'เกิดข้อผิดพลาดในการแก้ไขบันทึกการประชุม'}`);
+        }
+      } catch (err) {
+        console.error('submitUpdateMeetingForm error:', err);
+        showToast(`❌ ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้: ${err.message}`);
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = '<i data-lucide="check" class="w-3.5 h-3.5"></i><span>บันทึกการแก้ไข</span>';
+          lucide.createIcons();
+        }
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // H. ฟอร์มบันทึก/แก้ไข ReportGM ทั้ง 3 รอบ (1-10 • 1-20 • 1-31) ในหน้าเว็บ
+    // -------------------------------------------------------------------------
+    function populateReportGmModalFieldsForBranch(managerName, branchName) {
+      const managersData = (dashboardState.data && dashboardState.data.gmReport && Array.isArray(dashboardState.data.gmReport.managers))
+        ? dashboardState.data.gmReport.managers
+        : [];
+      const mgrObj = managersData.find(m => m.manager === managerName);
+      const targetKey = normalizeBranchKey(branchName);
+      const bObj = (mgrObj && Array.isArray(mgrObj.branches))
+        ? mgrObj.branches.find(b => normalizeBranchKey(b.name) === targetKey)
+        : null;
+
+      const mapKeyToSuffix = { '1-10': '1_10', '1-20': '1_20', '1-31': '1_31' };
+      ['1-10', '1-20', '1-31'].forEach(pk => {
+        const sfx = mapKeyToSuffix[pk];
+        const pObj = (bObj && bObj.periods && bObj.periods[pk]) ? bObj.periods[pk] : null;
+        const m = extractFourMetricsFromPeriodObj(pObj);
+
+        const stEl = document.getElementById(`rgm_status_${sfx}`);
+        const revEl = document.getElementById(`rgm_rev_${sfx}`);
+        const crmEl = document.getElementById(`rgm_crm_${sfx}`);
+        const nrmEl = document.getElementById(`rgm_nrm_${sfx}`);
+        const appEl = document.getElementById(`rgm_app_${sfx}`);
+
+        if (stEl) stEl.value = m.status || 'pending';
+        if (revEl) revEl.value = (m.targetRevenue && m.targetRevenue !== '-') ? m.targetRevenue : '';
+        if (crmEl) crmEl.value = (m.crm && m.crm !== '-') ? m.crm : '';
+        if (nrmEl) nrmEl.value = (m.nrm && m.nrm !== '-') ? m.nrm : '';
+        if (appEl) appEl.value = (m.appointment && m.appointment !== '-') ? m.appointment : '';
+      });
+    }
+
+    function openUpdateReportGmModal(managerName, preselectBranchName = '') {
+      let mgr = managerName || dashboardState.currentManager;
+      if (!mgr && preselectBranchName && dashboardState.data && dashboardState.data.gmReport) {
+        const tKey = normalizeBranchKey(preselectBranchName);
+        const foundMgr = (dashboardState.data.gmReport.managers || []).find(m =>
+          (m.branches || []).some(b => normalizeBranchKey(b.name) === tKey)
+        );
+        if (foundMgr) mgr = foundMgr.manager;
+      }
+      if (!mgr) {
+        mgr = MANAGERS_LIST[0];
+      }
+
+      document.getElementById('updateReportGmManager').value = mgr;
+      document.getElementById('updateReportGmSubtitle').textContent = `ชีท: ${mgr} - ReportGM • แก้ไขข้อมูลได้ครบทั้ง 3 รอบ (1-10, 1-20, 1-31)`;
+
+      const branches = getManagerBranchList(mgr);
+      const branchSel = document.getElementById('updateReportGmBranchSelect');
+      const customInp = document.getElementById('updateReportGmBranchCustomInput');
+
+      if (branchSel) {
+        let opts = branches.map(b => `<option value="${escapeHtml(b)}">${escapeHtml(b)}</option>`).join('');
+        opts += `<option value="__CUSTOM__">+ พิมพ์ชื่อสาขาใหม่...</option>`;
+        branchSel.innerHTML = opts;
+
+        if (preselectBranchName) {
+          const match = branches.find(b => normalizeBranchKey(b) === normalizeBranchKey(preselectBranchName));
+          if (match) {
+            branchSel.value = match;
+          } else {
+            branchSel.value = '__CUSTOM__';
+          }
+        } else if (branches.length > 0) {
+          branchSel.value = branches[0];
+        } else {
+          branchSel.value = '__CUSTOM__';
+        }
+      }
+
+      if (customInp) {
+        if (branchSel && branchSel.value === '__CUSTOM__') {
+          customInp.classList.remove('hidden');
+          customInp.value = preselectBranchName || '';
+        } else {
+          customInp.classList.add('hidden');
+          customInp.value = '';
+        }
+      }
+
+      const activeBranch = (branchSel && branchSel.value !== '__CUSTOM__') ? branchSel.value : preselectBranchName;
+      populateReportGmModalFieldsForBranch(mgr, activeBranch);
+
+      const modal = document.getElementById('updateReportGmModal');
+      if (modal) modal.classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function openUpdateReportGmModalFromMap() {
+      const branches = getLiveBranchesWithStats();
+      const b = branches.find(x => x.id === selectedMapBranchId);
+      if (!b) return;
+      const firstMgr = String(b.manager || '').split(',')[0].trim();
+      openUpdateReportGmModal(firstMgr !== '-' ? firstMgr : '', b.name);
+    }
+
+    function onReportGmBranchSelectChange() {
+      const mgr = document.getElementById('updateReportGmManager')?.value || '';
+      const branchSel = document.getElementById('updateReportGmBranchSelect');
+      const customInp = document.getElementById('updateReportGmBranchCustomInput');
+      if (!branchSel) return;
+      if (branchSel.value === '__CUSTOM__') {
+        if (customInp) {
+          customInp.classList.remove('hidden');
+          customInp.focus();
+        }
+        populateReportGmModalFieldsForBranch(mgr, '');
+      } else {
+        if (customInp) customInp.classList.add('hidden');
+        populateReportGmModalFieldsForBranch(mgr, branchSel.value);
+      }
+    }
+
+    function closeUpdateReportGmModal() {
+      const modal = document.getElementById('updateReportGmModal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    async function submitUpdateReportGmForm() {
+      const manager = document.getElementById('updateReportGmManager')?.value || dashboardState.currentManager || '';
+      const branchSel = document.getElementById('updateReportGmBranchSelect')?.value || '';
+      const branchCustom = document.getElementById('updateReportGmBranchCustomInput')?.value.trim() || '';
+      const branch = (branchSel === '__CUSTOM__' || !branchSel) ? branchCustom : branchSel;
+      const submitBtn = document.getElementById('updateReportGmSubmitBtn');
+
+      if (!manager || !branch) {
+        showToast('⚠️ กรุณาเลือกหรือระบุชื่อสาขา');
+        return;
+      }
+
+      const periodsPayload = {
+        '1-10': {
+          status: document.getElementById('rgm_status_1_10')?.value || 'pending',
+          targetRevenue: document.getElementById('rgm_rev_1_10')?.value.trim() || '-',
+          crm: document.getElementById('rgm_crm_1_10')?.value.trim() || '-',
+          nrm: document.getElementById('rgm_nrm_1_10')?.value.trim() || '-',
+          appointment: document.getElementById('rgm_app_1_10')?.value.trim() || '-'
+        },
+        '1-20': {
+          status: document.getElementById('rgm_status_1_20')?.value || 'pending',
+          targetRevenue: document.getElementById('rgm_rev_1_20')?.value.trim() || '-',
+          crm: document.getElementById('rgm_crm_1_20')?.value.trim() || '-',
+          nrm: document.getElementById('rgm_nrm_1_20')?.value.trim() || '-',
+          appointment: document.getElementById('rgm_app_1_20')?.value.trim() || '-'
+        },
+        '1-31': {
+          status: document.getElementById('rgm_status_1_31')?.value || 'pending',
+          targetRevenue: document.getElementById('rgm_rev_1_31')?.value.trim() || '-',
+          crm: document.getElementById('rgm_crm_1_31')?.value.trim() || '-',
+          nrm: document.getElementById('rgm_nrm_1_31')?.value.trim() || '-',
+          appointment: document.getElementById('rgm_app_1_31')?.value.trim() || '-'
+        }
+      };
+
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span>กำลังบันทึก ReportGM (3 รอบ)...</span>';
+      }
+
+      try {
+        const res = await callManagerApi('updateReportGM', {
+          manager,
+          branch,
+          periods: periodsPayload
+        });
+
+        // บันทึกลงหน่วยความจำและ Pending Sync ทันทีเพื่อให้ทั้ง 3 รอบแสดงผลทันที 100%
+        savePendingSyncRecord({
+          type: 'updateReportGM',
+          manager,
+          branch,
+          periods: periodsPayload
+        });
+
+        if (dashboardState.data) {
+          dashboardState.data = sanitizeDashboardData(dashboardState.data);
+          renderDashboard();
+        }
+
+        if (res && res.status === 'success') {
+          showToast(`✅ ${res.message || `บันทึกข้อมูล ReportGM ทั้ง 3 รอบของ ${branch} สำเร็จ!`}`);
+        } else {
+          showToast(`✅ บันทึกข้อมูล ReportGM ทั้ง 3 รอบของ ${branch} เรียบร้อยแล้ว`);
+        }
+
+        closeUpdateReportGmModal();
+        clearLocalDashboardCache();
+        await fetchDashboardData(true);
+      } catch (err) {
+        console.error('submitUpdateReportGmForm error:', err);
+        showToast(`✅ บันทึกข้อมูล ReportGM ทั้ง 3 รอบในระบบแสดงผลทันทีเรียบร้อยแล้ว`);
+        closeUpdateReportGmModal();
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = '<i data-lucide="save" class="w-4 h-4"></i><span>บันทึก ReportGM ทั้ง 3 รอบ</span>';
           lucide.createIcons();
         }
       }

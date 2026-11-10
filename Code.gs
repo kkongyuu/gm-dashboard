@@ -37,8 +37,8 @@ function doGet(e) {
   const action = params.action || '';
   const isForcedRefresh = params.refresh === 'true' || params.nocache === '1';
 
-  // 1.0 จัดการคำสั่งการบันทึกข้อมูลและรหัส PIN สำหรับ ผจก. 12 ท่าน
-  if (['addMeeting', 'addProblem', 'updateProblem', 'verifyPin'].includes(action)) {
+  // 1.0 จัดการคำสั่งการบันทึกข้อมูลและรหัส PIN สำหรับ ผจก. 12 ท่าน (รองรับ Meeting, Problem List และ ReportGM ครบทั้ง 3 รอบ)
+  if (['addMeeting', 'updateMeeting', 'addProblem', 'updateProblem', 'updateReportGM', 'verifyPin'].includes(action)) {
     const result = handleManagerAction(action, params);
     return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
   }
@@ -50,8 +50,8 @@ function doGet(e) {
       const periodInfo = getCurrentPeriodInfo();
       const periodIndex = (periodParam !== null && !isNaN(periodParam)) ? periodParam : periodInfo.index;
 
-      // ใช้คีย์แคช v3 เพื่อให้ดึงข้อมูลผู้จัดการทุกคน (รวมถึงชื่อที่เว้นวรรค/วรรณยุกต์ต่างกัน) ใหม่ทันทีโดยไม่ติดแคชเก่า
-      const cacheKey = 'gm_dash_cache_v3_p' + periodIndex;
+      // ใช้คีย์แคช v4 ที่รวมข้อมูลครบทั้ง 3 รอบ (1-10, 1-20, 1-31) ไว้ในก้อนเดียว
+      const cacheKey = 'gm_dash_cache_v4_p' + periodIndex;
       const cache = CacheService.getScriptCache();
 
       // ⚡ FAST CACHE: หากมีแคชและไม่ได้สั่งรีเฟรช ตอบกลับทันทีใน 0.1-0.2 วินาที!
@@ -132,6 +132,7 @@ function clearDashboardCaches() {
   try {
     const cache = CacheService.getScriptCache();
     for (let p = 0; p <= 5; p++) {
+      cache.remove('gm_dash_cache_v4_p' + p);
       cache.remove('gm_dash_cache_v3_p' + p);
       cache.remove('gm_dash_cache_v2_p' + p);
       cache.remove('gm_dash_cache_p' + p);
@@ -430,6 +431,137 @@ function handleManagerAction(action, params) {
       };
     }
 
+    // 1.5 UPDATE MEETING (แก้ไขข้อมูลการประชุมลงในไฟล์ของผู้จัดการโดยตรง + ซิงค์เข้า Dashboard ทันที)
+    if (action === 'updateMeeting') {
+      const mSheet = findSheet(manager, 'Meeting');
+      if (!mSheet) {
+        return { status: 'error', message: `ไม่พบชีท Meeting ในไฟล์ของ ผจก.${manager}` };
+      }
+
+      const dateInput = params.date ? String(params.date).trim() : '';
+      let dateObjToWrite = new Date();
+      let displayDateTh = '';
+
+      if (dateInput) {
+        const isoMatch = dateInput.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+        const slashMatch = dateInput.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+        if (isoMatch) {
+          let y = parseInt(isoMatch[1], 10);
+          if (y > 2400) y -= 543;
+          const m = parseInt(isoMatch[2], 10) - 1;
+          const d = parseInt(isoMatch[3], 10);
+          dateObjToWrite = new Date(y, m, d, 12, 0, 0);
+        } else if (slashMatch) {
+          const d = parseInt(slashMatch[1], 10);
+          const m = parseInt(slashMatch[2], 10) - 1;
+          let y = parseInt(slashMatch[3], 10);
+          if (y > 2400) y -= 543;
+          dateObjToWrite = new Date(y, m, d, 12, 0, 0);
+        }
+      }
+
+      const dd = String(dateObjToWrite.getDate()).padStart(2, '0');
+      const mm = String(dateObjToWrite.getMonth() + 1).padStart(2, '0');
+      const yyyyTh = dateObjToWrite.getFullYear() + 543;
+      displayDateTh = `${dd}/${mm}/${yyyyTh}`;
+
+      const rowIndex = params.rowIndex ? parseInt(params.rowIndex, 10) : null;
+      const oldContent = String(params.oldContent || '').trim();
+      const oldBranch = String(params.oldBranch || '').trim();
+      const branch = String(params.branch || '').trim();
+      const content = String(params.content || '').trim();
+      const responsible = String(params.responsible || `ผจก. ${manager}`).trim();
+      const attendees = String(params.attendees || 'ครบทุกคน').trim();
+
+      if (!content) {
+        return { status: 'error', message: 'กรุณากรอกเนื้อหาการประชุม' };
+      }
+
+      function applyMeetingUpdateOnSheet(sheet) {
+        if (!sheet) return -1;
+        const mData = sheet.getDataRange().getValues();
+        let matched = -1;
+
+        if (rowIndex && rowIndex >= 2 && rowIndex <= mData.length) {
+          const rContent = String(mData[rowIndex - 1][2] || '').trim();
+          if (!oldContent || rContent === oldContent) {
+            matched = rowIndex;
+          }
+        }
+        if (matched === -1 && oldContent) {
+          for (let r = 1; r < mData.length; r++) {
+            const rBranch = String(mData[r][1] || '').trim();
+            const rContent = String(mData[r][2] || '').trim();
+            if (rContent === oldContent && (!oldBranch || rBranch === oldBranch)) {
+              matched = r + 1;
+              break;
+            }
+          }
+        }
+        if (matched === -1 && oldContent) {
+          for (let r = 1; r < mData.length; r++) {
+            const rContent = String(mData[r][2] || '').trim();
+            if (rContent === oldContent) {
+              matched = r + 1;
+              break;
+            }
+          }
+        }
+        if (matched === -1 && rowIndex && rowIndex >= 2 && rowIndex <= mData.length + 5) {
+          matched = rowIndex;
+        }
+        if (matched !== -1) {
+          sheet.getRange(matched, 1, 1, 5).setValues([[dateObjToWrite, branch, content, responsible, attendees]]);
+        }
+        return matched;
+      }
+
+      const matchedRow = applyMeetingUpdateOnSheet(mSheet);
+      let matchedMainRow = -1;
+      try {
+        const mainMSheet = findMainOutputSheet(manager, 'Meeting');
+        if (mainMSheet && !sheetHasImportRange(mainMSheet)) {
+          matchedMainRow = applyMeetingUpdateOnSheet(mainMSheet);
+        }
+      } catch (syncErr) {
+        console.warn('Mirror updateMeeting warning:', syncErr);
+      }
+
+      if (matchedRow === -1 && matchedMainRow === -1) {
+        return { status: 'error', message: 'ไม่พบรายการประชุมที่ต้องการแก้ไขในชีทของผู้จัดการ' };
+      }
+
+      SpreadsheetApp.flush();
+
+      recordPendingSyncAction({
+        type: 'updateMeeting',
+        manager: manager,
+        rowIndex: matchedRow !== -1 ? matchedRow : rowIndex,
+        oldContent: oldContent,
+        oldBranch: oldBranch,
+        date: displayDateTh,
+        branch: branch,
+        content: content,
+        responsible: responsible,
+        attendees: attendees
+      });
+
+      clearDashboardCaches();
+
+      return {
+        status: 'success',
+        message: `แก้ไขข้อมูลการประชุมในชีทของ ผจก.${manager} (แถวที่ ${matchedRow !== -1 ? matchedRow : matchedMainRow}) สำเร็จแล้ว`,
+        record: {
+          rowIndex: matchedRow !== -1 ? matchedRow : rowIndex,
+          date: displayDateTh,
+          branch: branch,
+          content: content,
+          responsible: responsible,
+          attendees: attendees
+        }
+      };
+    }
+
     // 2. ADD PROBLEM (บันทึกลงไฟล์ของผู้จัดการโดยตรง + ซิงค์เข้า Dashboard ทันที)
     if (action === 'addProblem') {
       let pSheet = findSheet(manager, 'Problem List');
@@ -512,15 +644,17 @@ function handleManagerAction(action, params) {
       };
     }
 
-    // 3. UPDATE PROBLEM (อัปเดต COL H, COL I, STATUS, URGENCY ลงในไฟล์ของผู้จัดการโดยตรง + ซิงค์เข้า Dashboard ทันที)
+    // 3. UPDATE PROBLEM (อัปเดตทุกฟิลด์ของรายการปัญหาลงในไฟล์ของผู้จัดการโดยตรง + ซิงค์เข้า Dashboard ทันที)
     if (action === 'updateProblem') {
       const pSheet = findSheet(manager, 'Problem List');
       if (!pSheet) {
         return { status: 'error', message: `ไม่พบชีท Problem List ในไฟล์ของ ผจก.${manager}` };
       }
 
-      const targetSubject = String(params.subject || '').trim();
-      const targetBranch = String(params.branch || '').trim();
+      const targetSubject = String(params.oldSubject || params.subject || '').trim();
+      const targetBranch = String(params.oldBranch || params.branch || '').trim();
+      const newBranch = params.newBranch !== undefined ? String(params.newBranch).trim() : (params.branch !== undefined ? String(params.branch).trim() : '');
+      const newSubject = params.newSubject !== undefined ? String(params.newSubject).trim() : (params.subject !== undefined ? String(params.subject).trim() : '');
       const rowIndex = params.rowIndex ? parseInt(params.rowIndex, 10) : null;
 
       function applyProblemUpdateOnSheet(sheet) {
@@ -553,11 +687,18 @@ function handleManagerAction(action, params) {
             }
           }
         }
+        if (matched === -1 && rowIndex && rowIndex >= 2 && rowIndex <= pData.length + 5) {
+          matched = rowIndex;
+        }
         if (matched !== -1) {
+          if (newBranch !== '') sheet.getRange(matched, 2).setValue(newBranch);
+          if (params.urgency !== undefined && params.urgency !== '') sheet.getRange(matched, 3).setValue(String(params.urgency));
+          if (params.needsGmHelp !== undefined && params.needsGmHelp !== '') sheet.getRange(matched, 4).setValue(String(params.needsGmHelp));
+          if (params.status !== undefined && params.status !== '') sheet.getRange(matched, 5).setValue(String(params.status));
+          if (params.category !== undefined && params.category !== '') sheet.getRange(matched, 6).setValue(String(params.category));
+          if (newSubject !== '') sheet.getRange(matched, 7).setValue(newSubject);
           if (params.colH !== undefined) sheet.getRange(matched, 8).setValue(String(params.colH));
           if (params.colI !== undefined) sheet.getRange(matched, 9).setValue(String(params.colI));
-          if (params.status !== undefined && params.status !== '') sheet.getRange(matched, 5).setValue(String(params.status));
-          if (params.urgency !== undefined && params.urgency !== '') sheet.getRange(matched, 3).setValue(String(params.urgency));
         }
         return matched;
       }
@@ -584,7 +725,11 @@ function handleManagerAction(action, params) {
         manager: manager,
         rowIndex: matchedRow !== -1 ? matchedRow : rowIndex,
         branch: targetBranch,
+        newBranch: newBranch || targetBranch,
         subject: targetSubject,
+        newSubject: newSubject || targetSubject,
+        needsGmHelp: params.needsGmHelp,
+        category: params.category,
         status: params.status,
         urgency: params.urgency,
         colH: params.colH,
@@ -596,6 +741,167 @@ function handleManagerAction(action, params) {
       return {
         status: 'success',
         message: `อัปเดตข้อมูลปัญหาในชีทของ ผจก.${manager} (แถวที่ ${matchedRow !== -1 ? matchedRow : matchedMainRow}) สำเร็จแล้ว`
+      };
+    }
+
+    // 4. UPDATE REPORT GM (อัปเดต KPI ทั้ง 3 รอบ 1-10, 1-20, 1-31 ของสาขาลงในชีท ReportGM ของผู้จัดการโดยตรง + ซิงค์เข้า Dashboard ทันที)
+    if (action === 'updateReportGM') {
+      let rSheet = findSheet(manager, 'ReportGM');
+      if (!rSheet) {
+        rSheet = ss.insertSheet('ReportGM');
+      }
+
+      const branch = String(params.branch || '').trim();
+      if (!branch) {
+        return { status: 'error', message: 'กรุณาระบุชื่อสาขาที่ต้องการอัปเดต ReportGM' };
+      }
+
+      let periodsPayload = {};
+      if (params.periodsJson) {
+        try {
+          periodsPayload = typeof params.periodsJson === 'string' ? JSON.parse(params.periodsJson) : params.periodsJson;
+        } catch (e) {
+          return { status: 'error', message: 'รูปแบบข้อมูล ReportGM ไม่ถูกต้อง: ' + e.message };
+        }
+      }
+
+      function applyReportGMOnSheet(sheet) {
+        if (!sheet) return -1;
+        const rData = sheet.getDataRange().getValues();
+        const totalRows = rData.length;
+        let branchStartRow0 = -1; // 0-based index
+
+        for (let r = 0; r < totalRows; r += 24) {
+          const c0 = String(rData[r][0] || '').trim();
+          const c3 = String(rData[r][3] || '').trim();
+          const c0Next = (r + 1 < totalRows) ? String(rData[r + 1][0] || '').trim() : '';
+          const c3Next = (r + 1 < totalRows) ? String(rData[r + 1][3] || '').trim() : '';
+          if (c3 === branch || c0 === branch || c3Next === branch || c0Next === branch) {
+            branchStartRow0 = r;
+            break;
+          }
+        }
+
+        // ถ้าไม่พบทีละ 24 แถว ให้ค้นหาทุกแถว
+        if (branchStartRow0 === -1) {
+          for (let r = 0; r < totalRows; r++) {
+            const c0 = String(rData[r][0] || '').trim();
+            const c3 = String(rData[r][3] || '').trim();
+            if (c3 === branch || c0 === branch) {
+              branchStartRow0 = Math.floor(r / 24) * 24;
+              break;
+            }
+          }
+        }
+
+        // หากยังไม่มีสาขานี้ในชีท ReportGM ให้สร้างบล็อก 24 แถวใหม่ต่อท้าย
+        if (branchStartRow0 === -1) {
+          branchStartRow0 = totalRows > 1 ? Math.ceil(totalRows / 24) * 24 : 0;
+          const baseRow1 = branchStartRow0 + 1;
+          sheet.getRange(baseRow1, 1, 1, 4).setValues([['สาขา', '', '', branch]]);
+          const periodMeta = [
+            { offset: 1, label: '1-10', revSub: 'ยอดสะสมเทียบเป้า 10 วัน' },
+            { offset: 8, label: '11-20', revSub: 'ยอดสะสมเทียบเป้า 20 วัน' },
+            { offset: 15, label: '21-31', revSub: 'ยอดสะสมเทียบเป้า 30 วัน' }
+          ];
+          periodMeta.forEach(pm => {
+            const r1 = baseRow1 + pm.offset;
+            sheet.getRange(r1, 1, 6, 4).setValues([
+              [pm.label, 'รายละเอียด', 'ข้อมูล', 'เกณฑ์ประเมิน'],
+              ['🎯 Target Revenue', pm.revSub, '-', ''],
+              ['👥 New Case Management (NCM)', 'จำนวนลูกค้าใหม่', '-', ''],
+              ['❤️ CRM Performance', '% CRM ต่อเป้า', '-', ''],
+              ['การนัด', 'เปอร์เซ็นการนัด', '-', ''],
+              ['', '', '', '']
+            ]);
+          });
+        }
+
+        const refreshedData = sheet.getDataRange().getValues();
+        const periodOffsets = [
+          { keys: ['1-10', '0'], offset: 1, revSub: 'ยอดสะสมเทียบเป้า 10 วัน' },
+          { keys: ['1-20', '11-20', '1'], offset: 8, revSub: 'ยอดสะสมเทียบเป้า 20 วัน' },
+          { keys: ['1-31', '21-31', '2'], offset: 15, revSub: 'ยอดสะสมเทียบเป้า 30 วัน' }
+        ];
+
+        periodOffsets.forEach(po => {
+          let pInput = null;
+          for (let k = 0; k < po.keys.length; k++) {
+            if (periodsPayload[po.keys[k]]) {
+              pInput = periodsPayload[po.keys[k]];
+              break;
+            }
+          }
+          if (!pInput) return;
+
+          const start0 = branchStartRow0 + po.offset;
+          const end0 = Math.min(start0 + 6, refreshedData.length);
+
+          const kpiDefs = [
+            { fieldVal: 'targetVal', fieldCrit: 'targetCriteria', match: a => a.includes('target') || a.includes('revenue'), defaultTitle: '🎯 Target Revenue', defaultSub: po.revSub, fallbackOffset: 1 },
+            { fieldVal: 'nrmVal', fieldCrit: 'nrmCriteria', match: a => a.includes('new case') || a.includes('ncm') || a.includes('nrm'), defaultTitle: '👥 New Case Management (NCM)', defaultSub: 'จำนวนลูกค้าใหม่', fallbackOffset: 2 },
+            { fieldVal: 'crmVal', fieldCrit: 'crmCriteria', match: a => a.includes('crm'), defaultTitle: '❤️ CRM Performance', defaultSub: '% CRM ต่อเป้า', fallbackOffset: 3 },
+            { fieldVal: 'apptVal', fieldCrit: 'apptCriteria', match: a => a.includes('การนัด') || a.includes('appointment'), defaultTitle: 'การนัด', defaultSub: 'เปอร์เซ็นการนัด', fallbackOffset: 4 }
+          ];
+
+          kpiDefs.forEach(kd => {
+            if (pInput[kd.fieldVal] === undefined && pInput[kd.fieldCrit] === undefined) return;
+            let targetRow1 = -1;
+            for (let kr = start0; kr < end0; kr++) {
+              const colALower = String((refreshedData[kr] && refreshedData[kr][0]) || '').toLowerCase();
+              if (kd.match(colALower)) {
+                targetRow1 = kr + 1;
+                break;
+              }
+            }
+            if (targetRow1 === -1) {
+              targetRow1 = start0 + kd.fallbackOffset + 1;
+              const curTitle = String(sheet.getRange(targetRow1, 1).getValue() || '').trim();
+              if (!curTitle) {
+                sheet.getRange(targetRow1, 1, 1, 2).setValues([[kd.defaultTitle, kd.defaultSub]]);
+              }
+            }
+            if (pInput[kd.fieldVal] !== undefined) {
+              sheet.getRange(targetRow1, 3).setValue(String(pInput[kd.fieldVal]).trim() || '-');
+            }
+            if (pInput[kd.fieldCrit] !== undefined) {
+              sheet.getRange(targetRow1, 4).setValue(String(pInput[kd.fieldCrit]).trim());
+            }
+          });
+        });
+
+        return branchStartRow0 + 1;
+      }
+
+      const matchedRow = applyReportGMOnSheet(rSheet);
+      try {
+        const mainRSheet = findMainOutputSheet(manager, 'ReportGM');
+        if (mainRSheet && !sheetHasImportRange(mainRSheet)) {
+          applyReportGMOnSheet(mainRSheet);
+        }
+      } catch (syncErr) {
+        console.warn('Mirror updateReportGM warning:', syncErr);
+      }
+
+      SpreadsheetApp.flush();
+
+      recordPendingSyncAction({
+        type: 'updateReportGM',
+        manager: manager,
+        branch: branch,
+        periods: periodsPayload
+      });
+
+      clearDashboardCaches();
+
+      return {
+        status: 'success',
+        message: `บันทึกข้อมูล ReportGM ทั้ง 3 รอบ (1-10, 1-20, 1-31) ของ ${branch} (ผจก.${manager}) สำเร็จแล้ว`,
+        record: {
+          manager: manager,
+          branch: branch,
+          periods: periodsPayload
+        }
       };
     }
 
@@ -762,6 +1068,27 @@ function getGmDashboardDataFast(periodInfo) {
         }
       });
 
+      // ผสานรายการแก้ไขการประชุมจากฟอร์มของ ผจก.
+      const pendingMeetingUpdates = pendingSyncList.filter(a => a && a.type === 'updateMeeting' && a.manager === managerName);
+      pendingMeetingUpdates.forEach(mu => {
+        for (let i = 0; i < meetingLogs.length; i++) {
+          const log = meetingLogs[i];
+          const matchByRow = mu.rowIndex && log.rowIndex === mu.rowIndex && (!mu.oldContent || log.content === mu.oldContent);
+          const matchByContent = mu.oldContent && log.content === mu.oldContent && (!mu.oldBranch || log.branch === mu.oldBranch);
+          if (matchByRow || matchByContent) {
+            if (mu.date) {
+              log.date = mu.date;
+              log.rawDate = mu.date;
+              meetingDates[i] = mu.date;
+            }
+            if (mu.branch !== undefined) log.branch = mu.branch;
+            if (mu.content !== undefined) log.content = mu.content;
+            if (mu.responsible !== undefined) log.responsible = mu.responsible;
+            if (mu.attendees !== undefined) log.attendees = mu.attendees;
+          }
+        }
+      });
+
       actualMeetings = meetingDates.length;
       summaryTotals.totalMeetingsDone += actualMeetings;
       const compliance = Math.round((actualMeetings / 8) * 100);
@@ -827,7 +1154,7 @@ function getGmDashboardDataFast(periodInfo) {
         }
       });
 
-      // ผสานการแก้ไขปัญหา (Col H, Col I, Status, Urgency) ล่าสุดจาก Pending Sync
+      // ผสานการแก้ไขปัญหา (ทุกฟิลด์) ล่าสุดจาก Pending Sync
       const pendingUpdates = pendingSyncList.filter(a => a && a.type === 'updateProblem' && a.manager === managerName);
       pendingUpdates.forEach(pu => {
         for (let i = 0; i < rawProblemsRows.length; i++) {
@@ -835,6 +1162,10 @@ function getGmDashboardDataFast(periodInfo) {
           const matchBySubject = pu.subject && item.subject === pu.subject && (!pu.branch || item.branch === pu.branch);
           const matchByRow = pu.rowIndex && item.rowIndex === pu.rowIndex && (!pu.subject || item.subject === pu.subject);
           if (matchBySubject || matchByRow) {
+            if (pu.newBranch) item.branch = String(pu.newBranch).trim();
+            if (pu.newSubject) item.subject = String(pu.newSubject).trim();
+            if (pu.needsGmHelp !== undefined && pu.needsGmHelp !== '') item.needsGmHelp = String(pu.needsGmHelp).trim();
+            if (pu.category !== undefined && pu.category !== '') item.category = String(pu.category).trim();
             if (pu.colH !== undefined) item.colH = String(pu.colH).trim();
             if (pu.colI !== undefined) item.colI = String(pu.colI).trim();
             if (pu.status) item.status = String(pu.status).trim();
@@ -913,35 +1244,64 @@ function getGmDashboardDataFast(periodInfo) {
       }
 
       // -------------------------------------------------------------
-      // 3.3 รายงานผลประกอบการ KPI สาขา (ReportGM Sheet)
+      // 3.3 รายงานผลประกอบการ KPI สาขาครบทั้ง 3 รอบ (1-10, 1-20, 1-31) พร้อมกัน!
       // -------------------------------------------------------------
       let branchesMap = {};
       let allBranchNames = new Set(Object.keys(problemsByBranch));
-      let managerTargetRed = 0, managerTargetYellow = 0, managerTargetGreen = 0;
+      let managerTargetByPeriod = {
+        '1-10': { red: 0, yellow: 0, green: 0 },
+        '1-20': { red: 0, yellow: 0, green: 0 },
+        '1-31': { red: 0, yellow: 0, green: 0 }
+      };
+
+      function evaluateKpiRowStatus(colC, colD) {
+        if (colD !== '') {
+          if (colD.includes("ไม่เป็นไปตามเป้า")) return "red";
+          if (colD.includes("เสี่ยงต่ำกว่าเป้าหมาย")) return "yellow";
+          if (colD.includes("มีโอกาสเป็นไปตามเป้า")) return "green";
+        }
+        const pctMatch = String(colC || '').match(/\(([\d.]+)%\)/);
+        if (pctMatch) {
+          const pct = parseFloat(pctMatch[1]);
+          if (pct >= 100) return "green";
+          if (pct >= 85) return "yellow";
+          return "red";
+        }
+        return "pending";
+      }
+
+      function createDefaultPeriodKpis(pKey) {
+        const dayLabel = pKey === '1-10' ? '10 วัน' : (pKey === '1-20' ? '20 วัน' : '30 วัน');
+        return {
+          status: 'pending',
+          kpis: [
+            { title: "🎯 Target Revenue", rawTitle: "🎯 Target Revenue", subTitle: `ยอดสะสมเทียบเป้า ${dayLabel}`, value: "-", criteria: "", status: "pending" },
+            { title: "NRM", rawTitle: "👥 New Case Management (NCM)", subTitle: "จำนวนลูกค้าใหม่", value: "-", criteria: "", status: "pending" },
+            { title: "CRM", rawTitle: "❤️ CRM Performance", subTitle: "% CRM ต่อเป้า", value: "-", criteria: "", status: "pending" },
+            { title: "การนัด", rawTitle: "การนัด", subTitle: "เปอร์เซ็นการนัด", value: "-", criteria: "", status: "pending" }
+          ]
+        };
+      }
 
       const rSheet = getSheetFuzzy(managerName, 'ReportGM');
       if (rSheet) {
         const rData = rSheet.getDataRange().getValues();
         const totalRows = rData.length;
 
-        // ฟังก์ชันตรวจสอบชื่อสาขาที่ถูกต้อง (ต้องมีคำว่า สาขา หรือเป็นชื่อสาขาจริง และไม่เอาหัวตาราง/KPI/ตัวเลขวันที่)
         function isValidBranch(name) {
           if (!name || name instanceof Date) return false;
           const s = String(name).trim();
           if (s === '' || s === '-' || s === 'สาขา' || s === 'หัวข้อ' || s === 'ครั้งที่') return false;
           if (s.indexOf('1-10') === 0 || s.indexOf('11-20') === 0 || s.indexOf('21-31') === 0) return false;
           if (s.indexOf('GMT') !== -1 || /^\d+$/.test(s)) return false;
-          
-          // คัดกรองข้อความที่เป็นหัวข้อ KPI หรือเกณฑ์ประเมินออก
+
           const lower = s.toLowerCase();
           if (lower.includes('target') || lower.includes('revenue') || lower.includes('nrm') || lower.includes('ncm') || lower.includes('crm')) return false;
           if (s.includes('การนัด') || s.includes('หมายเหตุ') || s.includes('เป้าหมาย') || s.includes('มาตรการ') || s.includes('เป็นไปตามเป้า')) return false;
 
-          // ต้องมีคำว่า สาขา หรือขึ้นต้นด้วยคำว่า สาขา
           return s.includes('สาขา');
         }
 
-        // ค้นหาตำแหน่งหัวบล็อกสาขา โดยตรวจสอบทีละ 24 แถว (โครงสร้างมาตรฐานของ ReportGM)
         let branchBlockRows = [];
         for (let r = 0; r < totalRows; r += 24) {
           if (isValidBranch(rData[r][3]) || isValidBranch(rData[r][0]) || (r + 1 < totalRows && (isValidBranch(rData[r + 1][3]) || isValidBranch(rData[r + 1][0])))) {
@@ -949,9 +1309,14 @@ function getGmDashboardDataFast(periodInfo) {
           }
         }
 
+        const periodDefs = [
+          { key: '1-10', idx: 0, offset: 1 },
+          { key: '1-20', idx: 1, offset: 8 },
+          { key: '1-31', idx: 2, offset: 15 }
+        ];
+
         for (let bIdx = 0; bIdx < branchBlockRows.length; bIdx++) {
           const r = branchBlockRows[bIdx];
-          // ค้นหาชื่อสาขาที่ Cell D (index 3) หรือ Cell A (index 0) ในแถว r, r+1
           let bName = '';
           if (isValidBranch(rData[r][3])) {
             bName = String(rData[r][3]).trim();
@@ -965,112 +1330,195 @@ function getGmDashboardDataFast(periodInfo) {
 
           if (bName) {
             allBranchNames.add(bName);
+            let periodsData = {};
 
-            // คำนวณแถวเริ่มต้นของรอบ (0: r+1, 1: r+8, 2: r+15)
-            const startRowIdx = (periodInfo.index === 0) ? r + 1 : (periodInfo.index === 1 ? r + 8 : r + 15);
-            let branchRed = 0, branchYellow = 0, branchGreen = 0;
-            let kpiList = [];
+            periodDefs.forEach(pd => {
+              const startRowIdx = r + pd.offset;
+              let pRed = 0, pYellow = 0, pGreen = 0;
+              let kpiList = [];
 
-            if (startRowIdx < totalRows) {
-              const maxKpiRows = Math.min(startRowIdx + 6, totalRows);
-              for (let kr = startRowIdx; kr < maxKpiRows; kr++) {
-                const kRow = rData[kr];
-                const colA = String(kRow[0] || '').trim();
-                const colB = String(kRow[1] || '').trim();
-                const colC = kRow[2] !== undefined && kRow[2] !== null ? String(kRow[2]).trim() : '-';
-                const colD = String(kRow[3] || '').trim();
+              if (startRowIdx < totalRows) {
+                const maxKpiRows = Math.min(startRowIdx + 6, totalRows);
+                for (let kr = startRowIdx; kr < maxKpiRows; kr++) {
+                  const kRow = rData[kr];
+                  const colA = String(kRow[0] || '').trim();
+                  const colB = String(kRow[1] || '').trim();
+                  const colC = kRow[2] !== undefined && kRow[2] !== null ? String(kRow[2]).trim() : '-';
+                  const colD = String(kRow[3] || '').trim();
 
-                if (colA && colA !== 'สาขา' && colA !== 'หัวข้อ' && !colA.includes('GMT') && colA !== '1-10' && colA !== '11-20' && colA !== '21-31') {
-                  const shortColA = shortenKpiName(colA);
-                  const isTargetRevenue = colA.toLowerCase().includes('target') || colA.toLowerCase().includes('revenue');
+                  if (colA && colA !== 'สาขา' && colA !== 'หัวข้อ' && !colA.includes('GMT') && colA !== '1-10' && colA !== '11-20' && colA !== '21-31') {
+                    const shortColA = shortenKpiName(colA);
+                    const kpiStatus = evaluateKpiRowStatus(colC, colD);
+                    if (kpiStatus === 'red') pRed++;
+                    else if (kpiStatus === 'yellow') pYellow++;
+                    else if (kpiStatus === 'green') pGreen++;
 
-                  let kpiStatus = "pending";
-                  if (colD !== '') {
-                    if (colD.includes("ไม่เป็นไปตามเป้า")) {
-                      kpiStatus = "red";
-                      branchRed++;
-                      summaryTotals.kpiStatusCount.red++;
-                      if (isTargetRevenue) managerTargetRed++;
-                    } else if (colD.includes("เสี่ยงต่ำกว่าเป้าหมาย")) {
-                      kpiStatus = "yellow";
-                      branchYellow++;
-                      summaryTotals.kpiStatusCount.yellow++;
-                      if (isTargetRevenue) managerTargetYellow++;
-                    } else if (colD.includes("มีโอกาสเป็นไปตามเป้า")) {
-                      kpiStatus = "green";
-                      branchGreen++;
-                      summaryTotals.kpiStatusCount.green++;
-                      if (isTargetRevenue) managerTargetGreen++;
-                    }
-                  } else {
-                    // ประเมินจาก % หากมีระบุใน Value เช่น "1023376 (68.22%)"
-                    const pctMatch = colC.match(/\(([\d.]+)%\)/);
-                    if (pctMatch) {
-                      const pct = parseFloat(pctMatch[1]);
-                      if (pct >= 100) { kpiStatus = "green"; branchGreen++; summaryTotals.kpiStatusCount.green++; if (isTargetRevenue) managerTargetGreen++; }
-                      else if (pct >= 85) { kpiStatus = "yellow"; branchYellow++; summaryTotals.kpiStatusCount.yellow++; if (isTargetRevenue) managerTargetYellow++; }
-                      else { kpiStatus = "red"; branchRed++; summaryTotals.kpiStatusCount.red++; if (isTargetRevenue) managerTargetRed++; }
-                    } else {
-                      summaryTotals.kpiStatusCount.pending++;
-                    }
+                    kpiList.push({
+                      title: shortColA || colA,
+                      rawTitle: colA,
+                      subTitle: colB,
+                      value: colC !== '' ? colC : '-',
+                      criteria: colD,
+                      status: kpiStatus
+                    });
                   }
-
-                  kpiList.push({
-                    title: shortColA || colA,
-                    rawTitle: colA,
-                    subTitle: colB,
-                    value: colC !== '' ? colC : '-',
-                    criteria: colD,
-                    status: kpiStatus
-                  });
                 }
               }
-            }
 
-            let branchOverallStatus = "pending";
-            if (branchRed > 0) branchOverallStatus = "red";
-            else if (branchYellow > 0) branchOverallStatus = "yellow";
-            else if (branchGreen > 0) branchOverallStatus = "green";
+              let pStatus = "pending";
+              if (pRed > 0) pStatus = "red";
+              else if (pYellow > 0) pStatus = "yellow";
+              else if (pGreen > 0) pStatus = "green";
+
+              periodsData[pd.key] = {
+                status: pStatus,
+                kpis: kpiList.length > 0 ? kpiList : createDefaultPeriodKpis(pd.key).kpis
+              };
+            });
+
+            const activeKey = periodInfo.index === 0 ? '1-10' : (periodInfo.index === 1 ? '1-20' : '1-31');
+            const activePeriodObj = periodsData[activeKey] || periodsData['1-10'];
 
             branchesMap[bName] = {
               name: bName,
               manager: managerName,
-              kpis: kpiList,
-              status: branchOverallStatus,
+              kpis: activePeriodObj.kpis,
+              status: activePeriodObj.status,
+              periods: periodsData,
               problems: problemsByBranch[bName] || { red: 0, yellow: 0, purple: 0, normal: 0, total: 0 }
             };
           }
         }
       }
 
-      // 3.4 รวบรวมสาขาทั้งหมด (รวมสาขาที่มีใน Problem List ด้วย เช่น รัตน์ -> สาขานครปฐม)
+      // ผสานการแก้ไข ReportGM ล่าสุดจาก Pending Sync (กรณี IMPORTRANGE ยังซิงค์ไม่เสร็จ)
+      const pendingReportUpdates = pendingSyncList.filter(a => a && a.type === 'updateReportGM' && a.manager === managerName);
+      pendingReportUpdates.forEach(ru => {
+        if (!ru.branch || !ru.periods) return;
+        allBranchNames.add(ru.branch);
+        if (!branchesMap[ru.branch]) {
+          branchesMap[ru.branch] = {
+            name: ru.branch,
+            manager: managerName,
+            kpis: createDefaultPeriodKpis('1-10').kpis,
+            status: 'pending',
+            periods: {
+              '1-10': createDefaultPeriodKpis('1-10'),
+              '1-20': createDefaultPeriodKpis('1-20'),
+              '1-31': createDefaultPeriodKpis('1-31')
+            },
+            problems: problemsByBranch[ru.branch] || { red: 0, yellow: 0, purple: 0, normal: 0, total: 0 }
+          };
+        }
+        const bObj = branchesMap[ru.branch];
+        ['1-10', '1-20', '1-31'].forEach(pKey => {
+          const pInput = ru.periods[pKey];
+          if (!pInput) return;
+          if (!bObj.periods[pKey]) bObj.periods[pKey] = createDefaultPeriodKpis(pKey);
+          const kList = bObj.periods[pKey].kpis;
+
+          function updateKpiItemInList(matchFn, defaultTitle, defaultSub, val, crit) {
+            if (val === undefined && crit === undefined) return;
+            let item = kList.find(k => matchFn(String(k.title || '').toLowerCase(), String(k.rawTitle || '').toLowerCase()));
+            if (!item) {
+              item = { title: defaultTitle, rawTitle: defaultTitle, subTitle: defaultSub, value: '-', criteria: '', status: 'pending' };
+              kList.push(item);
+            }
+            if (val !== undefined) item.value = String(val).trim() || '-';
+            if (crit !== undefined) item.criteria = String(crit).trim();
+            item.status = evaluateKpiRowStatus(item.value, item.criteria);
+          }
+
+          const dayLabel = pKey === '1-10' ? '10 วัน' : (pKey === '1-20' ? '20 วัน' : '30 วัน');
+          updateKpiItemInList((t, r) => t.includes('target') || r.includes('target') || t.includes('revenue'), '🎯 Target Revenue', `ยอดสะสมเทียบเป้า ${dayLabel}`, pInput.targetVal, pInput.targetCriteria);
+          updateKpiItemInList((t, r) => t === 'nrm' || r.includes('new case') || r.includes('ncm'), 'NRM', 'จำนวนลูกค้าใหม่', pInput.nrmVal, pInput.nrmCriteria);
+          updateKpiItemInList((t, r) => t === 'crm' || r.includes('crm'), 'CRM', '% CRM ต่อเป้า', pInput.crmVal, pInput.crmCriteria);
+          updateKpiItemInList((t, r) => t.includes('การนัด') || r.includes('การนัด'), 'การนัด', 'เปอร์เซ็นการนัด', pInput.apptVal, pInput.apptCriteria);
+
+          let pRed = 0, pYellow = 0, pGreen = 0;
+          kList.forEach(k => {
+            if (k.status === 'red') pRed++;
+            else if (k.status === 'yellow') pYellow++;
+            else if (k.status === 'green') pGreen++;
+          });
+          bObj.periods[pKey].status = pRed > 0 ? 'red' : (pYellow > 0 ? 'yellow' : (pGreen > 0 ? 'green' : 'pending'));
+        });
+
+        const activeKey = periodInfo.index === 0 ? '1-10' : (periodInfo.index === 1 ? '1-20' : '1-31');
+        bObj.kpis = bObj.periods[activeKey].kpis;
+        bObj.status = bObj.periods[activeKey].status;
+      });
+
+      // 3.4 รวบรวมสาขาทั้งหมด และคำนวณสรุป KPI ทั้ง 3 รอบ
       // -------------------------------------------------------------
       let finalBranches = [];
       allBranchNames.forEach(bName => {
-        if (branchesMap[bName]) {
-          finalBranches.push(branchesMap[bName]);
-        } else {
-          // หากไม่มี ReportGM แต่มีปัญหาใน Problem List ให้สร้างการ์ดสาขาขึ้นมาเพื่อให้ติดตามได้!
-          finalBranches.push({
+        let bObj = branchesMap[bName];
+        if (!bObj) {
+          bObj = {
             name: bName,
             manager: managerName,
-            kpis: [
-              { title: "Target Revenue", rawTitle: "Target Revenue", subTitle: "เป้าหมายสาขา", value: "-", criteria: "-", status: "pending" },
-              { title: "NRM", rawTitle: "New Case Management", subTitle: "ลูกค้าใหม่", value: "-", criteria: "-", status: "pending" },
-              { title: "CRM", rawTitle: "CRM", subTitle: "การดูแลลูกค้า", value: "-", criteria: "-", status: "pending" }
-            ],
+            kpis: createDefaultPeriodKpis('1-10').kpis,
             status: "pending",
+            periods: {
+              '1-10': createDefaultPeriodKpis('1-10'),
+              '1-20': createDefaultPeriodKpis('1-20'),
+              '1-31': createDefaultPeriodKpis('1-31')
+            },
             problems: problemsByBranch[bName] || { red: 0, yellow: 0, purple: 0, normal: 0, total: 0 }
-          });
+          };
         }
+
+        // เลือก kpis หลักของสาขาจากรอบล่าสุดที่มีข้อมูลจริง (หากรอบปัจจุบันยัง pending)
+        const pOrder = ['1-31', '1-20', '1-10'];
+        let chosenPeriodKey = periodInfo.index === 0 ? '1-10' : (periodInfo.index === 1 ? '1-20' : '1-31');
+        if (!bObj.periods[chosenPeriodKey] || bObj.periods[chosenPeriodKey].status === 'pending') {
+          for (let pk of pOrder) {
+            if (bObj.periods[pk] && bObj.periods[pk].kpis.some(k => k.value && k.value !== '-')) {
+              chosenPeriodKey = pk;
+              break;
+            }
+          }
+        }
+        bObj.kpis = bObj.periods[chosenPeriodKey].kpis;
+        bObj.status = bObj.periods[chosenPeriodKey].status;
+
+        ['1-10', '1-20', '1-31'].forEach(pk => {
+          const pData = bObj.periods[pk];
+          if (!pData) return;
+          pData.kpis.forEach(k => {
+            const isTarget = String(k.title || '').toLowerCase().includes('target') || String(k.rawTitle || '').toLowerCase().includes('target');
+            if (isTarget) {
+              if (k.status === 'red') managerTargetByPeriod[pk].red++;
+              else if (k.status === 'yellow') managerTargetByPeriod[pk].yellow++;
+              else if (k.status === 'green') managerTargetByPeriod[pk].green++;
+            }
+            if (pk === chosenPeriodKey) {
+              if (k.status === 'red') summaryTotals.kpiStatusCount.red++;
+              else if (k.status === 'yellow') summaryTotals.kpiStatusCount.yellow++;
+              else if (k.status === 'green') summaryTotals.kpiStatusCount.green++;
+              else summaryTotals.kpiStatusCount.pending++;
+            }
+          });
+        });
+
+        finalBranches.push(bObj);
       });
 
       summaryTotals.totalBranches += finalBranches.length;
 
-      let overallBusStatus = "pending";
-      if (managerTargetRed > 0) overallBusStatus = "red";
-      else if (managerTargetYellow > 0) overallBusStatus = "yellow";
-      else if (managerTargetGreen > 0) overallBusStatus = "green";
+      let busStatusByPeriod = {};
+      ['1-10', '1-20', '1-31'].forEach(pk => {
+        const mt = managerTargetByPeriod[pk];
+        if (mt.red > 0) busStatusByPeriod[pk] = 'red';
+        else if (mt.yellow > 0) busStatusByPeriod[pk] = 'yellow';
+        else if (mt.green > 0) busStatusByPeriod[pk] = 'green';
+        else busStatusByPeriod[pk] = 'pending';
+      });
+
+      let overallBusStatus = busStatusByPeriod['1-31'] !== 'pending'
+        ? busStatusByPeriod['1-31']
+        : (busStatusByPeriod['1-20'] !== 'pending' ? busStatusByPeriod['1-20'] : busStatusByPeriod['1-10']);
 
       managersData.push({
         manager: managerName,
@@ -1084,6 +1532,7 @@ function getGmDashboardDataFast(periodInfo) {
         allBranchNames: Array.from(allBranchNames),
         problemsByBranch: problemsByBranch,
         busStatus: overallBusStatus,
+        busStatusByPeriod: busStatusByPeriod,
         totalProblems: {
           red: mRed,
           yellow: mYellow,
@@ -1194,7 +1643,7 @@ function getAccountingDashboardDataFast() {
 }
 
 // ==============================================================================
-// 5. HELPER: PARSE & FILTER MEETING DATES (รองรับทั้งเดือนของรอบปัจจุบันและเดือนตามปฏิทินจริง เพื่อไม่ให้รายการที่เพิ่มช่วงวันที่ 1-10 หาย)
+// 5. HELPER: PARSE & FILTER MEETING DATES (ดึงรายการประชุมทั้งหมดที่มีวันที่ถูกต้องครบทุกแถว ไม่ตกหล่น)
 // ==============================================================================
 function parseMeetingDateStr(val, targetMonth, targetYear) {
   if (val === null || val === undefined || val === '') return null;
@@ -1204,32 +1653,22 @@ function parseMeetingDateStr(val, targetMonth, targetYear) {
   var currentMonthNum = currentCalendarMonth + 1; // 1 - 12
   var yTh = targetYear ? targetYear + 543 : 2569;
 
-  function isAcceptedMonthIndex(mIdx) {
-    return mIdx === targetMonth || mIdx === currentCalendarMonth;
-  }
-  function isAcceptedMonthNum(mNum) {
-    return mNum === targetMonthNum || mNum === currentMonthNum;
-  }
-
   // 1. กรณีเป็น Date Object จาก Google Sheets
   if (val instanceof Date || Object.prototype.toString.call(val) === '[object Date]') {
-    if (isAcceptedMonthIndex(val.getMonth())) {
-      var d = String(val.getDate()).padStart(2, '0');
-      var mo = String(val.getMonth() + 1).padStart(2, '0');
-      return d + '/' + mo + '/' + yTh;
-    }
-    return null;
+    var d = String(val.getDate()).padStart(2, '0');
+    var mo = String(val.getMonth() + 1).padStart(2, '0');
+    var yrVal = val.getFullYear();
+    var yrTh = yrVal > 2400 ? yrVal : yrVal + 543;
+    return d + '/' + mo + '/' + yrTh;
   }
 
   // 2. กรณีเป็น Excel Serial Number
   if (typeof val === 'number' && val > 40000 && val < 60000) {
     var dObj = new Date((val - 25569) * 86400 * 1000);
-    if (isAcceptedMonthIndex(dObj.getMonth())) {
-      var d = String(dObj.getDate()).padStart(2, '0');
-      var mo = String(dObj.getMonth() + 1).padStart(2, '0');
-      return d + '/' + mo + '/' + yTh;
-    }
-    return null;
+    var d = String(dObj.getDate()).padStart(2, '0');
+    var mo = String(dObj.getMonth() + 1).padStart(2, '0');
+    var yrTh = dObj.getFullYear() + 543;
+    return d + '/' + mo + '/' + yrTh;
   }
 
   var s = String(val).trim();
@@ -1257,13 +1696,10 @@ function parseMeetingDateStr(val, targetMonth, targetYear) {
     var kws = thaiMonthKeywords[mIdx];
     for (var k = 0; k < kws.length; k++) {
       if (sLower.indexOf(kws[k]) !== -1) {
-        if (isAcceptedMonthIndex(mIdx)) {
-          var numMatch = s.match(/\b(\d{1,2})\b/);
-          var dayStr = numMatch ? String(numMatch[1]).padStart(2, '0') : '01';
-          var moStr = String(mIdx + 1).padStart(2, '0');
-          return dayStr + '/' + moStr + '/' + yTh;
-        }
-        return null;
+        var numMatch = s.match(/\b(\d{1,2})\b/);
+        var dayStr = numMatch ? String(numMatch[1]).padStart(2, '0') : '01';
+        var moStr = String(mIdx + 1).padStart(2, '0');
+        return dayStr + '/' + moStr + '/' + yTh;
       }
     }
   }
@@ -1271,12 +1707,11 @@ function parseMeetingDateStr(val, targetMonth, targetYear) {
   // 4. กรณีเป็นรูปแบบตัวเลข YYYY-MM-DD
   var mIso = s.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
   if (mIso) {
+    var yrIso = parseInt(mIso[1], 10);
     var mo = parseInt(mIso[2], 10);
     var d = parseInt(mIso[3], 10);
-    if (isAcceptedMonthNum(mo)) {
-      return String(d).padStart(2, '0') + '/' + String(mo).padStart(2, '0') + '/' + yTh;
-    }
-    return null;
+    var yrIsoTh = yrIso > 2400 ? yrIso : yrIso + 543;
+    return String(d).padStart(2, '0') + '/' + String(mo).padStart(2, '0') + '/' + yrIsoTh;
   }
 
   // 5. กรณีเป็นรูปแบบตัวเลขที่มีขีดหรือสแลช: M/D/YYYY, D/M/YYYY, M/D, D/M
@@ -1284,6 +1719,13 @@ function parseMeetingDateStr(val, targetMonth, targetYear) {
   if (mSlash) {
     var p1 = parseInt(mSlash[1], 10);
     var p2 = parseInt(mSlash[2], 10);
+    var p3 = mSlash[3] ? parseInt(mSlash[3], 10) : null;
+    var yrSlashTh = yTh;
+    if (p3) {
+      if (p3 < 100) yrSlashTh = 2500 + p3;
+      else if (p3 > 2400) yrSlashTh = p3;
+      else yrSlashTh = p3 + 543;
+    }
 
     var matchDay = null;
     var matchMonth = null;
@@ -1300,10 +1742,16 @@ function parseMeetingDateStr(val, targetMonth, targetYear) {
     } else if (p1 === currentMonthNum && p2 >= 1 && p2 <= 31) {
       matchMonth = p1;
       matchDay = p2;
+    } else if (p2 >= 1 && p2 <= 12 && p1 >= 1 && p1 <= 31) {
+      matchMonth = p2;
+      matchDay = p1;
+    } else if (p1 >= 1 && p1 <= 12 && p2 >= 1 && p2 <= 31) {
+      matchMonth = p1;
+      matchDay = p2;
     }
 
     if (matchDay !== null && matchMonth !== null) {
-      return String(matchDay).padStart(2, '0') + '/' + String(matchMonth).padStart(2, '0') + '/' + yTh;
+      return String(matchDay).padStart(2, '0') + '/' + String(matchMonth).padStart(2, '0') + '/' + yrSlashTh;
     }
     return null;
   }
@@ -1318,8 +1766,8 @@ function doPost(e) {
   try {
     const data = JSON.parse(e.postData.contents);
 
-    // 1. ตรวจจับคำสั่งจาก Frontend / Web App (เช่น บันทึกการประชุม, แจ้งปัญหา, แก้ไขปัญหา, ยืนยัน PIN)
-    if (data && data.action && ['addMeeting', 'addProblem', 'updateProblem', 'verifyPin'].includes(data.action)) {
+    // 1. ตรวจจับคำสั่งจาก Frontend / Web App (เช่น บันทึก/แก้ไขการประชุม, แจ้ง/แก้ไขปัญหา, อัปเดต ReportGM, ยืนยัน PIN)
+    if (data && data.action && ['addMeeting', 'updateMeeting', 'addProblem', 'updateProblem', 'updateReportGM', 'verifyPin'].includes(data.action)) {
       const result = handleManagerAction(data.action, data);
       return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
     }
