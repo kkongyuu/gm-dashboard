@@ -13,6 +13,22 @@ const ACCOUNTING_SHEET_NAME = 'Dashboard This month';
 // รายชื่อผู้จัดการ 12 คน
 const MANAGERS = ["กาญจน์", "นัท", "ซอฟ", "ลูกกุ้ง", "อัจ", "รัตน์", "อี้", "หมิว", "จาเน่", "โชว์", "เปีย", "ส้มโอ"];
 
+// ไฟล์ Google Sheets ปลายทางสำหรับบันทึก Input ของผู้จัดการแต่ละท่าน (แยกตามลิงก์ส่วนตัวทั้ง 12 ท่าน)
+const MANAGER_SPREADSHEET_IDS = {
+  "กาญจน์": "1MGBtJ2qnD6Nz9nkuWR_m6YBokcY4pVmXgicclM0WIfY",
+  "นัท": "1q2Ic3tFyxqrW58fl0vVdExUAXvrgmHVafKJ0eJFs3Kc",
+  "ซอฟ": "1MWzBypMkdvOZlk56W6oqvfkouicUqn1E7c2pNMsSsWk",
+  "ลูกกุ้ง": "1A3B6O_ysCr5UbQbt0_9R7bZD_pq0FxX68jYbJNlxtRU",
+  "อัจ": "10F0sXciAy5IUxlY0mQngIW9GA0UAhi6oeum_NzEm3TM",
+  "รัตน์": "1x3oui4I-OPJM_DaP9u2ZTgJT7NVsOYceFOPM2qndBnI",
+  "อี้": "1u3MogBGlWKOx4-LXOXSEfvUMfp2GxWkqqNJgYIJ3z5w",
+  "หมิว": "1u8R4CrIjHsFKKn55AAaJfr3mFiwtwjf4YScSIaUnNzc",
+  "จาเน่": "149wMv1hyvHNUE667uwzPQNce6OFEw2nheAocRa6Xvj4",
+  "โชว์": "1xobd6I18Y2z7nGiLZDwcXhNvT1SELeVWMe3g-pVmag0",
+  "เปีย": "1ao0qu1fb3MP20eYXOfh6vhub0mmvLOM2iyW8aeaJYjA",
+  "ส้มโอ": "1NJRaZUI-_FtpAf2-y2txqB5wsDTlZXalFUNp8wgawk8"
+};
+
 // ==============================================================================
 // 1. GET HANDLER: รองรับทั้ง Web App, JSON API และ Manager Actions
 // ==============================================================================
@@ -143,11 +159,6 @@ function handleManagerAction(action, params) {
       return { status: 'error', message: 'กรุณาระบุชื่อผู้จัดการ' };
     }
 
-    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-    const allSheets = ss.getSheets();
-    const sheetMap = {};
-    allSheets.forEach(s => sheetMap[s.getName().trim()] = s);
-
     function cleanThai(str) {
       if (!str) return '';
       return String(str)
@@ -158,37 +169,94 @@ function handleManagerAction(action, params) {
         .toLowerCase();
     }
 
-    function findSheet(mgr, type) {
-      const exact = `${mgr} - ${type}`;
-      if (sheetMap[exact]) return sheetMap[exact];
-      if (sheetMap[`${mgr}-${type}`]) return sheetMap[`${mgr}-${type}`];
+    // ค้นหา Spreadsheet ID ปลายทางของผู้จัดการแต่ละท่าน
+    function getManagerTargetSpreadsheetId(mgr) {
+      if (MANAGER_SPREADSHEET_IDS[mgr]) return MANAGER_SPREADSHEET_IDS[mgr];
+      const cleanMgr = cleanThai(mgr);
+      const keys = Object.keys(MANAGER_SPREADSHEET_IDS);
+      for (let i = 0; i < keys.length; i++) {
+        if (cleanThai(keys[i]) === cleanMgr) {
+          return MANAGER_SPREADSHEET_IDS[keys[i]];
+        }
+      }
+      if (mgr === 'กุ้ง') return MANAGER_SPREADSHEET_IDS['ลูกกุ้ง'];
+      if (mgr === 'โชว' || mgr === 'โช') return MANAGER_SPREADSHEET_IDS['โชว์'];
+      return null;
+    }
 
-      const aliases = [mgr];
-      if (mgr === 'ลูกกุ้ง') aliases.push('กุ้ง', 'ลูกกุ้ง');
-      if (mgr === 'กุ้ง') aliases.push('ลูกกุ้ง');
-      if (mgr === 'โชว์') aliases.push('โชว', 'โช', 'ผจก.โช', 'ผจก. โช');
-      if (mgr === 'โชว') aliases.push('โชว์', 'โช');
-      if (mgr === 'โช') aliases.push('โชว์', 'โชว');
+    const targetSpreadsheetId = getManagerTargetSpreadsheetId(manager);
+    if (!targetSpreadsheetId) {
+      return { status: 'error', message: `ไม่พบลิงก์ชีทปลายทางสำหรับ ผจก.${manager}` };
+    }
+
+    // เปิดไฟล์ Google Sheets ปลายทางของผู้จัดการท่านนั้นโดยตรง
+    const ss = SpreadsheetApp.openById(targetSpreadsheetId);
+    const allSheets = ss.getSheets();
+    const sheetMap = {};
+    allSheets.forEach(s => sheetMap[s.getName().trim()] = s);
+
+    // ค้นหาแท็บชีทภายในไฟล์ของผู้จัดการ (รองรับทั้งชื่อ 'Meeting', 'Problem List' หรือ '{ชื่อผจก} - Meeting')
+    function findSheet(mgr, type) {
+      if (sheetMap[type]) return sheetMap[type];
+      const exactWithMgr = `${mgr} - ${type}`;
+      if (sheetMap[exactWithMgr]) return sheetMap[exactWithMgr];
+      if (sheetMap[`${mgr}-${type}`]) return sheetMap[`${mgr}-${type}`];
 
       const cleanType = cleanThai(type);
       for (let i = 0; i < allSheets.length; i++) {
         const sName = allSheets[i].getName().trim();
         const sClean = cleanThai(sName);
-        if (!sClean.includes(cleanType)) continue;
-        for (let a = 0; a < aliases.length; a++) {
-          if (sClean.includes(cleanThai(aliases[a]))) {
-            return allSheets[i];
-          }
+        if (sClean === cleanType || sClean.includes(cleanType)) {
+          return allSheets[i];
+        }
+      }
+      if (type === 'Meeting') {
+        for (let i = 0; i < allSheets.length; i++) {
+          if (allSheets[i].getName().includes('ประชุม')) return allSheets[i];
+        }
+      }
+      if (type === 'Problem List') {
+        for (let i = 0; i < allSheets.length; i++) {
+          const n = allSheets[i].getName();
+          if (n.toLowerCase().includes('problem') || n.includes('ปัญหา')) return allSheets[i];
         }
       }
       return null;
     }
 
-    // 1. ADD MEETING
+    // หาแถวว่างแถวแรกสำหรับบันทึกการประชุม (ป้องกันกรณีชีทมีตีตาราง/สูตรว่างไว้ด้านล่าง)
+    function findFirstEmptyMeetingRow(sheet) {
+      const vals = sheet.getDataRange().getValues();
+      for (let r = 1; r < vals.length; r++) {
+        const cA = String(vals[r][0] || '').trim();
+        const cB = String(vals[r][1] || '').trim();
+        const cC = String(vals[r][2] || '').trim();
+        if (!cA && !cB && !cC) {
+          return r + 1;
+        }
+      }
+      return Math.max(vals.length + 1, 2);
+    }
+
+    // หาแถวว่างแถวแรกสำหรับแจ้งปัญหา (เช็คจากคอลัมน์ B สาขา และคอลัมน์ G หัวข้อปัญหา เผื่อคอลัมน์ A มีรันเลขลำดับไว้ล่วงหน้า)
+    function findFirstEmptyProblemRow(sheet) {
+      const vals = sheet.getDataRange().getValues();
+      for (let r = 1; r < vals.length; r++) {
+        const cB = String(vals[r][1] || '').trim();
+        const cG = String(vals[r][6] || '').trim();
+        const cH = String(vals[r][7] || '').trim();
+        if (!cB && !cG && !cH) {
+          return r + 1;
+        }
+      }
+      return Math.max(vals.length + 1, 2);
+    }
+
+    // 1. ADD MEETING (บันทึกลงไฟล์ของผู้จัดการโดยตรง)
     if (action === 'addMeeting') {
       let mSheet = findSheet(manager, 'Meeting');
       if (!mSheet) {
-        mSheet = ss.insertSheet(`${manager} - Meeting`);
+        mSheet = ss.insertSheet('Meeting');
         mSheet.appendRow(['วันที่ประชุม', 'สาขา', 'เนื้อหาการประชุม', 'ผู้รับผิดชอบ', 'ผู้ไม่เข้าร่วม']);
       }
 
@@ -214,21 +282,23 @@ function handleManagerAction(action, params) {
         return { status: 'error', message: 'กรุณากรอกเนื้อหาการประชุม' };
       }
 
-      mSheet.appendRow([dateVal, branch, content, responsible, attendees]);
+      const targetRow = findFirstEmptyMeetingRow(mSheet);
+      mSheet.getRange(targetRow, 1, 1, 5).setValues([[dateVal, branch, content, responsible, attendees]]);
+      SpreadsheetApp.flush();
       clearDashboardCaches();
 
       return {
         status: 'success',
-        message: `บันทึกการประชุมของ ผจก.${manager} สำเร็จแล้ว`,
+        message: `บันทึกการประชุมลงชีทของ ผจก.${manager} (แถวที่ ${targetRow}) สำเร็จแล้ว`,
         record: { date: dateVal, branch: branch, content: content, responsible: responsible, attendees: attendees }
       };
     }
 
-    // 2. ADD PROBLEM
+    // 2. ADD PROBLEM (บันทึกลงไฟล์ของผู้จัดการโดยตรง)
     if (action === 'addProblem') {
       let pSheet = findSheet(manager, 'Problem List');
       if (!pSheet) {
-        pSheet = ss.insertSheet(`${manager} - Problem List`);
+        pSheet = ss.insertSheet('Problem List');
         pSheet.appendRow(['ลำดับ', 'สาขา', 'ความเร่งด่วน', 'ต้องการให้ GM ช่วยเหลือ', 'สถานะ', 'หมวดหมู่', 'หัวข้อปัญหา', 'รายละเอียดปัญหา', 'การแก้ไขปัญหา']);
       }
 
@@ -245,35 +315,47 @@ function handleManagerAction(action, params) {
         return { status: 'error', message: 'กรุณาระบุหัวข้อปัญหาหรือสาขา' };
       }
 
-      const lastRow = pSheet.getLastRow();
-      const rowNum = lastRow > 1 ? lastRow : 1;
-
-      pSheet.appendRow([rowNum, branch, urgency, needsGmHelp, status, category, subject, colH, colI]);
+      const targetRow = findFirstEmptyProblemRow(pSheet);
+      const rowNum = targetRow - 1;
+      const existingColA = pSheet.getRange(targetRow, 1).getValue();
+      const existingFormulaA = pSheet.getRange(targetRow, 1).getFormula();
+      if (!existingFormulaA && (existingColA === '' || existingColA === null)) {
+        pSheet.getRange(targetRow, 1).setValue(rowNum);
+      }
+      pSheet.getRange(targetRow, 2, 1, 8).setValues([[branch, urgency, needsGmHelp, status, category, subject, colH, colI]]);
+      SpreadsheetApp.flush();
       clearDashboardCaches();
 
       return {
         status: 'success',
-        message: `แจ้งปัญหาหน้างานของ ผจก.${manager} สำเร็จแล้ว`,
+        message: `แจ้งปัญหาหน้างานลงชีทของ ผจก.${manager} (แถวที่ ${targetRow}) สำเร็จแล้ว`,
         record: { branch: branch, subject: subject, urgency: urgency, colH: colH, colI: colI }
       };
     }
 
-    // 3. UPDATE PROBLEM (COL H, COL I, STATUS, URGENCY)
+    // 3. UPDATE PROBLEM (อัปเดต COL H, COL I, STATUS, URGENCY ลงในไฟล์ของผู้จัดการโดยตรง)
     if (action === 'updateProblem') {
       const pSheet = findSheet(manager, 'Problem List');
       if (!pSheet) {
-        return { status: 'error', message: `ไม่พบชีท Problem List ของ ผจก.${manager}` };
+        return { status: 'error', message: `ไม่พบชีท Problem List ในไฟล์ของ ผจก.${manager}` };
       }
 
       const pData = pSheet.getDataRange().getValues();
       const targetSubject = String(params.subject || '').trim();
       const targetBranch = String(params.branch || '').trim();
-      const rowIndex = params.rowIndex ? parseInt(params.rowIndex) : null;
+      const rowIndex = params.rowIndex ? parseInt(params.rowIndex, 10) : null;
       let matchedRow = -1;
 
+      // 1. ตรวจสอบแถวตาม rowIndex ก่อนว่าตรงกับหัวข้อปัญหาหรือไม่
       if (rowIndex && rowIndex >= 2 && rowIndex <= pData.length) {
-        matchedRow = rowIndex;
-      } else {
+        const rSubject = String(pData[rowIndex - 1][6] || '').trim();
+        if (!targetSubject || rSubject === targetSubject) {
+          matchedRow = rowIndex;
+        }
+      }
+
+      // 2. หากไม่ตรง ให้ค้นหาจากหัวข้อปัญหาและชื่อสาขาในชีทของผู้จัดการ
+      if (matchedRow === -1 && targetSubject) {
         for (let r = 1; r < pData.length; r++) {
           const rBranch = String(pData[r][1] || '').trim();
           const rSubject = String(pData[r][6] || '').trim();
@@ -284,8 +366,19 @@ function handleManagerAction(action, params) {
         }
       }
 
+      // 3. Fallback: ค้นหาเฉพาะหัวข้อปัญหาที่ตรงกัน
+      if (matchedRow === -1 && targetSubject) {
+        for (let r = 1; r < pData.length; r++) {
+          const rSubject = String(pData[r][6] || '').trim();
+          if (rSubject === targetSubject) {
+            matchedRow = r + 1;
+            break;
+          }
+        }
+      }
+
       if (matchedRow === -1) {
-        return { status: 'error', message: 'ไม่พบรายการปัญหาที่ต้องการแก้ไขในชีท' };
+        return { status: 'error', message: 'ไม่พบรายการปัญหาที่ต้องการแก้ไขในชีทของผู้จัดการ' };
       }
 
       if (params.colH !== undefined) {
@@ -301,11 +394,12 @@ function handleManagerAction(action, params) {
         pSheet.getRange(matchedRow, 3).setValue(String(params.urgency));
       }
 
+      SpreadsheetApp.flush();
       clearDashboardCaches();
 
       return {
         status: 'success',
-        message: `อัปเดตข้อมูลปัญหาแถวที่ ${matchedRow} สำเร็จแล้ว`
+        message: `อัปเดตข้อมูลปัญหาในชีทของ ผจก.${manager} (แถวที่ ${matchedRow}) สำเร็จแล้ว`
       };
     }
 

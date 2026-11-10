@@ -6250,6 +6250,22 @@
       "ส้มโอ": "x8z2c7v4b9n1"
     };
 
+    // ลิงก์ไฟล์ Google Sheets ปลายทางสำหรับบันทึก Input ของผู้จัดการแต่ละท่าน
+    const MANAGER_SHEET_URLS = {
+      "กาญจน์": "https://docs.google.com/spreadsheets/d/1MGBtJ2qnD6Nz9nkuWR_m6YBokcY4pVmXgicclM0WIfY/edit",
+      "นัท": "https://docs.google.com/spreadsheets/d/1q2Ic3tFyxqrW58fl0vVdExUAXvrgmHVafKJ0eJFs3Kc/edit",
+      "ซอฟ": "https://docs.google.com/spreadsheets/d/1MWzBypMkdvOZlk56W6oqvfkouicUqn1E7c2pNMsSsWk/edit",
+      "ลูกกุ้ง": "https://docs.google.com/spreadsheets/d/1A3B6O_ysCr5UbQbt0_9R7bZD_pq0FxX68jYbJNlxtRU/edit",
+      "อัจ": "https://docs.google.com/spreadsheets/d/10F0sXciAy5IUxlY0mQngIW9GA0UAhi6oeum_NzEm3TM/edit",
+      "รัตน์": "https://docs.google.com/spreadsheets/d/1x3oui4I-OPJM_DaP9u2ZTgJT7NVsOYceFOPM2qndBnI/edit",
+      "อี้": "https://docs.google.com/spreadsheets/d/1u3MogBGlWKOx4-LXOXSEfvUMfp2GxWkqqNJgYIJ3z5w/edit",
+      "หมิว": "https://docs.google.com/spreadsheets/d/1u8R4CrIjHsFKKn55AAaJfr3mFiwtwjf4YScSIaUnNzc/edit",
+      "จาเน่": "https://docs.google.com/spreadsheets/d/149wMv1hyvHNUE667uwzPQNce6OFEw2nheAocRa6Xvj4/edit",
+      "โชว์": "https://docs.google.com/spreadsheets/d/1xobd6I18Y2z7nGiLZDwcXhNvT1SELeVWMe3g-pVmag0/edit",
+      "เปีย": "https://docs.google.com/spreadsheets/d/1ao0qu1fb3MP20eYXOfh6vhub0mmvLOM2iyW8aeaJYjA/edit",
+      "ส้มโอ": "https://docs.google.com/spreadsheets/d/1NJRaZUI-_FtpAf2-y2txqB5wsDTlZXalFUNp8wgawk8/edit"
+    };
+
     function getManagerByToken(token) {
       if (!token) return null;
       const cleanToken = String(token).trim();
@@ -6791,6 +6807,12 @@
                 <i data-lucide="alert-circle" class="w-4 h-4"></i>
                 <span>+ แจ้งปัญหาหน้างาน</span>
               </button>
+              ${MANAGER_SHEET_URLS[mgrName] ? `
+              <a href="${escapeHtml(MANAGER_SHEET_URLS[mgrName])}" target="_blank" rel="noopener noreferrer" class="px-3.5 py-2.5 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-200 border border-emerald-400/30 text-xs font-semibold rounded-xl transition flex items-center gap-1.5 active:scale-95" title="เปิดไฟล์ Google Sheets ของ ผจก.${escapeHtml(mgrName)}">
+                <i data-lucide="external-link" class="w-4 h-4 text-emerald-300"></i>
+                <span>เปิดชีทของฉัน</span>
+              </a>
+              ` : ''}
               <button type="button" onclick="copySingleManagerLink('${escapeHtml(mgrName)}')" class="px-3.5 py-2.5 bg-white/10 hover:bg-white/20 text-white border border-white/15 text-xs font-semibold rounded-xl transition flex items-center gap-1.5 active:scale-95" title="คัดลอกลิงก์ส่วนตัวส่ง LINE">
                 <i data-lucide="share-2" class="w-4 h-4 text-indigo-200"></i>
                 <span>ลิงก์ส่วนตัว</span>
