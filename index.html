@@ -1760,42 +1760,42 @@
     <section id="tab-accounting" class="tab-content hidden space-y-6">
       
       <!-- 1. EXECUTIVE OVERVIEW BANNER & PERIOD BREAKDOWN -->
-      <div class="bg-gradient-to-br from-slate-900 via-teal-950 to-emerald-950 text-white rounded-3xl p-5 sm:p-6 shadow-xl border border-teal-800/50 relative overflow-hidden">
+      <div class="bg-[#181A1C] border border-[#2B3138] text-white rounded-xl p-5 sm:p-6 relative overflow-hidden">
         <div class="relative z-10 space-y-5">
           
           <!-- Top Row: Total Spend & Core Counters -->
-          <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-teal-800/60 pb-5">
+          <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-[#2B3138] pb-5">
             <div>
-              <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-teal-500/20 border border-teal-400/30 text-teal-200 text-xs font-bold">
-                <i data-lucide="wallet" class="w-3.5 h-3.5 text-teal-300"></i>
+              <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-[#25394D] border border-[#3E5266] text-[#B4C6D7] text-xs font-bold">
+                <i data-lucide="wallet" class="w-3.5 h-3.5 text-[#8FA4B5]"></i>
                 <span id="accountingSheetTitle">รายงานการเบิกประจำเดือน</span>
               </div>
               <div class="flex items-baseline space-x-3 mt-2.5">
-                <div class="text-3xl sm:text-4xl font-black tracking-tight text-white" id="accountingTotalBanner">0 ฿</div>
-                <span class="text-xs text-teal-300/90 font-medium">ยอดรวมการเบิกจ่ายทุกสาขา</span>
+                <div class="text-3xl sm:text-4xl font-black tracking-tight text-[#E6EDF3]" id="accountingTotalBanner">0 ฿</div>
+                <span class="text-xs text-[#8A95A0] font-medium">ยอดรวมการเบิกจ่ายทุกสาขา</span>
               </div>
-              <p class="text-xxs sm:text-xs text-teal-200/70 mt-1">
+              <p class="text-xxs sm:text-xs text-[#636E7B] mt-1">
                 คลิกที่การ์ดรอบ 10 วัน, ปฏิทินรายวัน หรืออันดับสาขาด้านล่าง เพื่อเจาะลึกข้อมูลการเบิกได้ทันที
               </p>
             </div>
 
             <!-- 4 Core Stat Pills -->
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-              <div class="bg-white/10 backdrop-blur-md rounded-2xl px-3.5 py-2.5 border border-white/10">
-                <span class="text-xxs text-teal-200/80 block font-medium">สาขาที่เบิก</span>
-                <span class="text-lg sm:text-xl font-black text-white mt-0.5 block" id="accountingBranchesCount">0 สาขา</span>
+              <div class="bg-[#22262B] rounded-xl px-3.5 py-2.5 border border-[#2E353D]">
+                <span class="text-xxs text-[#8A95A0] block font-medium">สาขาที่เบิก</span>
+                <span class="text-lg sm:text-xl font-black text-[#E6EDF3] mt-0.5 block" id="accountingBranchesCount">0 สาขา</span>
               </div>
-              <div class="bg-white/10 backdrop-blur-md rounded-2xl px-3.5 py-2.5 border border-white/10">
-                <span class="text-xxs text-teal-200/80 block font-medium">จำนวนรายการ</span>
-                <span class="text-lg sm:text-xl font-black text-white mt-0.5 block" id="accountingTotalTransactions">0 รายการ</span>
+              <div class="bg-[#22262B] rounded-xl px-3.5 py-2.5 border border-[#2E353D]">
+                <span class="text-xxs text-[#8A95A0] block font-medium">จำนวนรายการ</span>
+                <span class="text-lg sm:text-xl font-black text-[#E6EDF3] mt-0.5 block" id="accountingTotalTransactions">0 รายการ</span>
               </div>
-              <div class="bg-white/10 backdrop-blur-md rounded-2xl px-3.5 py-2.5 border border-white/10">
-                <span class="text-xxs text-teal-200/80 block font-medium">เฉลี่ยต่อสาขา</span>
-                <span class="text-lg sm:text-xl font-black text-emerald-300 mt-0.5 block" id="accountingAvgPerBranch">0 ฿</span>
+              <div class="bg-[#22262B] rounded-xl px-3.5 py-2.5 border border-[#2E353D]">
+                <span class="text-xxs text-[#8A95A0] block font-medium">เฉลี่ยต่อสาขา</span>
+                <span class="text-lg sm:text-xl font-black text-[#8CB39E] mt-0.5 block" id="accountingAvgPerBranch">0 ฿</span>
               </div>
-              <div class="bg-white/10 backdrop-blur-md rounded-2xl px-3.5 py-2.5 border border-white/10">
-                <span class="text-xxs text-teal-200/80 block font-medium">เฉลี่ยต่อรายการ</span>
-                <span class="text-lg sm:text-xl font-black text-amber-300 mt-0.5 block" id="accountingAvgPerItem">0 ฿</span>
+              <div class="bg-[#22262B] rounded-xl px-3.5 py-2.5 border border-[#2E353D]">
+                <span class="text-xxs text-[#8A95A0] block font-medium">เฉลี่ยต่อรายการ</span>
+                <span class="text-lg sm:text-xl font-black text-[#C58569] mt-0.5 block" id="accountingAvgPerItem">0 ฿</span>
               </div>
             </div>
           </div>
@@ -1803,11 +1803,11 @@
           <!-- Middle Row: 3 Period Spend Cards (1-10, 11-20, 21-31) - Clickable to Filter -->
           <div>
             <div class="flex items-center justify-between mb-2.5">
-              <span class="text-xs font-bold text-teal-200 flex items-center space-x-1.5">
-                <i data-lucide="calendar-range" class="w-4 h-4 text-teal-300"></i>
+              <span class="text-xs font-bold text-[#D8DCE1] flex items-center space-x-1.5">
+                <i data-lucide="calendar-range" class="w-4 h-4 text-[#8FA4B5]"></i>
                 <span>สรุปยอดเบิกแบ่งตามรอบ 10 วัน (คลิกการ์ดเพื่อกรองเฉพาะรอบ)</span>
               </span>
-              <button type="button" onclick="resetAccountingFilters()" id="btnAcctResetTop" class="hidden text-xxs px-2.5 py-1 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-200 border border-rose-400/30 font-bold transition">
+              <button type="button" onclick="resetAccountingFilters()" id="btnAcctResetTop" class="hidden text-xxs px-2.5 py-1 rounded-lg bg-[#3E2323] hover:bg-[#4E2B2B] text-[#F6E7E7] border border-[#8C3838] font-bold transition">
                 ✕ ล้างตัวกรองทั้งหมด
               </button>
             </div>
@@ -5079,20 +5079,20 @@
           const pct = totalAmount > 0 ? Math.round((p.amount / totalAmount) * 100) : 0;
           const isSelected = accountingFilterState.period === k;
           return `
-            <div onclick="selectAccountingPeriod('${k}')" class="cursor-pointer rounded-2xl p-3.5 transition border ${isSelected ? 'bg-teal-500/30 border-teal-300 ring-2 ring-teal-300/60 shadow-lg' : 'bg-white/10 hover:bg-white/15 border-white/15'}">
+            <div onclick="selectAccountingPeriod('${k}')" class="cursor-pointer rounded-xl p-3.5 transition border ${isSelected ? 'bg-[#25394D] border-[#8FA4B5] ring-1 ring-[#8FA4B5]' : 'bg-[#22262B] hover:bg-[#2C323A] border-[#2E353D]'}">
               <div class="flex items-center justify-between text-xs">
-                <span class="font-bold text-teal-100 flex items-center space-x-1.5">
+                <span class="font-bold text-[#E6EDF3] flex items-center space-x-1.5">
                   <span>🗓️</span>
                   <span>${p.title}</span>
                 </span>
-                <span class="text-xxs px-2 py-0.5 rounded-full font-extrabold ${isSelected ? 'bg-teal-300 text-slate-950' : 'bg-teal-950/80 text-teal-300 border border-teal-700/60'}">${pct}% ของเดือน</span>
+                <span class="text-xxs px-2 py-0.5 rounded font-bold ${isSelected ? 'bg-[#8FA4B5] text-[#181A1C]' : 'bg-[#181A1C] text-[#8FA4B5] border border-[#3E5266]'}">${pct}% ของเดือน</span>
               </div>
               <div class="flex items-baseline justify-between mt-2">
-                <span class="text-xl font-black text-white">฿${p.amount.toLocaleString()}</span>
-                <span class="text-xxs text-teal-200/90">${p.count} รายการ • ${p.branches.size} สาขา</span>
+                <span class="text-xl font-black text-[#E6EDF3]">฿${p.amount.toLocaleString()}</span>
+                <span class="text-xxs text-[#8A95A0]">${p.count} รายการ • ${p.branches.size} สาขา</span>
               </div>
-              <div class="w-full bg-slate-950/60 rounded-full h-1.5 mt-2 overflow-hidden">
-                <div class="bg-gradient-to-r from-teal-300 to-emerald-400 h-1.5 rounded-full transition-all duration-300" style="width: ${Math.min(Math.max(pct, p.amount > 0 ? 5 : 0), 100)}%"></div>
+              <div class="w-full bg-[#181A1C] rounded-full h-1.5 mt-2 overflow-hidden border border-[#2E353D]">
+                <div class="bg-[#5B826D] h-1.5 rounded-full transition-all duration-300" style="width: ${Math.min(Math.max(pct, p.amount > 0 ? 5 : 0), 100)}%"></div>
               </div>
             </div>
           `;
@@ -5109,47 +5109,47 @@
       if (highlightsRow) {
         highlightsRow.innerHTML = `
           <!-- Highlight 1: Top Spending Branch -->
-          <div onclick="${topBranch ? `selectAccountingBranch('${topBranch.branch}')` : ''}" class="cursor-pointer bg-slate-950/45 hover:bg-slate-950/65 rounded-2xl p-3.5 border border-teal-700/40 transition flex items-start justify-between gap-3">
+          <div onclick="${topBranch ? `selectAccountingBranch('${topBranch.branch}')` : ''}" class="cursor-pointer bg-[#22262B] hover:bg-[#2C323A] rounded-xl p-3.5 border border-[#2E353D] transition flex items-start justify-between gap-3">
             <div class="min-w-0">
-              <span class="text-xxs font-bold text-amber-300 uppercase tracking-wider flex items-center space-x-1">
+              <span class="text-xxs font-bold text-[#C58569] uppercase tracking-wider flex items-center space-x-1">
                 <span>🏆 สาขาที่มียอดเบิกสูงสุดอันดับ 1</span>
               </span>
-              <p class="text-sm sm:text-base font-black text-white truncate mt-1">${topBranch ? topBranch.branch : '-'}</p>
-              <p class="text-xxs text-teal-200/80 mt-0.5">${topBranch ? `เบิก ${topBranch.itemsCount} รายการ (${topBranchPct}% ของทั้งเดือน)` : 'ไม่มีข้อมูล'}</p>
+              <p class="text-sm sm:text-base font-black text-[#E6EDF3] truncate mt-1">${topBranch ? topBranch.branch : '-'}</p>
+              <p class="text-xxs text-[#8A95A0] mt-0.5">${topBranch ? `เบิก ${topBranch.itemsCount} รายการ (${topBranchPct}% ของทั้งเดือน)` : 'ไม่มีข้อมูล'}</p>
             </div>
             <div class="text-right flex-shrink-0">
-              <span class="text-base sm:text-lg font-black text-amber-300">${topBranch ? `฿${Number(topBranch.totalAmount).toLocaleString()}` : '-'}</span>
-              <span class="block text-xxxs text-teal-300 mt-1">คลิกดูสาขานี้ →</span>
+              <span class="text-base sm:text-lg font-black text-[#C58569]">${topBranch ? `฿${Number(topBranch.totalAmount).toLocaleString()}` : '-'}</span>
+              <span class="block text-xxxs text-[#8FA4B5] mt-1">คลิกดูสาขานี้ →</span>
             </div>
           </div>
 
           <!-- Highlight 2: Peak Spending Day -->
-          <div onclick="${peakDayObj ? `selectAccountingDay(${peakDayObj.day})` : ''}" class="cursor-pointer bg-slate-950/45 hover:bg-slate-950/65 rounded-2xl p-3.5 border border-teal-700/40 transition flex items-start justify-between gap-3">
+          <div onclick="${peakDayObj ? `selectAccountingDay(${peakDayObj.day})` : ''}" class="cursor-pointer bg-[#22262B] hover:bg-[#2C323A] rounded-xl p-3.5 border border-[#2E353D] transition flex items-start justify-between gap-3">
             <div class="min-w-0">
-              <span class="text-xxs font-bold text-sky-300 uppercase tracking-wider flex items-center space-x-1">
+              <span class="text-xxs font-bold text-[#8FA4B5] uppercase tracking-wider flex items-center space-x-1">
                 <span>📅 วันที่มียอดเบิกรวมสูงสุด (Peak Day)</span>
               </span>
-              <p class="text-sm sm:text-base font-black text-white truncate mt-1">${peakDayObj ? `วันที่ ${peakDayObj.day} (${peakDayObj.dateLabel})` : '-'}</p>
-              <p class="text-xxs text-teal-200/80 mt-0.5">${peakDayObj ? `รวม ${peakDayObj.count} รายการ จาก ${peakDayObj.branches.size} สาขา` : 'ไม่มีข้อมูล'}</p>
+              <p class="text-sm sm:text-base font-black text-[#E6EDF3] truncate mt-1">${peakDayObj ? `วันที่ ${peakDayObj.day} (${peakDayObj.dateLabel})` : '-'}</p>
+              <p class="text-xxs text-[#8A95A0] mt-0.5">${peakDayObj ? `รวม ${peakDayObj.count} รายการ จาก ${peakDayObj.branches.size} สาขา` : 'ไม่มีข้อมูล'}</p>
             </div>
             <div class="text-right flex-shrink-0">
-              <span class="text-base sm:text-lg font-black text-sky-300">${peakDayObj ? `฿${peakDayObj.amount.toLocaleString()}` : '-'}</span>
-              <span class="block text-xxxs text-teal-300 mt-1">คลิกดูวันนี้ →</span>
+              <span class="text-base sm:text-lg font-black text-[#8FA4B5]">${peakDayObj ? `฿${peakDayObj.amount.toLocaleString()}` : '-'}</span>
+              <span class="block text-xxxs text-[#8FA4B5] mt-1">คลิกดูวันนี้ →</span>
             </div>
           </div>
 
           <!-- Highlight 3: Highest Single Withdrawal Item -->
-          <div onclick="${maxSingleItem ? `selectAccountingBranch('${maxSingleItem.branch}')` : ''}" class="cursor-pointer bg-slate-950/45 hover:bg-slate-950/65 rounded-2xl p-3.5 border border-teal-700/40 transition flex items-start justify-between gap-3">
+          <div onclick="${maxSingleItem ? `selectAccountingBranch('${maxSingleItem.branch}')` : ''}" class="cursor-pointer bg-[#22262B] hover:bg-[#2C323A] rounded-xl p-3.5 border border-[#2E353D] transition flex items-start justify-between gap-3">
             <div class="min-w-0">
-              <span class="text-xxs font-bold text-rose-300 uppercase tracking-wider flex items-center space-x-1">
+              <span class="text-xxs font-bold text-[#D68A8A] uppercase tracking-wider flex items-center space-x-1">
                 <span>🔥 รายการเบิกต่อบิลสูงสุดของเดือน</span>
               </span>
-              <p class="text-sm font-black text-white truncate mt-1" title="${maxSingleItem ? maxSingleItem.name : ''}">${maxSingleItem ? maxSingleItem.name : '-'}</p>
-              <p class="text-xxs text-teal-200/80 mt-0.5">${maxSingleItem ? `${maxSingleItem.branch} • ${maxSingleItem.date}` : 'ไม่มีข้อมูล'}</p>
+              <p class="text-sm font-black text-[#E6EDF3] truncate mt-1" title="${maxSingleItem ? maxSingleItem.name : ''}">${maxSingleItem ? maxSingleItem.name : '-'}</p>
+              <p class="text-xxs text-[#8A95A0] mt-0.5">${maxSingleItem ? `${maxSingleItem.branch} • ${maxSingleItem.date}` : 'ไม่มีข้อมูล'}</p>
             </div>
             <div class="text-right flex-shrink-0">
-              <span class="text-base sm:text-lg font-black text-rose-300">${maxSingleItem ? `฿${Number(maxSingleItem.amount).toLocaleString()}` : '-'}</span>
-              <span class="block text-xxxs text-teal-300 mt-1">คลิกดูสาขา →</span>
+              <span class="text-base sm:text-lg font-black text-[#D68A8A]">${maxSingleItem ? `฿${Number(maxSingleItem.amount).toLocaleString()}` : '-'}</span>
+              <span class="block text-xxxs text-[#8FA4B5] mt-1">คลิกดูสาขา →</span>
             </div>
           </div>
         `;
