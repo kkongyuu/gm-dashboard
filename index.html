@@ -541,6 +541,11 @@
           <span>รายงานการเบิกจ่าย</span>
         </button>
 
+        <button onclick="switchTab('tab-cases')" id="nav-tab-cases" class="tab-btn px-3 py-2 text-xs sm:text-sm font-medium rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 flex items-center space-x-1.5 whitespace-nowrap">
+          <i data-lucide="layers" class="w-4 h-4 text-emerald-600"></i>
+          <span>วิเคราะห์เคส บอท & ภาพรวม</span>
+        </button>
+
         <button onclick="switchTab('tab-manager')" id="nav-tab-manager" class="tab-btn px-3 py-2 text-xs sm:text-sm font-medium rounded-lg text-indigo-700 bg-indigo-50 hover:bg-indigo-100 flex items-center space-x-1.5 whitespace-nowrap border border-indigo-200">
           <i data-lucide="user-check" class="w-4 h-4 text-indigo-600"></i>
           <span id="navManagerLabel">พื้นที่งาน ผจก. (12 คน)</span>
@@ -2040,6 +2045,241 @@
     </section>
 
     <!-- ===================================================================== -->
+    <!-- TAB 5: CASE ANALYTICS & BOT MONITOR (วิเคราะห์เคส บอท & ภาพรวมเดือนนี้) -->
+    <!-- ===================================================================== -->
+    <section id="tab-cases" class="tab-content hidden space-y-6">
+
+      <!-- 1. EXECUTIVE HERO BANNER -->
+      <div class="bg-[#181A1C] border border-[#2B3138] text-white rounded-xl p-5 sm:p-6 relative overflow-hidden">
+        <div class="relative z-10 space-y-5">
+
+          <!-- Top Row: Total Case Revenue & Core Status -->
+          <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-[#2B3138] pb-5">
+            <div>
+              <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-[#1F332A] border border-[#2E5240] text-[#9AC7AF] text-xs font-bold">
+                <i data-lucide="layers" class="w-3.5 h-3.5 text-[#5B826D]"></i>
+                <span id="casesMonthBadge">รายงานเคสประจำเดือน พฤศจิกายน 2569</span>
+              </div>
+              <div class="flex items-baseline space-x-3 mt-2.5">
+                <div class="text-3xl sm:text-4xl font-black tracking-tight text-[#E6EDF3]" id="casesTotalRevenueBanner">0 ฿</div>
+                <span class="text-xs text-[#8A95A0] font-medium">ยอดรายได้รวมทุกเคส (19 สาขา)</span>
+              </div>
+              <p class="text-xxs sm:text-xs text-[#8A95A0] mt-1" id="casesSubBannerText">
+                เคสใหม่ 0 ฿ (0 เคส) • เคสเก่า 0 ฿ (0 เคส) • รวมทั้งสิ้น 0 เคส
+              </p>
+            </div>
+
+            <!-- Core Stat Pills -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              <div class="bg-[#22262B] rounded-xl px-3.5 py-2.5 border border-[#2E353D]">
+                <span class="text-xxs text-[#8A95A0] block font-medium">สาขาทั้งหมด</span>
+                <span class="text-lg sm:text-xl font-black text-[#E6EDF3] mt-0.5 block" id="casesTotalBranches">19 สาขา</span>
+              </div>
+              <div class="bg-[#22262B] rounded-xl px-3.5 py-2.5 border border-[#2E353D]">
+                <span class="text-xxs text-[#8A95A0] block font-medium">เคสใหม่ (จำนวน)</span>
+                <span class="text-lg sm:text-xl font-black text-[#8CB39E] mt-0.5 block" id="casesNewCount">0 เคส</span>
+              </div>
+              <div class="bg-[#22262B] rounded-xl px-3.5 py-2.5 border border-[#2E353D]">
+                <span class="text-xxs text-[#8A95A0] block font-medium">เคสเก่า (จำนวน)</span>
+                <span class="text-lg sm:text-xl font-black text-[#C58569] mt-0.5 block" id="casesOldCount">0 เคส</span>
+              </div>
+              <div class="bg-[#22262B] rounded-xl px-3.5 py-2.5 border border-[#2E353D]">
+                <span class="text-xxs text-[#8A95A0] block font-medium">สัดส่วนเคสใหม่/เก่า</span>
+                <span class="text-lg sm:text-xl font-black text-[#8FA4B5] mt-0.5 block" id="casesRatioText">-</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Row: Case Breakdown Types & Highlights -->
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 pt-1">
+            <div class="bg-[#22262B] rounded-xl p-3 border border-[#2E353D] flex items-center justify-between">
+              <div>
+                <span class="text-xxxs text-[#8A95A0] block">รายคอร์ส</span>
+                <span class="text-base font-black text-[#E6EDF3]" id="caseTypeCourse">0</span>
+              </div>
+              <span class="px-2 py-0.5 rounded text-xxxs bg-[#2E3844] text-[#A6C3DB] font-bold">Course</span>
+            </div>
+            <div class="bg-[#22262B] rounded-xl p-3 border border-[#2E353D] flex items-center justify-between">
+              <div>
+                <span class="text-xxxs text-[#8A95A0] block">รายครั้ง</span>
+                <span class="text-base font-black text-[#E6EDF3]" id="caseTypeSingle">0</span>
+              </div>
+              <span class="px-2 py-0.5 rounded text-xxxs bg-[#2E3844] text-[#A6C3DB] font-bold">Single</span>
+            </div>
+            <div class="bg-[#22262B] rounded-xl p-3 border border-[#2E353D] flex items-center justify-between">
+              <div>
+                <span class="text-xxxs text-[#8A95A0] block">ตรวจร่างกาย</span>
+                <span class="text-base font-black text-[#E6EDF3]" id="caseTypeExam">0</span>
+              </div>
+              <span class="px-2 py-0.5 rounded text-xxxs bg-[#243B33] text-[#91C7A8] font-bold">Checkup</span>
+            </div>
+            <div class="bg-[#22262B] rounded-xl p-3 border border-[#2E353D] flex items-center justify-between">
+              <div>
+                <span class="text-xxxs text-[#8A95A0] block">ยกเลิก</span>
+                <span class="text-base font-black text-[#D68A8A]" id="caseTypeCancel">0</span>
+              </div>
+              <span class="px-2 py-0.5 rounded text-xxxs bg-[#3E2323] text-[#E8A3A3] font-bold">Cancel</span>
+            </div>
+            <div class="bg-[#22262B] rounded-xl p-3 border border-[#2E353D] flex items-center justify-between col-span-2 sm:col-span-1">
+              <div>
+                <span class="text-xxxs text-[#8A95A0] block">ชำระงวด</span>
+                <span class="text-base font-black text-[#E6EDF3]" id="caseInstallment">0 ฿</span>
+              </div>
+              <span class="px-2 py-0.5 rounded text-xxxs bg-[#3D3425] text-[#D8B983] font-bold">Installment</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- 2. VISUAL ANALYTICS GRID (4 CHARTS) -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- Chart 1 (Left 7 cols): Daily Revenue Trend (วันที่ 1–31 จากชีทบอท) -->
+        <div class="lg:col-span-7 bg-white rounded-2xl p-5 sm:p-6 border border-slate-200 shadow-xs flex flex-col justify-between space-y-4">
+          <div>
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3.5">
+              <div>
+                <div class="flex items-center space-x-2">
+                  <span class="w-2.5 h-2.5 rounded-full bg-teal-600"></span>
+                  <h3 class="font-black text-slate-900 text-base">แนวโน้มรายได้เคสรายวัน (วันที่ 1–31 จากบอท)</h3>
+                </div>
+                <p class="text-xs text-slate-500 mt-0.5">เปรียบเทียบยอดเงินเคสใหม่ vs เคสเก่า ในแต่ละวันของเดือน</p>
+              </div>
+              <div class="inline-flex rounded-xl bg-slate-100 p-0.5 border border-slate-200 self-start sm:self-auto">
+                <button type="button" onclick="setCasesDailyMetric('combined')" id="btnCasesDailyCombined" class="px-2.5 py-1 rounded-lg text-xxs font-bold bg-white text-slate-900 shadow-2xs transition">
+                  รวมทั้งสิ้น
+                </button>
+                <button type="button" onclick="setCasesDailyMetric('new')" id="btnCasesDailyNew" class="px-2.5 py-1 rounded-lg text-xxs font-semibold text-slate-600 hover:text-slate-900 transition">
+                  เฉพาะเคสใหม่
+                </button>
+                <button type="button" onclick="setCasesDailyMetric('old')" id="btnCasesDailyOld" class="px-2.5 py-1 rounded-lg text-xxs font-semibold text-slate-600 hover:text-slate-900 transition">
+                  เฉพาะเคสเก่า
+                </button>
+              </div>
+            </div>
+
+            <!-- Daily Chart Canvas -->
+            <div class="h-64 relative mt-4">
+              <canvas id="casesDailyTrendChart"></canvas>
+            </div>
+          </div>
+
+          <div class="pt-2 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-xxs text-slate-500">
+            <span class="flex items-center space-x-3">
+              <span class="flex items-center space-x-1"><span class="w-3 h-3 rounded bg-teal-600 inline-block"></span><span>เคสใหม่</span></span>
+              <span class="flex items-center space-x-1"><span class="w-3 h-3 rounded bg-[#C58569] inline-block"></span><span>เคสเก่า</span></span>
+            </span>
+            <span id="casesPeakDayText" class="font-bold text-slate-700">วันที่ยอดสูงสุด: -</span>
+          </div>
+        </div>
+
+        <!-- Chart 2 (Right 5 cols): Case Types Distribution (Donut Chart) -->
+        <div class="lg:col-span-5 bg-white rounded-2xl p-5 sm:p-6 border border-slate-200 shadow-xs flex flex-col justify-between space-y-4">
+          <div>
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3.5">
+              <div>
+                <div class="flex items-center space-x-2">
+                  <span class="w-2.5 h-2.5 rounded-full bg-indigo-500"></span>
+                  <h3 class="font-black text-slate-900 text-base">สัดส่วนประเภทเคส & ระยะเวลา</h3>
+                </div>
+                <p class="text-xs text-slate-500 mt-0.5">จำแนกตามประเภทสัญญาและระยะเวลาดำเนินการ</p>
+              </div>
+            </div>
+
+            <div class="h-56 relative mt-4 flex items-center justify-center">
+              <canvas id="casesTypesDonutChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Bottom details -->
+          <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100 text-xxs text-slate-600">
+            <div class="bg-slate-50 p-2 rounded-lg border border-slate-100">
+              <span class="font-semibold block text-slate-500">ระยะสั้น</span>
+              <span class="text-sm font-black text-slate-900" id="casesShortTermBadge">0 เคส</span>
+            </div>
+            <div class="bg-slate-50 p-2 rounded-lg border border-slate-100">
+              <span class="font-semibold block text-slate-500">ระยะกลาง</span>
+              <span class="text-sm font-black text-slate-900" id="casesMidTermBadge">0 เคส</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Chart 3: Branch Ranking Bar Chart (Full Width) -->
+      <div class="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200 shadow-xs space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3.5">
+          <div>
+            <div class="flex items-center space-x-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span>
+              <h3 class="font-black text-slate-900 text-base">เปรียบเทียบยอดเงินเคสใหม่ vs เคสเก่า รายสาขา (ทั้ง 19 สาขา)</h3>
+            </div>
+            <p class="text-xs text-slate-500 mt-0.5">เรียงลำดับตามยอดเงินรวมทั้งหมดจากสูงสุดไปต่ำสุด</p>
+          </div>
+          <span class="text-xxs font-bold px-2.5 py-1 rounded-xl bg-slate-100 text-slate-700">19 สาขา</span>
+        </div>
+        <div class="h-80 relative mt-2">
+          <canvas id="casesBranchBarChart"></canvas>
+        </div>
+      </div>
+
+      <!-- 3. INTERACTIVE DATA EXPLORER & TABLES (3 VIEW MODES) -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+        
+        <!-- Explorer Header & Controls -->
+        <div class="p-5 sm:p-6 border-b border-slate-200 space-y-4 bg-slate-50/60">
+          <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div>
+              <div class="flex items-center space-x-2">
+                <h3 class="font-black text-slate-900 text-base sm:text-lg">เจาะลึกตารางข้อมูล (Cases Data Explorer)</h3>
+              </div>
+              <p class="text-xs text-slate-500 mt-0.5">เลือกสลับมุมมองระหว่าง **สรุปภาพรวม 19 สาขา**, **ตารางไขว้รายวัน 1–31 (Matrix)**, หรือ **ตารางเคสเก่าโดยเฉพาะ**</p>
+            </div>
+
+            <!-- 3 Mode Buttons -->
+            <div class="inline-flex flex-wrap items-center bg-slate-200/80 p-1 rounded-xl border border-slate-300/80 gap-1 self-start lg:self-auto">
+              <button type="button" onclick="setCasesViewMode('overview')" id="btnCasesMode-overview" class="px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 bg-white text-slate-900 shadow-2xs">
+                <i data-lucide="table" class="w-3.5 h-3.5 text-teal-600"></i>
+                <span>สรุปภาพรวมสาขา</span>
+              </button>
+              <button type="button" onclick="setCasesViewMode('matrix')" id="btnCasesMode-matrix" class="px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center space-x-1.5 text-slate-600 hover:text-slate-900">
+                <i data-lucide="calendar" class="w-3.5 h-3.5 text-indigo-600"></i>
+                <span>ตารางไขว้รายวัน (1–31)</span>
+              </button>
+              <button type="button" onclick="setCasesViewMode('old_cases')" id="btnCasesMode-old_cases" class="px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center space-x-1.5 text-slate-600 hover:text-slate-900">
+                <i data-lucide="history" class="w-3.5 h-3.5 text-amber-600"></i>
+                <span>เจาะลึกเคสเก่า (แถว 28–48)</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Search & Filter Bar -->
+          <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-1">
+            <div class="relative w-full sm:w-72">
+              <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i>
+              <input type="text" id="casesSearchInput" oninput="onCasesSearch(this.value)" placeholder="ค้นหาชื่อสาขา..." class="w-full pl-9 pr-3 py-1.5 text-xs bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none">
+            </div>
+            <div class="flex items-center space-x-2 self-end sm:self-auto">
+              <span id="casesTableCountLabel" class="text-xs font-bold text-slate-600">แสดง 19 สาขา</span>
+              <button type="button" onclick="exportCasesTableToCsv()" class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition flex items-center space-x-1 shadow-2xs">
+                <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                <span>ส่งออก CSV</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dynamic Table View Container -->
+        <div id="casesTableContainer" class="overflow-x-auto custom-scrollbar">
+          <!-- Populated dynamically via JS -->
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ===================================================================== -->
     <!-- 6. TAB: MANAGER PERSONAL PORTAL & INPUT (พื้นที่ ผจก. 12 ท่าน) -->
     <!-- ===================================================================== -->
     <section id="tab-manager" class="tab-content hidden space-y-6">
@@ -2810,8 +3050,14 @@
         kpiDoughnut: null,
         problemsDonut: null,
         accountingDaily: null,
-        accountingBranch: null
+        accountingBranch: null,
+        casesDailyTrend: null,
+        casesTypesDonut: null,
+        casesBranchBar: null
       },
+      casesViewMode: 'overview',
+      casesDailyMetric: 'combined',
+      casesSearchQuery: '',
       problemFilterRisk: 'ALL',
       problemFilterStatus: 'ALL',
       problemFilterBranch: 'ALL',
@@ -3793,6 +4039,9 @@
 
       // Render Tab 4 (Accounting)
       renderAccountingSection(data.accounting);
+
+      // Render Tab 5 (Case Analytics)
+      renderCasesDashboard();
 
       // Render Manager Personal Portal
       renderManagerPortal();
@@ -6024,6 +6273,799 @@
       }
     }
 
+    // =========================================================================
+    // 5.6 CASE ANALYTICS ENGINE (วิเคราะห์เคส บอทรายงาน & ภาพรวมเดือนนี้)
+    // =========================================================================
+    const DEFAULT_CASES_ANALYTICS_DATA = {
+      monthTitle: 'November 2026',
+      summary: {
+        totalRevenue: 7258364,
+        newCasesRevenue: 5570978,
+        oldCasesRevenue: 1655386,
+        newCasesCount: 412,
+        oldCasesCount: 114,
+        totalCasesCount: 526,
+        courseCount: 169,
+        singleCount: 121,
+        physicalExamCount: 38,
+        cancelCount: 77,
+        installmentAmount: 32000,
+        shortTermCount: 41,
+        midTermCount: 34,
+        consultCount: 5,
+        unspecifiedCount: 4
+      },
+      branches: [
+        { name: "000มิสทีน", newCasesCount: 21, oldCasesCount: 11, courseCount: 7, singleCount: 6, physicalExamCount: 0, cancelCount: 4, installmentAmount: 0, newCasesAmount: 264969, oldCasesAmount: 179000, totalAmount: 443969, rank: 4, consultCount: 0, unspecifiedCount: 0, totalCount: 21, shortTermCount: 4, midTermCount: 4, dailyNew: [26000, 40840, 53500, 57750, 24250, 39500, 26589, 78540, 67500, 28500], dailyOld: [6000, 40840, 0, 29750, 11250, 19500, 16589, 78540, 48000, 13500] },
+        { name: "001เพชรเกษม", newCasesCount: 28, oldCasesCount: 5, courseCount: 19, singleCount: 5, physicalExamCount: 0, cancelCount: 5, installmentAmount: 5000, newCasesAmount: 591080, oldCasesAmount: 63150, totalAmount: 659230, rank: 2, consultCount: 1, unspecifiedCount: 0, totalCount: 28, shortTermCount: 0, midTermCount: 3, dailyNew: [189750, 70000, 71900, 8290, 13500, 67290, 61250, 57250, 30000, 90000], dailyOld: [189750, 70000, 58000, 8290, 13500, 47290, 61250, 28000, 25000, 90000] },
+        { name: "002รัตนาธิเบศร์", newCasesCount: 27, oldCasesCount: 5, courseCount: 10, singleCount: 6, physicalExamCount: 6, cancelCount: 4, installmentAmount: 0, newCasesAmount: 344680, oldCasesAmount: 81084, totalAmount: 425764, rank: 5, consultCount: 0, unspecifiedCount: 0, totalCount: 27, shortTermCount: 3, midTermCount: 2, dailyNew: [15000, 10000, 74000, 50420, 26000, 28290, 39600, 93499, 38180, 50775], dailyOld: [15000, 10000, 74000, 47000, 26000, 27000, 0, 83500, 38180, 24000] },
+        { name: "003บางนา", newCasesCount: 21, oldCasesCount: 10, courseCount: 10, singleCount: 6, physicalExamCount: 2, cancelCount: 5, installmentAmount: 0, newCasesAmount: 327448, oldCasesAmount: 85595, totalAmount: 413043, rank: 6, consultCount: 0, unspecifiedCount: 0, totalCount: 21, shortTermCount: 3, midTermCount: 0, dailyNew: [127039, 39000, 34430, 35750, 12579, 28000, 32290, 72595, 7900, 23460], dailyOld: [120039, 35000, 27590, 29750, 11289, 28000, 0, 32290, 35590, 7800] },
+        { name: "004เชียงใหม่", newCasesCount: 13, oldCasesCount: 6, courseCount: 5, singleCount: 5, physicalExamCount: 0, cancelCount: 5, installmentAmount: 0, newCasesAmount: 165930, oldCasesAmount: 107370, totalAmount: 273300, rank: 16, consultCount: 0, unspecifiedCount: 0, totalCount: 13, shortTermCount: 2, midTermCount: 1, dailyNew: [30090, 3870, 1290, 57000, 3000, 27000, 6590, 84290, 57000, 3170], dailyOld: [12590, 0, 1290, 35000, 3000, 27000, 6590, 64290, 13000, 3170] },
+        { name: "005พิษณุโลก", newCasesCount: 13, oldCasesCount: 6, courseCount: 6, singleCount: 5, physicalExamCount: 2, cancelCount: 4, installmentAmount: 0, newCasesAmount: 285040, oldCasesAmount: 88950, totalAmount: 373990, rank: 9, consultCount: 0, unspecifiedCount: 0, totalCount: 13, shortTermCount: 0, midTermCount: 0, dailyNew: [57000, 1180, 63090, 35000, 0, 22590, 5680, 131250, 20000, 38200], dailyOld: [57000, 1180, 63090, 35000, 0, 590, 3180, 90000, 0, 35000] },
+        { name: "006ชลบุรี", newCasesCount: 26, oldCasesCount: 3, courseCount: 12, singleCount: 4, physicalExamCount: 5, cancelCount: 3, installmentAmount: 0, newCasesAmount: 411868, oldCasesAmount: 58575, totalAmount: 470443, rank: 3, consultCount: 0, unspecifiedCount: 0, totalCount: 26, shortTermCount: 3, midTermCount: 2, dailyNew: [82299, 102275, 0, 27000, 85000, 47000, 40999, 22870, 63000, 0], dailyOld: [78499, 75500, 0, 27000, 85000, 47000, 40999, 22870, 35000, 0] },
+        { name: "007ขอนแก่น", newCasesCount: 13, oldCasesCount: 6, courseCount: 7, singleCount: 2, physicalExamCount: 1, cancelCount: 5, installmentAmount: 0, newCasesAmount: 244370, oldCasesAmount: 130250, totalAmount: 374620, rank: 8, consultCount: 0, unspecifiedCount: 0, totalCount: 12, shortTermCount: 0, midTermCount: 2, dailyNew: [20000, 34290, 42500, 40000, 0, 33080, 25000, 38250, 73500, 70000], dailyOld: [20000, 34290, 25000, 20000, 0, 1580, 0, 0, 73500, 70000] },
+        { name: "008หาดใหญ่", newCasesCount: 32, oldCasesCount: 7, courseCount: 8, singleCount: 15, physicalExamCount: 3, cancelCount: 4, installmentAmount: 1500, newCasesAmount: 254310, oldCasesAmount: 74590, totalAmount: 330400, rank: 12, consultCount: 2, unspecifiedCount: 1, totalCount: 31, shortTermCount: 2, midTermCount: 1, dailyNew: [14790, 36880, 64590, 49000, 16760, 11790, 4000, 50750, 3000, 78840], dailyOld: [5790, 35890, 64590, 49000, 16760, 10290, 4000, 8000, 3000, 57290] },
+        { name: "009อุบลราชธานี", newCasesCount: 21, oldCasesCount: 7, courseCount: 5, singleCount: 8, physicalExamCount: 5, cancelCount: 2, installmentAmount: 0, newCasesAmount: 183790, oldCasesAmount: 55720, totalAmount: 239510, rank: 18, consultCount: 1, unspecifiedCount: 0, totalCount: 21, shortTermCount: 2, midTermCount: 0, dailyNew: [8000, 4180, 0, 36290, 6000, 60290, 4000, 28250, 49500, 35000], dailyOld: [8000, 2000, 0, 36290, 6000, 56000, 4000, 2000, 37500, 32000] },
+        { name: "010เชียงราย", newCasesCount: 9, oldCasesCount: 4, courseCount: 4, singleCount: 4, physicalExamCount: 0, cancelCount: 2, installmentAmount: 0, newCasesAmount: 114370, oldCasesAmount: 16290, totalAmount: 130660, rank: 19, consultCount: 0, unspecifiedCount: 0, totalCount: 9, shortTermCount: 1, midTermCount: 0, dailyNew: [3200, 2590, 27580, 0, 25000, 9000, 28000, 0, 3500, 31790], dailyOld: [0, 2000, 27580, 0, 25000, 0, 28000, 0, 0, 31790] },
+        { name: "011ระยอง", newCasesCount: 29, oldCasesCount: 3, courseCount: 11, singleCount: 8, physicalExamCount: 4, cancelCount: 3, installmentAmount: 0, newCasesAmount: 338167, oldCasesAmount: 54000, totalAmount: 392167, rank: 7, consultCount: 0, unspecifiedCount: 1, totalCount: 28, shortTermCount: 5, midTermCount: 0, dailyNew: [28860, 36290, 5000, 26250, 15000, 74000, 89497, 88260, 2000, 27000], dailyOld: [28860, 36290, 5000, 0, 15000, 65000, 89497, 69500, 2000, 27000] },
+        { name: "012ดอนเมือง", newCasesCount: 29, oldCasesCount: 15, courseCount: 17, singleCount: 4, physicalExamCount: 2, cancelCount: 7, installmentAmount: 25500, newCasesAmount: 504129, oldCasesAmount: 291395, totalAmount: 821024, rank: 1, consultCount: 1, unspecifiedCount: 1, totalCount: 28, shortTermCount: 2, midTermCount: 2, dailyNew: [113250, 63984, 49000, 33290, 25000, 66750, 184000, 52500, 64250, 109000, 40000], dailyOld: [85250, 50589, 23000, 21290, 25000, 0, 111000, 32000, 16000, 100000, 40000] },
+        { name: "013พระราม 9", newCasesCount: 18, oldCasesCount: 8, courseCount: 9, singleCount: 7, physicalExamCount: 0, cancelCount: 5, installmentAmount: 0, newCasesAmount: 227009, oldCasesAmount: 136700, totalAmount: 363709, rank: 11, consultCount: 0, unspecifiedCount: 0, totalCount: 18, shortTermCount: 1, midTermCount: 1, dailyNew: [56000, 39250, 61100, 9000, 49830, 55000, 32499, 26540, 6000, 17000, 11490], dailyOld: [26000, 21750, 57900, 9000, 2580, 55000, 9999, 15290, 6000, 12000, 11490] },
+        { name: "014สุราษฎร์ธานี", newCasesCount: 31, oldCasesCount: 2, courseCount: 8, singleCount: 14, physicalExamCount: 3, cancelCount: 7, installmentAmount: 0, newCasesAmount: 253810, oldCasesAmount: 13199, totalAmount: 267009, rank: 17, consultCount: 0, unspecifiedCount: 0, totalCount: 31, shortTermCount: 3, midTermCount: 3, dailyNew: [58500, 0, 9360, 3000, 9999, 35590, 21500, 67500, 29000, 6290, 24250], dailyOld: [0, 0, 9360, 0, 0, 0, 0, 0, 0, 0, 3839] },
+        { name: "015ท่าพระ", newCasesCount: 18, oldCasesCount: 3, courseCount: 6, singleCount: 5, physicalExamCount: 1, cancelCount: 4, installmentAmount: 0, newCasesAmount: 220570, oldCasesAmount: 57875, totalAmount: 278445, rank: 15, consultCount: 0, unspecifiedCount: 0, totalCount: 18, shortTermCount: 3, midTermCount: 3, dailyNew: [51300, 7180, 6000, 81465, 12000, 35000, 9000, 11000, 25000, 40500], dailyOld: [17300, 7180, 6000, 24875, 2520, 0, 0, 0, 0, 0] },
+        { name: "016หนองจอก", newCasesCount: 23, oldCasesCount: 3, courseCount: 10, singleCount: 8, physicalExamCount: 2, cancelCount: 2, installmentAmount: 0, newCasesAmount: 307908, oldCasesAmount: 56195, totalAmount: 364103, rank: 10, consultCount: 0, unspecifiedCount: 0, totalCount: 23, shortTermCount: 1, midTermCount: 2, dailyNew: [22749, 34460, 31775, 45999, 21290, 30000, 14000, 32000, 27580, 82000, 22250], dailyOld: [0, 24000, 0, 0, 0, 0, 0, 0, 0, 32195, 0] },
+        { name: "017นครปฐม", newCasesCount: 18, oldCasesCount: 4, courseCount: 7, singleCount: 3, physicalExamCount: 0, cancelCount: 4, installmentAmount: 0, newCasesAmount: 267580, oldCasesAmount: 57853, totalAmount: 325433, rank: 13, consultCount: 0, unspecifiedCount: 0, totalCount: 18, shortTermCount: 3, midTermCount: 5, dailyNew: [8560, 3000, 20000, 23500, 25000, 23800, 8000, 81750, 65000, 47000, 19803], dailyOld: [0, 0, 0, 0, 25000, 0, 0, 0, 0, 32853, 0] },
+        { name: "018ยะลา", newCasesCount: 22, oldCasesCount: 6, courseCount: 8, singleCount: 6, physicalExamCount: 2, cancelCount: 2, installmentAmount: 0, newCasesAmount: 263950, oldCasesAmount: 47595, totalAmount: 311545, rank: 14, consultCount: 0, unspecifiedCount: 0, totalCount: 22, shortTermCount: 3, midTermCount: 3, dailyNew: [42705, 29920, 4000, 48590, 56000, 33000, 38330, 15000, 0, 44000], dailyOld: [0, 0, 0, 0, 0, 0, 0, 0, 0, 47595, 0] }
+      ],
+      oldCasesBranches: [
+        { name: "000มิสทีน", oldCasesCount: 11, courseCount: 10, singleCount: 1, physicalExamCount: 0, cancelCount: 0, installmentAmount: 0, oldCasesAmount: 179000, totalAmount: 179000 },
+        { name: "001เพชรเกษม", oldCasesCount: 5, courseCount: 4, singleCount: 0, physicalExamCount: 0, cancelCount: 0, installmentAmount: 0, oldCasesAmount: 63150, totalAmount: 63150 },
+        { name: "002รัตนาธิเบศร์", oldCasesCount: 5, courseCount: 3, singleCount: 1, physicalExamCount: 0, cancelCount: 0, installmentAmount: 0, oldCasesAmount: 81084, totalAmount: 81084 },
+        { name: "003บางนา", oldCasesCount: 10, courseCount: 6, singleCount: 4, physicalExamCount: 0, cancelCount: 0, installmentAmount: 0, oldCasesAmount: 85595, totalAmount: 85595 },
+        { name: "004เชียงใหม่", oldCasesCount: 6, courseCount: 4, singleCount: 2, physicalExamCount: 0, cancelCount: 0, installmentAmount: 0, oldCasesAmount: 107370, totalAmount: 107370 },
+        { name: "005พิษณุโลก", oldCasesCount: 6, courseCount: 5, singleCount: 1, physicalExamCount: 0, cancelCount: 0, installmentAmount: 0, oldCasesAmount: 88950, totalAmount: 88950 },
+        { name: "006ชลบุรี", oldCasesCount: 3, courseCount: 3, singleCount: 0, physicalExamCount: 0, cancelCount: 0, installmentAmount: 0, oldCasesAmount: 58575, totalAmount: 58575 },
+        { name: "007ขอนแก่น", oldCasesCount: 6, courseCount: 6, singleCount: 0, physicalExamCount: 0, cancelCount: 0, installmentAmount: 0, oldCasesAmount: 130250, totalAmount: 130250 },
+        { name: "008หาดใหญ่", oldCasesCount: 7, courseCount: 6, singleCount: 1, physicalExamCount: 0, cancelCount: 0, installmentAmount: 0, oldCasesAmount: 74590, totalAmount: 74590 },
+        { name: "009อุบลราชธานี", oldCasesCount: 7, courseCount: 3, singleCount: 4, physicalExamCount: 0, cancelCount: 0, installmentAmount: 0, oldCasesAmount: 55720, totalAmount: 55720 },
+        { name: "010เชียงราย", oldCasesCount: 4, courseCount: 3, singleCount: 1, physicalExamCount: 0, cancelCount: 0, installmentAmount: 0, oldCasesAmount: 18290, totalAmount: 18290 },
+        { name: "011ระยอง", oldCasesCount: 3, courseCount: 3, singleCount: 0, physicalExamCount: 0, cancelCount: 0, installmentAmount: 0, oldCasesAmount: 54000, totalAmount: 54000 },
+        { name: "012ดอนเมือง", oldCasesCount: 15, courseCount: 15, singleCount: 0, physicalExamCount: 0, cancelCount: 0, installmentAmount: 0, oldCasesAmount: 291395, totalAmount: 291395 },
+        { name: "013พระราม 9", oldCasesCount: 8, courseCount: 7, singleCount: 0, physicalExamCount: 0, cancelCount: 0, installmentAmount: 0, oldCasesAmount: 136700, totalAmount: 136700 },
+        { name: "014สุราษฎร์ธานี", oldCasesCount: 2, courseCount: 1, singleCount: 0, physicalExamCount: 0, cancelCount: 0, installmentAmount: 0, oldCasesAmount: 13199, totalAmount: 13199 },
+        { name: "015ท่าพระ", oldCasesCount: 3, courseCount: 3, singleCount: 0, physicalExamCount: 0, cancelCount: 0, installmentAmount: 0, oldCasesAmount: 57875, totalAmount: 57875 }
+      ],
+      dailyMatrix: {
+        days: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
+        newDailyTotals: [955132, 579189, 627135, 667594, 426208, 726970, 636534, 990779, 698605, 808965, 141253, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        oldDailyTotals: [494849, 367099, 319220, 169905, 178330, 151590, 227586, 281660, 228270, 542248, 145290, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        combinedDailyTotals: [1449981, 946288, 946355, 837499, 604538, 878560, 864120, 1272439, 926875, 1351213, 286543, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      }
+    };
+
+    function getActiveCasesData() {
+      const live = dashboardState.data && dashboardState.data.casesAnalytics;
+      if (live && Array.isArray(live.branches) && live.branches.length > 0) {
+        return live;
+      }
+      return DEFAULT_CASES_ANALYTICS_DATA;
+    }
+
+    function renderCasesDashboard() {
+      const data = getActiveCasesData();
+      if (!data) return;
+
+      const summary = data.summary || {};
+      const branches = Array.isArray(data.branches) ? data.branches : [];
+
+      // 1. Update Hero Banner Elements
+      const mBadge = document.getElementById('casesMonthBadge');
+      if (mBadge) mBadge.textContent = `รายงานเคสประจำเดือน ${data.monthTitle || 'พฤศจิกายน 2569'}`;
+
+      const totalRevEl = document.getElementById('casesTotalRevenueBanner');
+      if (totalRevEl) totalRevEl.textContent = `${Number(summary.totalRevenue || 0).toLocaleString()} ฿`;
+
+      const subBannerEl = document.getElementById('casesSubBannerText');
+      if (subBannerEl) {
+        subBannerEl.textContent = `เคสใหม่ ฿${Number(summary.newCasesRevenue || 0).toLocaleString()} (${summary.newCasesCount || 0} เคส) • เคสเก่า ฿${Number(summary.oldCasesRevenue || 0).toLocaleString()} (${summary.oldCasesCount || 0} เคส) • รวมทั้งสิ้น ${(summary.newCasesCount || 0) + (summary.oldCasesCount || 0)} เคส`;
+      }
+
+      const totalBranchesEl = document.getElementById('casesTotalBranches');
+      if (totalBranchesEl) totalBranchesEl.textContent = `${branches.length} สาขา`;
+
+      const newCountEl = document.getElementById('casesNewCount');
+      if (newCountEl) newCountEl.textContent = `${summary.newCasesCount || 0} เคส`;
+
+      const oldCountEl = document.getElementById('casesOldCount');
+      if (oldCountEl) oldCountEl.textContent = `${summary.oldCasesCount || 0} เคส`;
+
+      const ratioEl = document.getElementById('casesRatioText');
+      if (ratioEl) {
+        const tot = (summary.newCasesCount || 0) + (summary.oldCasesCount || 0);
+        if (tot > 0) {
+          const nPct = Math.round((summary.newCasesCount / tot) * 100);
+          const oPct = 100 - nPct;
+          ratioEl.textContent = `${nPct}% / ${oPct}%`;
+        } else {
+          ratioEl.textContent = '-';
+        }
+      }
+
+      // Breakdown Cards
+      const cCourse = document.getElementById('caseTypeCourse');
+      if (cCourse) cCourse.textContent = Number(summary.courseCount || 0).toLocaleString();
+
+      const cSingle = document.getElementById('caseTypeSingle');
+      if (cSingle) cSingle.textContent = Number(summary.singleCount || 0).toLocaleString();
+
+      const cExam = document.getElementById('caseTypeExam');
+      if (cExam) cExam.textContent = Number(summary.physicalExamCount || 0).toLocaleString();
+
+      const cCancel = document.getElementById('caseTypeCancel');
+      if (cCancel) cCancel.textContent = Number(summary.cancelCount || 0).toLocaleString();
+
+      const cInst = document.getElementById('caseInstallment');
+      if (cInst) cInst.textContent = `${Number(summary.installmentAmount || 0).toLocaleString()} ฿`;
+
+      const sTerm = document.getElementById('casesShortTermBadge');
+      if (sTerm) sTerm.textContent = `${summary.shortTermCount || 0} เคส`;
+
+      const mTerm = document.getElementById('casesMidTermBadge');
+      if (mTerm) mTerm.textContent = `${summary.midTermCount || 0} เคส`;
+
+      // 2. Render Charts
+      renderCasesDailyTrendChart(data);
+      renderCasesTypesDonutChart(data);
+      renderCasesBranchBarChart(data);
+
+      // 3. Render Table
+      renderCasesTable();
+
+      lucide.createIcons();
+    }
+
+    // -------------------------------------------------------------------------
+    // CHART 1: DAILY REVENUE TREND CHART (1–31 จากชีทบอท)
+    // -------------------------------------------------------------------------
+    function renderCasesDailyTrendChart(data) {
+      const canvas = document.getElementById('casesDailyTrendChart');
+      if (!canvas) return;
+
+      const matrix = data.dailyMatrix || {};
+      const days = Array.isArray(matrix.days) && matrix.days.length > 0 ? matrix.days : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
+      const labels = days.map(d => `วันที่ ${d}`);
+
+      const newTotals = Array.isArray(matrix.newDailyTotals) ? matrix.newDailyTotals : [];
+      const oldTotals = Array.isArray(matrix.oldDailyTotals) ? matrix.oldDailyTotals : [];
+      const combTotals = Array.isArray(matrix.combinedDailyTotals) ? matrix.combinedDailyTotals : [];
+
+      // หา Peak Day
+      let maxVal = 0;
+      let peakDay = '-';
+      combTotals.forEach((val, idx) => {
+        if (val > maxVal) {
+          maxVal = val;
+          peakDay = `วันที่ ${days[idx]} (฿${Number(val).toLocaleString()})`;
+        }
+      });
+      const peakDayEl = document.getElementById('casesPeakDayText');
+      if (peakDayEl) peakDayEl.textContent = `วันที่ยอดสูงสุด: ${peakDay}`;
+
+      const metric = dashboardState.casesDailyMetric || 'combined';
+      let datasets = [];
+
+      if (metric === 'combined') {
+        datasets = [
+          {
+            label: 'เคสใหม่ (New Cases)',
+            data: newTotals.slice(0, days.length),
+            backgroundColor: '#0D9488',
+            borderColor: '#0F766E',
+            borderWidth: 1,
+            borderRadius: 4
+          },
+          {
+            label: 'เคสเก่า (Old Cases)',
+            data: oldTotals.slice(0, days.length),
+            backgroundColor: '#C58569',
+            borderColor: '#A3664C',
+            borderWidth: 1,
+            borderRadius: 4
+          }
+        ];
+      } else if (metric === 'new') {
+        datasets = [
+          {
+            label: 'เคสใหม่ (New Cases)',
+            data: newTotals.slice(0, days.length),
+            backgroundColor: '#0D9488',
+            borderColor: '#0F766E',
+            borderWidth: 1,
+            borderRadius: 6
+          }
+        ];
+      } else {
+        datasets = [
+          {
+            label: 'เคสเก่า (Old Cases)',
+            data: oldTotals.slice(0, days.length),
+            backgroundColor: '#C58569',
+            borderColor: '#A3664C',
+            borderWidth: 1,
+            borderRadius: 6
+          }
+        ];
+      }
+
+      if (dashboardState.charts.casesDailyTrend) {
+        dashboardState.charts.casesDailyTrend.destroy();
+      }
+
+      const ctx = canvas.getContext('2d');
+      dashboardState.charts.casesDailyTrend = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: datasets
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: {
+            mode: 'index',
+            intersect: false
+          },
+          scales: {
+            x: {
+              stacked: metric === 'combined',
+              grid: { display: false },
+              ticks: { font: { size: 10 } }
+            },
+            y: {
+              stacked: metric === 'combined',
+              grid: { color: '#F1F5F9' },
+              ticks: {
+                callback: function(v) {
+                  return '฿' + (v >= 1000000 ? (v / 1000000).toFixed(1) + 'M' : (v >= 1000 ? (v / 1000).toFixed(0) + 'k' : v));
+                },
+                font: { size: 10 }
+              }
+            }
+          },
+          plugins: {
+            legend: {
+              display: metric === 'combined',
+              position: 'top',
+              labels: { font: { size: 11, weight: 'bold' }, boxWidth: 12 }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const label = context.dataset.label || '';
+                  const val = context.parsed.y !== null ? context.parsed.y : 0;
+                  return ` ${label}: ฿${Number(val).toLocaleString()}`;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function setCasesDailyMetric(metric) {
+      dashboardState.casesDailyMetric = metric;
+
+      const btnComb = document.getElementById('btnCasesDailyCombined');
+      const btnNew = document.getElementById('btnCasesDailyNew');
+      const btnOld = document.getElementById('btnCasesDailyOld');
+
+      [btnComb, btnNew, btnOld].forEach(b => {
+        if (b) {
+          b.className = 'px-2.5 py-1 rounded-lg text-xxs font-semibold text-slate-600 hover:text-slate-900 transition';
+        }
+      });
+
+      if (metric === 'combined' && btnComb) btnComb.className = 'px-2.5 py-1 rounded-lg text-xxs font-bold bg-white text-slate-900 shadow-2xs transition';
+      if (metric === 'new' && btnNew) btnNew.className = 'px-2.5 py-1 rounded-lg text-xxs font-bold bg-white text-slate-900 shadow-2xs transition';
+      if (metric === 'old' && btnOld) btnOld.className = 'px-2.5 py-1 rounded-lg text-xxs font-bold bg-white text-slate-900 shadow-2xs transition';
+
+      const data = getActiveCasesData();
+      renderCasesDailyTrendChart(data);
+    }
+
+    // -------------------------------------------------------------------------
+    // CHART 2: CASE TYPES DONUT CHART
+    // -------------------------------------------------------------------------
+    function renderCasesTypesDonutChart(data) {
+      const canvas = document.getElementById('casesTypesDonutChart');
+      if (!canvas) return;
+
+      const summary = data.summary || {};
+      const labels = ['รายคอร์ส', 'รายครั้ง', 'ตรวจร่างกาย', 'ยกเลิก'];
+      const vals = [
+        Number(summary.courseCount || 0),
+        Number(summary.singleCount || 0),
+        Number(summary.physicalExamCount || 0),
+        Number(summary.cancelCount || 0)
+      ];
+
+      if (dashboardState.charts.casesTypesDonut) {
+        dashboardState.charts.casesTypesDonut.destroy();
+      }
+
+      const ctx = canvas.getContext('2d');
+      dashboardState.charts.casesTypesDonut = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: vals,
+            backgroundColor: ['#2E475D', '#4D6B5A', '#B56D4A', '#8F3434'],
+            borderWidth: 2,
+            borderColor: '#FFFFFF'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '68%',
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: {
+                boxWidth: 10,
+                font: { size: 11, weight: 'bold' },
+                generateLabels: function(chart) {
+                  const data = chart.data;
+                  if (data.labels.length && data.datasets.length) {
+                    const total = data.datasets[0].data.reduce((a, b) => a + b, 0);
+                    return data.labels.map((label, i) => {
+                      const val = data.datasets[0].data[i];
+                      const pct = total > 0 ? Math.round((val / total) * 100) : 0;
+                      return {
+                        text: `${label} (${val} / ${pct}%)`,
+                        fillStyle: data.datasets[0].backgroundColor[i],
+                        hidden: false,
+                        index: i
+                      };
+                    });
+                  }
+                  return [];
+                }
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(c) {
+                  return ` ${c.label}: ${c.parsed} รายการ`;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // -------------------------------------------------------------------------
+    // CHART 3: BRANCH RANKING STACKED BAR CHART
+    // -------------------------------------------------------------------------
+    function renderCasesBranchBarChart(data) {
+      const canvas = document.getElementById('casesBranchBarChart');
+      if (!canvas) return;
+
+      const rawBranches = Array.isArray(data.branches) ? [...data.branches] : [];
+      // เรียงลำดับตามยอดเงินรวมทั้งหมดจากมากไปน้อย
+      const sortedBranches = rawBranches.sort((a, b) => (b.totalAmount || 0) - (a.totalAmount || 0));
+
+      const labels = sortedBranches.map(b => b.name);
+      const newAmts = sortedBranches.map(b => b.newCasesAmount || 0);
+      const oldAmts = sortedBranches.map(b => b.oldCasesAmount || 0);
+
+      if (dashboardState.charts.casesBranchBar) {
+        dashboardState.charts.casesBranchBar.destroy();
+      }
+
+      const ctx = canvas.getContext('2d');
+      dashboardState.charts.casesBranchBar = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'เคสใหม่ (฿)',
+              data: newAmts,
+              backgroundColor: '#0D9488',
+              borderRadius: 4
+            },
+            {
+              label: 'เคสเก่า (฿)',
+              data: oldAmts,
+              backgroundColor: '#C58569',
+              borderRadius: 4
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: {
+              stacked: true,
+              grid: { display: false },
+              ticks: {
+                font: { size: 10, weight: 'bold' },
+                maxRotation: 45,
+                minRotation: 30
+              }
+            },
+            y: {
+              stacked: true,
+              grid: { color: '#F1F5F9' },
+              ticks: {
+                callback: function(v) {
+                  return '฿' + (v >= 1000000 ? (v / 1000000).toFixed(1) + 'M' : (v >= 1000 ? (v / 1000).toFixed(0) + 'k' : v));
+                },
+                font: { size: 10 }
+              }
+            }
+          },
+          plugins: {
+            legend: {
+              position: 'top',
+              labels: { font: { size: 11, weight: 'bold' }, boxWidth: 12 }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(c) {
+                  return ` ${c.dataset.label}: ฿${Number(c.parsed.y).toLocaleString()}`;
+                },
+                footer: function(items) {
+                  const total = items.reduce((a, b) => a + (b.parsed.y || 0), 0);
+                  return `ยอดรวมทั้งสิ้น: ฿${total.toLocaleString()}`;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // -------------------------------------------------------------------------
+    // 3 VIEW MODES: OVERVIEW / MATRIX / OLD CASES
+    // -------------------------------------------------------------------------
+    function setCasesViewMode(mode) {
+      dashboardState.casesViewMode = mode;
+
+      const btnOv = document.getElementById('btnCasesMode-overview');
+      const btnMat = document.getElementById('btnCasesMode-matrix');
+      const btnOld = document.getElementById('btnCasesMode-old_cases');
+
+      [btnOv, btnMat, btnOld].forEach(b => {
+        if (b) b.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center space-x-1.5 text-slate-600 hover:text-slate-900';
+      });
+
+      if (mode === 'overview' && btnOv) btnOv.className = 'px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 bg-white text-slate-900 shadow-2xs';
+      if (mode === 'matrix' && btnMat) btnMat.className = 'px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 bg-white text-slate-900 shadow-2xs';
+      if (mode === 'old_cases' && btnOld) btnOld.className = 'px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 bg-white text-slate-900 shadow-2xs';
+
+      renderCasesTable();
+    }
+
+    function onCasesSearch(val) {
+      dashboardState.casesSearchQuery = (val || '').trim().toLowerCase();
+      renderCasesTable();
+    }
+
+    function renderCasesTable() {
+      const container = document.getElementById('casesTableContainer');
+      if (!container) return;
+
+      const data = getActiveCasesData();
+      const mode = dashboardState.casesViewMode || 'overview';
+      const q = dashboardState.casesSearchQuery || '';
+
+      let branches = Array.isArray(data.branches) ? [...data.branches] : [];
+      if (q) {
+        branches = branches.filter(b => (b.name || '').toLowerCase().includes(q));
+      }
+
+      const countEl = document.getElementById('casesTableCountLabel');
+      if (countEl) countEl.textContent = `แสดง ${branches.length} จาก ${data.branches?.length || 19} สาขา`;
+
+      if (branches.length === 0) {
+        container.innerHTML = `
+          <div class="p-8 text-center text-slate-500">
+            <i data-lucide="search-x" class="w-8 h-8 mx-auto text-slate-400 mb-2"></i>
+            <p class="font-bold">ไม่พบสาขาที่ตรงกับคำค้นหา "${q}"</p>
+          </div>
+        `;
+        lucide.createIcons();
+        return;
+      }
+
+      if (mode === 'overview') {
+        // MODE A: SUMMARY OVERVIEW TABLE
+        let html = `
+          <table class="w-full text-left text-xs whitespace-nowrap">
+            <thead class="bg-[#F8F9FA] text-[#4A5568] font-bold border-b border-[#E2E8F0]">
+              <tr>
+                <th class="py-3 px-3.5 text-center w-12">อันดับ</th>
+                <th class="py-3 px-3.5">สาขา</th>
+                <th class="py-3 px-3 text-right">เคสใหม่</th>
+                <th class="py-3 px-3 text-right">เคสเก่า</th>
+                <th class="py-3 px-3 text-right">รวมเคส</th>
+                <th class="py-3 px-3 text-right">รายคอร์ส</th>
+                <th class="py-3 px-3 text-right">รายครั้ง</th>
+                <th class="py-3 px-3 text-right">ตรวจร่างกาย</th>
+                <th class="py-3 px-3 text-right text-rose-700">ยกเลิก</th>
+                <th class="py-3 px-3.5 text-right font-black text-teal-800">ยอดเคสใหม่ (฿)</th>
+                <th class="py-3 px-3.5 text-right font-black text-amber-800">ยอดเคสเก่า (฿)</th>
+                <th class="py-3 px-3.5 text-right font-black text-slate-900 bg-slate-100/60">ยอดรวมทั้งหมด (฿)</th>
+                <th class="py-3 px-3 text-center">สัดส่วนเคสใหม่</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-[#E2E8F0] text-[#2D3748]">
+        `;
+
+        branches.forEach((b, idx) => {
+          const totAmt = b.totalAmount || (b.newCasesAmount + b.oldCasesAmount);
+          const newPct = totAmt > 0 ? Math.round((b.newCasesAmount / totAmt) * 100) : 0;
+          const rank = b.rank || (idx + 1);
+
+          html += `
+            <tr class="hover:bg-slate-50/80 transition">
+              <td class="py-2.5 px-3.5 text-center font-bold">
+                <span class="inline-flex items-center justify-center w-6 h-6 rounded-lg ${rank === 1 ? 'bg-amber-100 text-amber-900 font-black' : (rank <= 3 ? 'bg-slate-200 text-slate-800 font-bold' : 'text-slate-500 font-medium')}">${rank}</span>
+              </td>
+              <td class="py-2.5 px-3.5 font-bold text-slate-900 flex items-center space-x-2">
+                <span>${b.name}</span>
+              </td>
+              <td class="py-2.5 px-3 text-right font-bold text-teal-700">${b.newCasesCount}</td>
+              <td class="py-2.5 px-3 text-right font-bold text-amber-700">${b.oldCasesCount}</td>
+              <td class="py-2.5 px-3 text-right font-black text-slate-900">${(b.newCasesCount || 0) + (b.oldCasesCount || 0)}</td>
+              <td class="py-2.5 px-3 text-right text-slate-600">${b.courseCount}</td>
+              <td class="py-2.5 px-3 text-right text-slate-600">${b.singleCount}</td>
+              <td class="py-2.5 px-3 text-right text-slate-600">${b.physicalExamCount}</td>
+              <td class="py-2.5 px-3 text-right font-semibold ${b.cancelCount > 0 ? 'text-rose-600' : 'text-slate-400'}">${b.cancelCount}</td>
+              <td class="py-2.5 px-3.5 text-right font-bold text-teal-700">฿${Number(b.newCasesAmount || 0).toLocaleString()}</td>
+              <td class="py-2.5 px-3.5 text-right font-bold text-amber-700">฿${Number(b.oldCasesAmount || 0).toLocaleString()}</td>
+              <td class="py-2.5 px-3.5 text-right font-black text-slate-900 bg-slate-50">฿${Number(totAmt).toLocaleString()}</td>
+              <td class="py-2.5 px-3 text-center">
+                <div class="inline-flex items-center space-x-1.5 w-24">
+                  <div class="flex-1 bg-slate-200 h-1.5 rounded-full overflow-hidden">
+                    <div class="bg-teal-600 h-full rounded-full" style="width: ${newPct}%"></div>
+                  </div>
+                  <span class="text-xxs font-bold text-slate-600">${newPct}%</span>
+                </div>
+              </td>
+            </tr>
+          `;
+        });
+
+        // แถวรวม
+        const sum = data.summary || {};
+        html += `
+            <tr class="bg-slate-100 font-black text-slate-900 border-t-2 border-slate-300">
+              <td class="py-3 px-3.5 text-center font-black">รวม</td>
+              <td class="py-3 px-3.5">ทั้งหมด ${branches.length} สาขา</td>
+              <td class="py-3 px-3 text-right text-teal-800">${sum.newCasesCount}</td>
+              <td class="py-3 px-3 text-right text-amber-800">${sum.oldCasesCount}</td>
+              <td class="py-3 px-3 text-right">${sum.totalCasesCount || (sum.newCasesCount + sum.oldCasesCount)}</td>
+              <td class="py-3 px-3 text-right">${sum.courseCount}</td>
+              <td class="py-3 px-3 text-right">${sum.singleCount}</td>
+              <td class="py-3 px-3 text-right">${sum.physicalExamCount}</td>
+              <td class="py-3 px-3 text-right text-rose-700">${sum.cancelCount}</td>
+              <td class="py-3 px-3.5 text-right text-teal-800">฿${Number(sum.newCasesRevenue || 0).toLocaleString()}</td>
+              <td class="py-3 px-3.5 text-right text-amber-800">฿${Number(sum.oldCasesRevenue || 0).toLocaleString()}</td>
+              <td class="py-3 px-3.5 text-right text-slate-900 bg-slate-200">฿${Number(sum.totalRevenue || 0).toLocaleString()}</td>
+              <td class="py-3 px-3 text-center">-</td>
+            </tr>
+          </tbody>
+        </table>
+        `;
+        container.innerHTML = html;
+
+      } else if (mode === 'matrix') {
+        // MODE B: DAILY MATRIX TABLE (1..31)
+        const days = data.dailyMatrix?.days || [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
+        const metric = dashboardState.casesDailyMetric || 'combined';
+
+        let html = `
+          <table class="w-full text-left text-xs whitespace-nowrap">
+            <thead class="bg-[#F8F9FA] text-[#4A5568] font-bold border-b border-[#E2E8F0]">
+              <tr>
+                <th class="py-3 px-3.5 sticky left-0 bg-[#F8F9FA] z-10 shadow-r">สาขา (${metric === 'new' ? 'เคสใหม่' : (metric === 'old' ? 'เคสเก่า' : 'รวมยอด')})</th>
+                <th class="py-3 px-3.5 text-right font-black bg-slate-100">รวมเดือน</th>
+        `;
+
+        days.forEach(d => {
+          html += `<th class="py-3 px-2.5 text-center min-w-[70px]">ว.${d}</th>`;
+        });
+
+        html += `
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-[#E2E8F0] text-[#2D3748]">
+        `;
+
+        branches.forEach(b => {
+          let dailyVals = [];
+          let rowTotal = 0;
+          if (metric === 'new') {
+            dailyVals = b.dailyNew || [];
+            rowTotal = b.newCasesAmount || 0;
+          } else if (metric === 'old') {
+            dailyVals = b.dailyOld || [];
+            rowTotal = b.oldCasesAmount || 0;
+          } else {
+            for (let i = 0; i < days.length; i++) {
+              const n = (b.dailyNew && b.dailyNew[i]) || 0;
+              const o = (b.dailyOld && b.dailyOld[i]) || 0;
+              dailyVals.push(n + o);
+            }
+            rowTotal = b.totalAmount || (b.newCasesAmount + b.oldCasesAmount);
+          }
+
+          html += `
+            <tr class="hover:bg-slate-50 transition">
+              <td class="py-2.5 px-3.5 font-bold text-slate-900 sticky left-0 bg-white z-10 shadow-r">${b.name}</td>
+              <td class="py-2.5 px-3.5 text-right font-black text-slate-900 bg-slate-50">฿${Number(rowTotal).toLocaleString()}</td>
+          `;
+
+          for (let i = 0; i < days.length; i++) {
+            const val = dailyVals[i] || 0;
+            const hasVal = val > 0;
+            const isHigh = val >= 50000;
+            html += `
+              <td class="py-2.5 px-2.5 text-center ${isHigh ? 'bg-teal-50 font-black text-teal-800' : (hasVal ? 'font-medium text-slate-800' : 'text-slate-300')}">
+                ${hasVal ? '฿' + Number(val).toLocaleString() : '-'}
+              </td>
+            `;
+          }
+
+          html += `</tr>`;
+        });
+
+        // แถวรวมรายวันของทั้ง 19 สาขา
+        let totals = [];
+        if (metric === 'new') totals = data.dailyMatrix?.newDailyTotals || [];
+        else if (metric === 'old') totals = data.dailyMatrix?.oldDailyTotals || [];
+        else totals = data.dailyMatrix?.combinedDailyTotals || [];
+
+        const grandTot = metric === 'new' ? data.summary?.newCasesRevenue : (metric === 'old' ? data.summary?.oldCasesRevenue : data.summary?.totalRevenue);
+
+        html += `
+            <tr class="bg-slate-100 font-black text-slate-900 border-t-2 border-slate-300">
+              <td class="py-3 px-3.5 sticky left-0 bg-slate-100 z-10 shadow-r font-black">รวมทุกสาขา</td>
+              <td class="py-3 px-3.5 text-right bg-slate-200">฿${Number(grandTot || 0).toLocaleString()}</td>
+        `;
+
+        for (let i = 0; i < days.length; i++) {
+          const val = totals[i] || 0;
+          html += `
+            <td class="py-3 px-2.5 text-center text-teal-900 font-black">
+              ${val > 0 ? '฿' + (val >= 1000 ? Math.round(val / 1000) + 'k' : val) : '-'}
+            </td>
+          `;
+        }
+
+        html += `
+            </tr>
+          </tbody>
+        </table>
+        `;
+        container.innerHTML = html;
+
+      } else {
+        // MODE C: OLD CASES ONLY TABLE (แถว 28-48)
+        const oldBranches = Array.isArray(data.oldCasesBranches) && data.oldCasesBranches.length > 0
+          ? data.oldCasesBranches
+          : branches.map(b => ({
+              name: b.name,
+              oldCasesCount: b.oldCasesCount,
+              courseCount: b.courseCount,
+              singleCount: b.singleCount,
+              physicalExamCount: b.physicalExamCount,
+              cancelCount: b.cancelCount,
+              installmentAmount: b.installmentAmount,
+              oldCasesAmount: b.oldCasesAmount,
+              totalAmount: b.oldCasesAmount
+            }));
+
+        const filteredOld = q ? oldBranches.filter(b => b.name.toLowerCase().includes(q)) : oldBranches;
+
+        let html = `
+          <table class="w-full text-left text-xs whitespace-nowrap">
+            <thead class="bg-[#F8F9FA] text-[#4A5568] font-bold border-b border-[#E2E8F0]">
+              <tr>
+                <th class="py-3 px-3.5 text-center w-12">ลำดับ</th>
+                <th class="py-3 px-3.5">สาขา</th>
+                <th class="py-3 px-3 text-right">เคสเก่า (จำนวน)</th>
+                <th class="py-3 px-3 text-right">รายคอร์ส</th>
+                <th class="py-3 px-3 text-right">รายครั้ง</th>
+                <th class="py-3 px-3 text-right">ตรวจร่างกาย</th>
+                <th class="py-3 px-3 text-right">ยกเลิก</th>
+                <th class="py-3 px-3.5 text-right">ชำระงวด (฿)</th>
+                <th class="py-3 px-3.5 text-right font-black text-amber-800 bg-amber-50/50">ยอดรวมเคสเก่า (บาท)</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-[#E2E8F0] text-[#2D3748]">
+        `;
+
+        let sumOldCount = 0;
+        let sumOldAmt = 0;
+
+        filteredOld.forEach((b, idx) => {
+          sumOldCount += (b.oldCasesCount || 0);
+          sumOldAmt += (b.oldCasesAmount || b.totalAmount || 0);
+
+          html += `
+            <tr class="hover:bg-slate-50 transition">
+              <td class="py-2.5 px-3.5 text-center text-slate-500">${idx + 1}</td>
+              <td class="py-2.5 px-3.5 font-bold text-slate-900">${b.name}</td>
+              <td class="py-2.5 px-3 text-right font-bold text-amber-700">${b.oldCasesCount || 0}</td>
+              <td class="py-2.5 px-3 text-right text-slate-600">${b.courseCount || 0}</td>
+              <td class="py-2.5 px-3 text-right text-slate-600">${b.singleCount || 0}</td>
+              <td class="py-2.5 px-3 text-right text-slate-600">${b.physicalExamCount || 0}</td>
+              <td class="py-2.5 px-3 text-right text-slate-600">${b.cancelCount || 0}</td>
+              <td class="py-2.5 px-3.5 text-right text-slate-600">฿${Number(b.installmentAmount || 0).toLocaleString()}</td>
+              <td class="py-2.5 px-3.5 text-right font-black text-amber-800 bg-amber-50/30">฿${Number(b.oldCasesAmount || b.totalAmount || 0).toLocaleString()}</td>
+            </tr>
+          `;
+        });
+
+        html += `
+            <tr class="bg-slate-100 font-black text-slate-900 border-t-2 border-slate-300">
+              <td class="py-3 px-3.5 text-center">รวม</td>
+              <td class="py-3 px-3.5">ทั้งหมด ${filteredOld.length} สาขา</td>
+              <td class="py-3 px-3 text-right text-amber-800">${sumOldCount}</td>
+              <td class="py-3 px-3 text-right" colspan="5"></td>
+              <td class="py-3 px-3.5 text-right text-amber-900 bg-amber-100">฿${sumOldAmt.toLocaleString()}</td>
+            </tr>
+          </tbody>
+        </table>
+        `;
+        container.innerHTML = html;
+      }
+
+      lucide.createIcons();
+    }
+
+    function exportCasesTableToCsv() {
+      const data = getActiveCasesData();
+      const branches = data.branches || [];
+      if (branches.length === 0) {
+        showToast('⚠️ ไม่มีข้อมูลสำหรับส่งออก');
+        return;
+      }
+
+      const headers = ['ลำดับ', 'สาขา', 'เคสใหม่(จำนวน)', 'เคสเก่า(จำนวน)', 'รายคอร์ส', 'รายครั้ง', 'ตรวจร่างกาย', 'ยกเลิก', 'ยอดรวมเคสใหม่(บาท)', 'ยอดรวมเคสเก่า(บาท)', 'ยอดรวมทั้งหมด(บาท)'];
+      const rows = branches.map((b, i) => [
+        i + 1,
+        `"${b.name}"`,
+        b.newCasesCount,
+        b.oldCasesCount,
+        b.courseCount,
+        b.singleCount,
+        b.physicalExamCount,
+        b.cancelCount,
+        b.newCasesAmount,
+        b.oldCasesAmount,
+        b.totalAmount
+      ]);
+
+      const csvContent = '\uFEFF' + [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Case_Report_${data.monthTitle || 'November_2026'}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('📥 ส่งออกไฟล์ CSV สำหรับเคสเรียบร้อยแล้ว');
+    }
+
 
     // =========================================================================
     // 0. THAILAND MAP & BRANCH SUMMARY LOGIC (ดึงข้อมูลจริงจาก Google Sheet 100%)
@@ -7327,6 +8369,8 @@
 
         if (tabId === 'tab-manager') {
           renderManagerPortal();
+        } else if (tabId === 'tab-cases') {
+          renderCasesDashboard();
         }
 
         lucide.createIcons();

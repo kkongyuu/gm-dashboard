@@ -934,6 +934,9 @@ function getAllDashboardData(forcedPeriodIndex) {
   // ดึงข้อมูลบัญชีการเบิกจ่าย
   const accountingData = getAccountingDashboardDataFast();
 
+  // ดึงข้อมูลวิเคราะห์เคส บอท & ภาพรวมเดือนนี้ (เคสใหม่ & เคสเก่า)
+  const casesData = getCasesDashboardDataFast(SpreadsheetApp.openById(SPREADSHEET_ID));
+
   return {
     periodInfo: {
       index: periodInfo.index,
@@ -944,7 +947,8 @@ function getAllDashboardData(forcedPeriodIndex) {
       displayText: periodText
     },
     gmReport: gmData,
-    accounting: accountingData
+    accounting: accountingData,
+    casesAnalytics: casesData
   };
 }
 
@@ -1642,6 +1646,355 @@ function getAccountingDashboardDataFast() {
 
   } catch (err) {
     return { error: err.message, totalAmount: 0, branchList: [], dailyList: [], details: [] };
+  }
+}
+
+// ==============================================================================
+// 4.1 CASE ANALYTICS ENGINE (บอทรายงานเคสเก่าใหม่ & ภาพรวมเดือนนี้)
+// ==============================================================================
+function getCasesDashboardDataFast(ss) {
+  try {
+    if (!ss) ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const allSheets = ss.getSheets();
+    let overviewSheet = null;
+    let botSheet = null;
+
+    allSheets.forEach(sheet => {
+      const name = sheet.getName().trim();
+      if (name === 'ภาพรวมเดือนนี้' || name.indexOf('ภาพรวมเดือน') !== -1) {
+        overviewSheet = sheet;
+      } else if (name === 'From บอทรายงานเคสเก่าใหม่' || name.indexOf('บอทรายงานเคสเก่าใหม่') !== -1) {
+        botSheet = sheet;
+      }
+    });
+
+    function cleanNum(val) {
+      if (val === null || val === undefined || val === '') return 0;
+      if (typeof val === 'number') return isNaN(val) ? 0 : val;
+      const s = String(val).replace(/,/g, '').replace(/฿/g, '').trim();
+      const n = parseFloat(s);
+      return isNaN(n) ? 0 : n;
+    }
+
+    function cleanStr(val) {
+      return val ? String(val).trim() : '';
+    }
+
+    let result = {
+      monthTitle: 'November 2026',
+      summary: {
+        totalRevenue: 0,
+        newCasesRevenue: 0,
+        oldCasesRevenue: 0,
+        newCasesCount: 0,
+        oldCasesCount: 0,
+        totalCasesCount: 0,
+        courseCount: 0,
+        singleCount: 0,
+        physicalExamCount: 0,
+        cancelCount: 0,
+        installmentAmount: 0,
+        shortTermCount: 0,
+        midTermCount: 0,
+        consultCount: 0,
+        unspecifiedCount: 0
+      },
+      branches: [],
+      oldCasesBranches: [],
+      dailyMatrix: {
+        days: [],
+        newDailyTotals: [],
+        oldDailyTotals: [],
+        combinedDailyTotals: []
+      }
+    };
+
+    // -------------------------------------------------------------
+    // PART A: PARSE 'ภาพรวมเดือนนี้'
+    // -------------------------------------------------------------
+    if (overviewSheet) {
+      const oRows = overviewSheet.getDataRange().getValues();
+      if (oRows.length > 2) {
+        // หาชื่อเดือน เช่น November 2026
+        for (let r = 0; r < Math.min(5, oRows.length); r++) {
+          for (let c = 0; c < oRows[r].length; c++) {
+            const v = cleanStr(oRows[r][c]);
+            if (v.toLowerCase().includes('november') || v.toLowerCase().includes('2026') || v.includes('พฤศจิกายน') || v.includes('เดือน')) {
+              result.monthTitle = v;
+              break;
+            }
+          }
+          if (result.monthTitle !== 'November 2026') break;
+        }
+
+        // หาจุดเริ่มต้นของตารางที่ 1 (เคสใหม่ / ภาพรวมหลัก)
+        let t1HeaderRow = -1;
+        let colBranch = 3; // default Col D (index 3)
+
+        for (let r = 0; r < Math.min(10, oRows.length); r++) {
+          for (let c = 0; c < oRows[r].length; c++) {
+            if (cleanStr(oRows[r][c]) === 'สาขา') {
+              t1HeaderRow = r;
+              colBranch = c;
+              break;
+            }
+          }
+          if (t1HeaderRow !== -1) break;
+        }
+
+        if (t1HeaderRow !== -1) {
+          // อ่านรายการสาขาในตารางที่ 1 (จนถึงแถว 'รวม')
+          let r = t1HeaderRow + 1;
+          while (r < oRows.length) {
+            const bName = cleanStr(oRows[r][colBranch]);
+            if (!bName) {
+              r++;
+              continue;
+            }
+
+            if (bName === 'รวม' || bName.includes('ยอดรวม') || bName.includes('ทั้งหมด')) {
+              // บันทึกแถวรวมของตารางที่ 1
+              result.summary.newCasesCount = cleanNum(oRows[r][colBranch + 1]);
+              result.summary.oldCasesCount = cleanNum(oRows[r][colBranch + 2]);
+              result.summary.courseCount = cleanNum(oRows[r][colBranch + 3]);
+              result.summary.singleCount = cleanNum(oRows[r][colBranch + 4]);
+              result.summary.physicalExamCount = cleanNum(oRows[r][colBranch + 5]);
+              result.summary.cancelCount = cleanNum(oRows[r][colBranch + 6]);
+              result.summary.installmentAmount = cleanNum(oRows[r][colBranch + 7]);
+              result.summary.newCasesRevenue = cleanNum(oRows[r][colBranch + 8]);
+              result.summary.oldCasesRevenue = cleanNum(oRows[r][colBranch + 9]);
+              result.summary.totalRevenue = cleanNum(oRows[r][colBranch + 10]);
+              result.summary.consultCount = cleanNum(oRows[r][colBranch + 12]);
+              result.summary.unspecifiedCount = cleanNum(oRows[r][colBranch + 13]);
+              result.summary.totalCasesCount = cleanNum(oRows[r][colBranch + 14]) || (result.summary.newCasesCount + result.summary.oldCasesCount);
+              result.summary.shortTermCount = cleanNum(oRows[r][colBranch + 15]);
+              result.summary.midTermCount = cleanNum(oRows[r][colBranch + 16]);
+              break;
+            }
+
+            // แถวสาขา
+            const bItem = {
+              name: bName,
+              newCasesCount: cleanNum(oRows[r][colBranch + 1]),
+              oldCasesCount: cleanNum(oRows[r][colBranch + 2]),
+              courseCount: cleanNum(oRows[r][colBranch + 3]),
+              singleCount: cleanNum(oRows[r][colBranch + 4]),
+              physicalExamCount: cleanNum(oRows[r][colBranch + 5]),
+              cancelCount: cleanNum(oRows[r][colBranch + 6]),
+              installmentAmount: cleanNum(oRows[r][colBranch + 7]),
+              newCasesAmount: cleanNum(oRows[r][colBranch + 8]),
+              oldCasesAmount: cleanNum(oRows[r][colBranch + 9]),
+              totalAmount: cleanNum(oRows[r][colBranch + 10]),
+              rank: cleanNum(oRows[r][colBranch + 11]),
+              consultCount: cleanNum(oRows[r][colBranch + 12]),
+              unspecifiedCount: cleanNum(oRows[r][colBranch + 13]),
+              totalCount: cleanNum(oRows[r][colBranch + 14]),
+              shortTermCount: cleanNum(oRows[r][colBranch + 15]),
+              midTermCount: cleanNum(oRows[r][colBranch + 16]),
+              dailyNew: [],
+              dailyOld: []
+            };
+            result.branches.push(bItem);
+            r++;
+          }
+
+          // หาจุดเริ่มต้นของตารางที่ 2 (เคสเก่า แถว 28 เป็นต้นไป)
+          let t2HeaderRow = -1;
+          for (let rIdx = r + 1; rIdx < oRows.length; rIdx++) {
+            if (cleanStr(oRows[rIdx][colBranch]) === 'สาขา') {
+              t2HeaderRow = rIdx;
+              break;
+            }
+          }
+
+          if (t2HeaderRow !== -1) {
+            let r2 = t2HeaderRow + 1;
+            while (r2 < oRows.length) {
+              const bName = cleanStr(oRows[r2][colBranch]);
+              if (!bName) {
+                r2++;
+                continue;
+              }
+              if (bName === 'รวม' || bName.includes('ยอดรวม')) break;
+
+              result.oldCasesBranches.push({
+                name: bName,
+                oldCasesCount: cleanNum(oRows[r2][colBranch + 2]),
+                courseCount: cleanNum(oRows[r2][colBranch + 3]),
+                singleCount: cleanNum(oRows[r2][colBranch + 4]),
+                physicalExamCount: cleanNum(oRows[r2][colBranch + 5]),
+                cancelCount: cleanNum(oRows[r2][colBranch + 6]),
+                installmentAmount: cleanNum(oRows[r2][colBranch + 7]),
+                oldCasesAmount: cleanNum(oRows[r2][colBranch + 9]),
+                totalAmount: cleanNum(oRows[r2][colBranch + 10]) || cleanNum(oRows[r2][colBranch + 9])
+              });
+              r2++;
+            }
+          }
+        }
+      }
+    }
+
+    // -------------------------------------------------------------
+    // PART B: PARSE 'From บอทรายงานเคสเก่าใหม่' (ตาราง Matrix รายวัน 1..31)
+    // -------------------------------------------------------------
+    if (botSheet) {
+      const bRows = botSheet.getDataRange().getValues();
+      if (bRows.length > 1) {
+        // หาตารางที่ 1: เคสใหม่รายวัน
+        let headerRow1 = -1;
+        let dayColStart = 2; // default Col C (index 2)
+        let days = [];
+
+        // ตรวจหาแถวหัวตารางวันที่
+        for (let r = 0; r < Math.min(6, bRows.length); r++) {
+          for (let c = 1; c < bRows[r].length; c++) {
+            const v = parseInt(bRows[r][c]);
+            if (v === 1 && parseInt(bRows[r][c + 1]) === 2) {
+              headerRow1 = r;
+              dayColStart = c;
+              break;
+            }
+          }
+          if (headerRow1 !== -1) break;
+        }
+
+        if (headerRow1 !== -1) {
+          for (let c = dayColStart; c < bRows[headerRow1].length; c++) {
+            const dVal = parseInt(bRows[headerRow1][c]);
+            if (!isNaN(dVal) && dVal >= 1 && dVal <= 31) {
+              days.push(dVal);
+            } else {
+              break;
+            }
+          }
+          result.dailyMatrix.days = days;
+
+          // ดึงยอดรายวันของเคสใหม่ (จากแถว headerRow1 + 1 จนถึงแถว 'รวม')
+          let r1 = headerRow1 + 1;
+          const branchCol = dayColStart - 1; // Col B (index 1)
+          const branchDailyNewMap = {};
+
+          while (r1 < bRows.length) {
+            const bName = cleanStr(bRows[r1][branchCol]);
+            if (!bName) {
+              r1++;
+              continue;
+            }
+            if (bName === 'รวม' || bName.includes('ยอดรวม')) {
+              // แถวรวมรายวันของเคสใหม่
+              for (let i = 0; i < days.length; i++) {
+                result.dailyMatrix.newDailyTotals.push(cleanNum(bRows[r1][dayColStart + i]));
+              }
+              break;
+            }
+
+            // ยอดรายวันของแต่ละสาขา
+            const dailyVals = [];
+            for (let i = 0; i < days.length; i++) {
+              dailyVals.push(cleanNum(bRows[r1][dayColStart + i]));
+            }
+            branchDailyNewMap[bName] = dailyVals;
+            r1++;
+          }
+
+          // หาตารางที่ 2: เคสเก่ารายวัน (ช่วงแถว 28-35 เป็นต้นไป)
+          let headerRow2 = -1;
+          for (let r = r1 + 1; r < bRows.length; r++) {
+            for (let c = 1; c < bRows[r].length; c++) {
+              const v = parseInt(bRows[r][c]);
+              if (v === 1 && parseInt(bRows[r][c + 1]) === 2) {
+                headerRow2 = r;
+                break;
+              }
+            }
+            if (headerRow2 !== -1) break;
+          }
+
+          const branchDailyOldMap = {};
+          if (headerRow2 !== -1) {
+            let r2 = headerRow2 + 1;
+            while (r2 < bRows.length) {
+              const bName = cleanStr(bRows[r2][branchCol]);
+              if (!bName) {
+                r2++;
+                continue;
+              }
+              if (bName === 'รวม' || bName.includes('ยอดรวม')) {
+                // แถวรวมรายวันของเคสเก่า
+                for (let i = 0; i < days.length; i++) {
+                  result.dailyMatrix.oldDailyTotals.push(cleanNum(bRows[r2][dayColStart + i]));
+                }
+                break;
+              }
+
+              const dailyOldVals = [];
+              for (let i = 0; i < days.length; i++) {
+                dailyOldVals.push(cleanNum(bRows[r2][dayColStart + i]));
+              }
+              branchDailyOldMap[bName] = dailyOldVals;
+              r2++;
+            }
+          }
+
+          // รวมยอด Daily Totals (New + Old)
+          for (let i = 0; i < days.length; i++) {
+            const nTot = result.dailyMatrix.newDailyTotals[i] || 0;
+            const oTot = result.dailyMatrix.oldDailyTotals[i] || 0;
+            result.dailyMatrix.combinedDailyTotals.push(nTot + oTot);
+          }
+
+          // Map ข้อมูลรายวันกลับเข้าไปใน result.branches แต่ละสาขา
+          result.branches.forEach(b => {
+            let matchedNew = branchDailyNewMap[b.name];
+            let matchedOld = branchDailyOldMap[b.name];
+
+            if (!matchedNew) {
+              const bKey = Object.keys(branchDailyNewMap).find(k => k.includes(b.name) || b.name.includes(k));
+              if (bKey) matchedNew = branchDailyNewMap[bKey];
+            }
+            if (!matchedOld) {
+              const bKey = Object.keys(branchDailyOldMap).find(k => k.includes(b.name) || b.name.includes(k));
+              if (bKey) matchedOld = branchDailyOldMap[bKey];
+            }
+
+            b.dailyNew = matchedNew || new Array(days.length).fill(0);
+            b.dailyOld = matchedOld || new Array(days.length).fill(0);
+          });
+        }
+      }
+    }
+
+    // คำนวณสรุปเพิ่มเติมหากในแถวรวมยังไม่มี
+    if (result.summary.totalRevenue === 0 && result.branches.length > 0) {
+      result.branches.forEach(b => {
+        result.summary.newCasesRevenue += b.newCasesAmount;
+        result.summary.oldCasesRevenue += b.oldCasesAmount;
+        result.summary.totalRevenue += b.totalAmount;
+        result.summary.newCasesCount += b.newCasesCount;
+        result.summary.oldCasesCount += b.oldCasesCount;
+        result.summary.courseCount += b.courseCount;
+        result.summary.singleCount += b.singleCount;
+        result.summary.physicalExamCount += b.physicalExamCount;
+        result.summary.cancelCount += b.cancelCount;
+        result.summary.installmentAmount += b.installmentAmount;
+        result.summary.shortTermCount += b.shortTermCount;
+        result.summary.midTermCount += b.midTermCount;
+      });
+      result.summary.totalCasesCount = result.summary.newCasesCount + result.summary.oldCasesCount;
+    }
+
+    return result;
+
+  } catch (err) {
+    return {
+      error: err.message,
+      monthTitle: 'November 2026',
+      summary: { totalRevenue: 0, newCasesRevenue: 0, oldCasesRevenue: 0 },
+      branches: [],
+      oldCasesBranches: [],
+      dailyMatrix: { days: [], newDailyTotals: [], oldDailyTotals: [], combinedDailyTotals: [] }
+    };
   }
 }
 
