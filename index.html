@@ -2391,6 +2391,15 @@
           <p class="text-xxs text-slate-400">ระบุ URL ของ Web API Endpoint สำหรับซิงค์ข้อมูลระบบบริหารจัดการ</p>
         </div>
 
+        <div id="casesSheetIdContainer" class="space-y-1.5 pt-2 border-t border-slate-100">
+          <div class="flex items-center justify-between">
+            <label class="block text-xs font-semibold text-slate-700">Google Spreadsheet ID หรือ ลิงก์ชีทเคส:</label>
+            <span class="text-xxs text-slate-400">ภาพรวมเดือนนี้ / บอทรายงาน</span>
+          </div>
+          <input type="text" id="casesSheetIdInput" placeholder="วางลิงก์ Google Sheets หรือ ID เช่น 1ZVxDG93kElikrhKxvMplHFrzBbwYAEvdf3RawZbuNvI" class="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
+          <p class="text-xxs text-slate-400">หากชีทเคสถูกแยกไปไว้คนละไฟล์ หรือเป็นชีทคัดลอกใหม่ สามารถวางลิงก์ไฟล์ที่นี่ได้โดยตรง</p>
+        </div>
+
         <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 text-xxs text-slate-600 space-y-1">
           <p class="font-semibold text-slate-700">ข้อมูลการเชื่อมต่อระบบ:</p>
           <p>• ระบบซิงค์ข้อมูลอัตโนมัติแบบ Real-Time พร้อมระบบ Fast Cache ความเร็วสูง</p>
@@ -4151,6 +4160,9 @@
         // -------------------------------------------------------------
         // กรณี A: เปิดใช้งานผ่านระบบ Web App โดยตรง
         // -------------------------------------------------------------
+        const storedCasesSheetId = (localStorage.getItem('gm_cases_spreadsheet_id') || '').trim();
+        const casesParam = storedCasesSheetId ? `&casesSpreadsheetId=${encodeURIComponent(storedCasesSheetId)}` : '';
+
         if (typeof google !== 'undefined' && google.script && google.script.run) {
           google.script.run
             .withSuccessHandler(function(serverData) {
@@ -4170,7 +4182,7 @@
               if (refreshIcon) refreshIcon.classList.remove('animate-spin');
               hideGlobalLoader();
             })
-            .getAllDashboardData(0);
+            .getAllDashboardData(0, storedCasesSheetId);
           return;
         }
 
@@ -4185,7 +4197,7 @@
             localStorage.removeItem('gm_dash_cache_v11_monthly_live');
           } catch (e) { /* ignore */ }
         }
-        const response0 = await fetch(`${activeApiUrl}?action=api&period=0${refreshSuffix}`);
+        const response0 = await fetch(`${activeApiUrl}?action=api&period=0${refreshSuffix}${casesParam}`);
         if (!response0.ok) {
           throw new Error(`HTTP ${response0.status}`);
         }
@@ -4200,8 +4212,8 @@
           if (!hasNativeAllPeriods) {
             try {
               const [res1, res2] = await Promise.all([
-                fetch(`${activeApiUrl}?action=api&period=1${refreshSuffix}`).then(r => r.ok ? r.json() : null).catch(() => null),
-                fetch(`${activeApiUrl}?action=api&period=2${refreshSuffix}`).then(r => r.ok ? r.json() : null).catch(() => null)
+                fetch(`${activeApiUrl}?action=api&period=1${refreshSuffix}${casesParam}`).then(r => r.ok ? r.json() : null).catch(() => null),
+                fetch(`${activeApiUrl}?action=api&period=2${refreshSuffix}${casesParam}`).then(r => r.ok ? r.json() : null).catch(() => null)
               ]);
               finalData = mergeThreePeriodsPayloads(
                 result0.data,
@@ -6517,9 +6529,9 @@
     const DEFAULT_CASES_ANALYTICS_DATA = {
       monthTitle: 'November 2026',
       summary: {
-        totalRevenue: 7258364,
-        newCasesRevenue: 5570978,
-        oldCasesRevenue: 1655386,
+        totalRevenue: 9565411,
+        newCasesRevenue: 7208944,
+        oldCasesRevenue: 2356467,
         newCasesCount: 412,
         oldCasesCount: 114,
         totalCasesCount: 526,
@@ -6581,11 +6593,31 @@
     };
 
     function getActiveCasesData() {
+      let data = DEFAULT_CASES_ANALYTICS_DATA;
       const live = dashboardState.data && dashboardState.data.casesAnalytics;
       if (live && Array.isArray(live.branches) && live.branches.length > 0 && live.summary && live.summary.totalRevenue > 0) {
-        return live;
+        data = live;
       }
-      return DEFAULT_CASES_ANALYTICS_DATA;
+
+      // ⚡ ป้องกันยอดรวมทั้งเดือนขาดหาย / ค้างยอดเก่า:
+      // หากยอดรวมรายวันสะสมใน dailyMatrix มีมูลค่าสูงกว่า (เช่น บอทอัปเดตวันใหม่เข้ามาต่อเนื่อง) ให้อัปเกรดยอดรวมทั้งเดือนอัตโนมัติทันที
+      if (data && data.dailyMatrix && Array.isArray(data.dailyMatrix.combinedDailyTotals) && data.dailyMatrix.combinedDailyTotals.length > 0) {
+        const sumComb = data.dailyMatrix.combinedDailyTotals.reduce((a, b) => a + (Number(b) || 0), 0);
+        const sumNew = (data.dailyMatrix.newDailyTotals || []).reduce((a, b) => a + (Number(b) || 0), 0);
+        const sumOld = (data.dailyMatrix.oldDailyTotals || []).reduce((a, b) => a + (Number(b) || 0), 0);
+        if (data.summary) {
+          if (sumComb > (data.summary.totalRevenue || 0)) {
+            data.summary.totalRevenue = sumComb;
+          }
+          if (sumNew > (data.summary.newCasesRevenue || 0)) {
+            data.summary.newCasesRevenue = sumNew;
+          }
+          if (sumOld > (data.summary.oldCasesRevenue || 0)) {
+            data.summary.oldCasesRevenue = sumOld;
+          }
+        }
+      }
+      return data;
     }
 
     function renderCasesDashboard() {
@@ -6650,33 +6682,18 @@
       const mTerm = document.getElementById('casesMidTermBadge');
       if (mTerm) mTerm.textContent = `${summary.midTermCount || 0} เคส`;
 
-      // 1.5 Calculate & Populate Yesterday & Today Revenue Pulse Cards
+      // 1.5 Calculate & Populate Yesterday & Today Revenue Pulse Cards (ตรงตามปฏิทินจริง 100% ไม่เลื่อนวัน)
       const matrix = data.dailyMatrix || {};
-      const days = Array.isArray(matrix.days) && matrix.days.length > 0 ? matrix.days : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
+      const days = Array.isArray(matrix.days) && matrix.days.length > 0 ? matrix.days : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
       const newTotals = Array.isArray(matrix.newDailyTotals) ? matrix.newDailyTotals : [];
       const oldTotals = Array.isArray(matrix.oldDailyTotals) ? matrix.oldDailyTotals : [];
       const combTotals = Array.isArray(matrix.combinedDailyTotals) ? matrix.combinedDailyTotals : [];
 
-      let lastActiveIdx = -1;
-      for (let i = combTotals.length - 1; i >= 0; i--) {
-        if (combTotals[i] > 0) {
-          lastActiveIdx = i;
-          break;
-        }
-      }
-
       const todayCalDay = new Date().getDate();
       const yesterdayCalDay = todayCalDay > 1 ? todayCalDay - 1 : 1;
 
-      let todayIdx = days.indexOf(todayCalDay);
-      let yesterdayIdx = days.indexOf(yesterdayCalDay);
-
-      if (yesterdayIdx === -1 || (yesterdayIdx > lastActiveIdx && lastActiveIdx !== -1)) {
-        yesterdayIdx = lastActiveIdx > 0 ? lastActiveIdx - 1 : (lastActiveIdx === 0 ? 0 : -1);
-      }
-      if (todayIdx === -1 || (todayIdx > lastActiveIdx && lastActiveIdx !== -1)) {
-        todayIdx = lastActiveIdx;
-      }
+      const todayIdx = days.indexOf(todayCalDay);
+      const yesterdayIdx = days.indexOf(yesterdayCalDay);
 
       const yesterdayDayNum = yesterdayIdx !== -1 ? days[yesterdayIdx] : yesterdayCalDay;
       const todayDayNum = todayIdx !== -1 ? days[todayIdx] : todayCalDay;
@@ -6700,9 +6717,9 @@
         }
         if (v > peakVal) {
           peakVal = v;
-          peakIdx = idx;
         }
       });
+      peakIdx = combTotals.indexOf(peakVal);
       const dailyAvg = activeDaysCount > 0 ? Math.round(sumActiveRev / activeDaysCount) : 0;
       const peakDayNum = peakIdx !== -1 ? days[peakIdx] : '-';
 
@@ -6726,7 +6743,11 @@
       const tRevText = document.getElementById('casesTodayRevenueText');
       if (tRevText) tRevText.textContent = `${Number(tComb).toLocaleString()} ฿`;
       const tSubText = document.getElementById('casesTodaySubText');
-      if (tSubText) tSubText.textContent = tComb > 0 ? `ใหม่ ฿${Number(tNew).toLocaleString()} • เก่า ฿${Number(tOld).toLocaleString()}` : `รอข้อมูลบอทรอบวันนี้`;
+      if (tSubText) {
+        tSubText.textContent = tComb > 0 
+          ? `ใหม่ ฿${Number(tNew).toLocaleString()} • เก่า ฿${Number(tOld).toLocaleString()}` 
+          : `รอข้อมูลบอทรอบวันนี้ (วันที่ ${todayDayNum})`;
+      }
 
       // Update Daily Avg Card
       const avgRevText = document.getElementById('casesDailyAvgRevenueText');
@@ -7596,33 +7617,18 @@
       const fsCancel = document.getElementById('casesFsCancelCount');
       if (fsCancel) fsCancel.textContent = `${Number(summary.cancelCount || 0).toLocaleString()} รายการ`;
 
-      // Yesterday & Today Pulse in Fullscreen View
+      // Yesterday & Today Pulse in Fullscreen View (ตรงตามปฏิทินจริง 100% ไม่เลื่อนวัน)
       const matrix = data.dailyMatrix || {};
-      const days = Array.isArray(matrix.days) && matrix.days.length > 0 ? matrix.days : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
+      const days = Array.isArray(matrix.days) && matrix.days.length > 0 ? matrix.days : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
       const newTotals = Array.isArray(matrix.newDailyTotals) ? matrix.newDailyTotals : [];
       const oldTotals = Array.isArray(matrix.oldDailyTotals) ? matrix.oldDailyTotals : [];
       const combTotals = Array.isArray(matrix.combinedDailyTotals) ? matrix.combinedDailyTotals : [];
 
-      let lastActiveIdx = -1;
-      for (let i = combTotals.length - 1; i >= 0; i--) {
-        if (combTotals[i] > 0) {
-          lastActiveIdx = i;
-          break;
-        }
-      }
-
       const todayCalDay = new Date().getDate();
       const yesterdayCalDay = todayCalDay > 1 ? todayCalDay - 1 : 1;
 
-      let todayIdx = days.indexOf(todayCalDay);
-      let yesterdayIdx = days.indexOf(yesterdayCalDay);
-
-      if (yesterdayIdx === -1 || (yesterdayIdx > lastActiveIdx && lastActiveIdx !== -1)) {
-        yesterdayIdx = lastActiveIdx > 0 ? lastActiveIdx - 1 : (lastActiveIdx === 0 ? 0 : -1);
-      }
-      if (todayIdx === -1 || (todayIdx > lastActiveIdx && lastActiveIdx !== -1)) {
-        todayIdx = lastActiveIdx;
-      }
+      const todayIdx = days.indexOf(todayCalDay);
+      const yesterdayIdx = days.indexOf(yesterdayCalDay);
 
       const yesterdayDayNum = yesterdayIdx !== -1 ? days[yesterdayIdx] : yesterdayCalDay;
       const todayDayNum = todayIdx !== -1 ? days[todayIdx] : todayCalDay;
@@ -7646,9 +7652,9 @@
         }
         if (v > peakVal) {
           peakVal = v;
-          peakIdx = idx;
         }
       });
+      peakIdx = combTotals.indexOf(peakVal);
       const dailyAvg = activeDaysCount > 0 ? Math.round(sumActiveRev / activeDaysCount) : 0;
       const peakDayNum = peakIdx !== -1 ? days[peakIdx] : '-';
 
@@ -7664,7 +7670,11 @@
       const fsTAmt = document.getElementById('casesFsTodayAmount');
       if (fsTAmt) fsTAmt.textContent = `฿ ${Number(tComb).toLocaleString()}`;
       const fsTSt = document.getElementById('casesFsTodayStatus');
-      if (fsTSt) fsTSt.textContent = tComb > 0 ? `ใหม่ ฿${Number(tNew).toLocaleString()} • เก่า ฿${Number(tOld).toLocaleString()}` : `รอข้อมูลบอทรอบวันนี้`;
+      if (fsTSt) {
+        fsTSt.textContent = tComb > 0 
+          ? `ใหม่ ฿${Number(tNew).toLocaleString()} • เก่า ฿${Number(tOld).toLocaleString()}` 
+          : `รอข้อมูลบอทรอบวันนี้ (วันที่ ${todayDayNum})`;
+      }
 
       const fsAvgAmt = document.getElementById('casesFsDailyAvgAmount');
       if (fsAvgAmt) fsAvgAmt.textContent = `฿ ${Number(dailyAvg).toLocaleString()}`;
@@ -9170,9 +9180,13 @@
       document.getElementById('managerModal').classList.add('hidden');
     }
 
-    // Settings Modal (Live Google Sheets API URL Only)
+    // Settings Modal (Live Google Sheets API URL & Cases Spreadsheet ID)
     function openSettingsModal() {
       document.getElementById('gasApiUrlInput').value = dashboardState.apiUrl || DEFAULT_LIVE_API_URL;
+      const casesInput = document.getElementById('casesSheetIdInput');
+      if (casesInput) {
+        casesInput.value = localStorage.getItem('gm_cases_spreadsheet_id') || '';
+      }
       document.getElementById('settingsModal').classList.remove('hidden');
     }
 
@@ -9189,6 +9203,15 @@
       const url = document.getElementById('gasApiUrlInput').value.trim() || DEFAULT_LIVE_API_URL;
       dashboardState.apiUrl = url;
       localStorage.setItem('gm_gas_api_url', url);
+
+      const casesInput = document.getElementById('casesSheetIdInput');
+      if (casesInput) {
+        let val = casesInput.value.trim();
+        // If user pasted a full Google Sheets URL: extract the sheet ID
+        const match = val.match(/\/d\/([a-zA-Z0-9_-]+)/);
+        if (match) val = match[1];
+        localStorage.setItem('gm_cases_spreadsheet_id', val);
+      }
 
       closeSettingsModal();
       fetchDashboardData(true);

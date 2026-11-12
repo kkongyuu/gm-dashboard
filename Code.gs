@@ -47,6 +47,7 @@ function doGet(e) {
   if (action === 'api' || action === 'getData' || params.format === 'json') {
     try {
       const periodParam = params.period !== undefined ? parseInt(params.period) : null;
+      const customCasesSheetId = params.casesSpreadsheetId || params.casesSheetId || params.sheetId || '';
       const periodInfo = getCurrentPeriodInfo();
       const periodIndex = (periodParam !== null && !isNaN(periodParam)) ? periodParam : periodInfo.index;
 
@@ -55,7 +56,7 @@ function doGet(e) {
       const cache = CacheService.getScriptCache();
 
       // ⚡ FAST CACHE: หากมีแคชและไม่ได้สั่งรีเฟรช ตอบกลับทันทีใน 0.1-0.2 วินาที!
-      if (isForcedRefresh) {
+      if (isForcedRefresh || customCasesSheetId) {
         cache.remove(cacheKey);
       } else {
         const cachedJson = cache.get(cacheKey);
@@ -65,7 +66,7 @@ function doGet(e) {
       }
 
       // ถ้าไม่มีแคช หรือสั่งรีเฟรช ให้คำนวณใหม่
-      const data = getAllDashboardData(periodParam);
+      const data = getAllDashboardData(periodParam, customCasesSheetId);
       const jsonOutput = JSON.stringify({
         status: 'success',
         cached: !isForcedRefresh,
@@ -919,7 +920,7 @@ function handleManagerAction(action, params) {
 // ==============================================================================
 // 2. ฟังก์ชันรวบรวมข้อมูลทั้งหมดสำหรับ Dashboard
 // ==============================================================================
-function getAllDashboardData(forcedPeriodIndex) {
+function getAllDashboardData(forcedPeriodIndex, customCasesSheetId) {
   const periodInfo = getCurrentPeriodInfo();
   if (forcedPeriodIndex !== null && forcedPeriodIndex !== undefined && !isNaN(forcedPeriodIndex)) {
     periodInfo.index = forcedPeriodIndex;
@@ -936,8 +937,8 @@ function getAllDashboardData(forcedPeriodIndex) {
   // ดึงข้อมูลบัญชีการเบิกจ่าย
   const accountingData = getAccountingDashboardDataFast();
 
-  // ดึงข้อมูลวิเคราะห์เคส บอท & ภาพรวมเดือนนี้ (เคสใหม่ & เคสเก่า)
-  const casesData = getCasesDashboardDataFast(SpreadsheetApp.openById(SPREADSHEET_ID));
+  // ดึงข้อมูลวิเคราะห์เคส บอท & ภาพรวมเดือนนี้ (เคสใหม่ & เคสเก่า) - ค้นหาแบบหลายแหล่งอัตโนมัติ
+  const casesData = getCasesDashboardDataFast(null, customCasesSheetId);
 
   return {
     periodInfo: {
@@ -1654,10 +1655,65 @@ function getAccountingDashboardDataFast() {
 // ==============================================================================
 // 4.1 CASE ANALYTICS ENGINE (บอทรายงานเคสเก่าใหม่ & ภาพรวมเดือนนี้)
 // ==============================================================================
-function getCasesDashboardDataFast(ss) {
+function getCasesDashboardDataFast(ss, customCasesSheetId) {
   try {
-    if (!ss) ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-    const allSheets = ss.getSheets();
+    function extractSpreadsheetId(val) {
+      if (!val) return '';
+      const s = String(val).trim();
+      const match = s.match(/\/d\/([a-zA-Z0-9-_]+)/);
+      return match ? match[1] : s;
+    }
+
+    const candidateSpreadsheets = [];
+    const addedIds = new Set();
+
+    function addCandidate(s) {
+      if (!s) return;
+      try {
+        const id = s.getId();
+        if (id && !addedIds.has(id)) {
+          addedIds.add(id);
+          candidateSpreadsheets.push(s);
+        }
+      } catch (e) {}
+    }
+
+    function addCandidateById(idStr) {
+      const cleanId = extractSpreadsheetId(idStr);
+      if (cleanId && !addedIds.has(cleanId)) {
+        try {
+          const s = SpreadsheetApp.openById(cleanId);
+          addCandidate(s);
+        } catch (e) {}
+      }
+    }
+
+    // 1. ตรวจสอบจาก customCasesSheetId ที่ผู้ใช้ส่งมาจากหน้าเว็บ / URL / Settings Modal
+    if (customCasesSheetId) addCandidateById(customCasesSheetId);
+
+    // 2. ตรวจสอบจาก ScriptProperties (กรณีเคยจำได้ก่อนหน้า)
+    try {
+      const savedPropId = PropertiesService.getScriptProperties().getProperty('CASES_SPREADSHEET_ID');
+      if (savedPropId) addCandidateById(savedPropId);
+    } catch (e) {}
+
+    // 3. ตรวจสอบ Container-Bound Active Spreadsheet (ชีทที่เปิดทำงาน Apps Script นี้อยู่)
+    try {
+      const act = SpreadsheetApp.getActiveSpreadsheet();
+      if (act) addCandidate(act);
+    } catch (e) {}
+
+    // 4. ตรวจสอบจากพารามิเตอร์ ss ถ้ามี
+    if (ss) addCandidate(ss);
+
+    // 5. ตรวจสอบไฟล์หลัก SPREADSHEET_ID
+    if (SPREADSHEET_ID) addCandidateById(SPREADSHEET_ID);
+
+    // 6. ตรวจสอบไฟล์บัญชีเบิกจ่าย ACCOUNTING_SPREADSHEET_ID
+    if (ACCOUNTING_SPREADSHEET_ID) addCandidateById(ACCOUNTING_SPREADSHEET_ID);
+
+    // 7. ตรวจสอบไฟล์ของผู้จัดการทั้ง 12 ท่าน
+    Object.values(MANAGER_SPREADSHEET_IDS).forEach(id => addCandidateById(id));
 
     function cleanNum(val) {
       if (val === null || val === undefined || val === '') return 0;
@@ -1711,16 +1767,47 @@ function getCasesDashboardDataFast(ss) {
 
     let overviewSheet = null;
     let botSheet = null;
+    let matchedSpreadsheet = null;
+    let checkedSpreadsheetsLog = [];
 
-    allSheets.forEach(sheet => {
-      const name = sheet.getName();
-      const c = cleanThai(name);
-      if (c.includes('ภาพรวมเดอน') || c.includes('ภาพรวม')) {
-        overviewSheet = sheet;
-      } else if (c.includes('บอทรายงาน') || c.includes('เคสเกาใหม') || c.includes('fromบอท')) {
-        botSheet = sheet;
-      }
-    });
+    for (let i = 0; i < candidateSpreadsheets.length; i++) {
+      const candSs = candidateSpreadsheets[i];
+      try {
+        const candSheets = candSs.getSheets();
+        let foundOverview = null;
+        let foundBot = null;
+        const sheetNames = [];
+
+        candSheets.forEach(sheet => {
+          const name = sheet.getName();
+          sheetNames.push(name);
+          const c = cleanThai(name);
+          if (c.includes('ภาพรวมเดอน') || c.includes('ภาพรวม')) {
+            foundOverview = sheet;
+          } else if (c.includes('บอทรายงาน') || c.includes('เคสเกาใหม') || c.includes('fromบอท')) {
+            foundBot = sheet;
+          }
+        });
+
+        checkedSpreadsheetsLog.push({
+          id: candSs.getId(),
+          name: candSs.getName(),
+          sheetNames: sheetNames,
+          foundOverview: !!foundOverview,
+          foundBot: !!foundBot
+        });
+
+        if (foundOverview || foundBot) {
+          overviewSheet = foundOverview;
+          botSheet = foundBot;
+          matchedSpreadsheet = candSs;
+          try {
+            PropertiesService.getScriptProperties().setProperty('CASES_SPREADSHEET_ID', candSs.getId());
+          } catch (e) {}
+          break;
+        }
+      } catch (e) {}
+    }
 
     let result = {
       monthTitle: 'November 2026',
@@ -1754,7 +1841,9 @@ function getCasesDashboardDataFast(ss) {
         overviewName: overviewSheet ? overviewSheet.getName() : '',
         botFound: !!botSheet,
         botName: botSheet ? botSheet.getName() : '',
-        allSheetNames: allSheets.map(s => s.getName())
+        matchedSpreadsheetId: matchedSpreadsheet ? matchedSpreadsheet.getId() : '',
+        matchedSpreadsheetName: matchedSpreadsheet ? matchedSpreadsheet.getName() : '',
+        checkedSpreadsheetsLog: checkedSpreadsheetsLog
       }
     };
 
@@ -2123,6 +2212,25 @@ function getCasesDashboardDataFast(ss) {
         result.summary.midTermCount += (b.midTermCount || 0);
       });
       result.summary.totalCasesCount = result.summary.newCasesCount + result.summary.oldCasesCount;
+    }
+
+    // ⚡ ป้องกันยอดรวมทั้งเดือนขาดหาย / ไม่ตรงกับที่บอทบันทึกรายวันล่าสุด:
+    // หากยอดรวมรายวันสะสมใน dailyMatrix มีมูลค่าสูงกว่าตารางภาพรวม (เช่น บอทเพิ่มวันใหม่เข้ามาต่อเนื่องแต่ตารางสรุปยังไม่อัปเดต) 
+    // ให้อัปเกรดยอดรวมทั้งเดือนให้สะท้อนรายได้จริงสูงสุดเสมอ
+    if (result.dailyMatrix && Array.isArray(result.dailyMatrix.combinedDailyTotals) && result.dailyMatrix.combinedDailyTotals.length > 0) {
+      const sumCombDaily = result.dailyMatrix.combinedDailyTotals.reduce((a, b) => a + (Number(b) || 0), 0);
+      const sumNewDaily = (result.dailyMatrix.newDailyTotals || []).reduce((a, b) => a + (Number(b) || 0), 0);
+      const sumOldDaily = (result.dailyMatrix.oldDailyTotals || []).reduce((a, b) => a + (Number(b) || 0), 0);
+
+      if (sumCombDaily > result.summary.totalRevenue) {
+        result.summary.totalRevenue = sumCombDaily;
+      }
+      if (sumNewDaily > result.summary.newCasesRevenue) {
+        result.summary.newCasesRevenue = sumNewDaily;
+      }
+      if (sumOldDaily > result.summary.oldCasesRevenue) {
+        result.summary.oldCasesRevenue = sumOldDaily;
+      }
     }
 
     return result;
