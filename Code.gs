@@ -2026,117 +2026,140 @@ function getCasesDashboardDataFast(ss, customCasesSheetId) {
         result.dailyMatrix.days = days;
 
         const branchCol = Math.max(0, dayColStart - 1); // Col B (index 1)
-        const branchDailyTotalMap = {}; // ตารางบน: คือยอดรวมทั้งหมดรายวัน (Combined Daily Total: New + Old)
-        let r1 = headerRow1 + 1;
 
-        while (r1 < bRows.length) {
-          const rawName = cleanStr(bRows[r1][branchCol]);
-          const rawColA = cleanStr(bRows[r1][0]);
-          const cName = cleanThai(rawName);
-          const cNameA = cleanThai(rawColA);
-
-          const isExplicitTotal = cName === 'รวม' || cName.includes('ยอดรวม') || cName.includes('ทงหมด') || cNameA === 'รวม' || cNameA.includes('ยอดรวม');
-          const isBlankWithBranches = !rawName && Object.keys(branchDailyTotalMap).length >= 10;
-
-          if (isExplicitTotal || isBlankWithBranches) {
-            for (let i = 0; i < days.length; i++) {
-              result.dailyMatrix.combinedDailyTotals.push(cleanNum(bRows[r1][dayColStart + i]));
-            }
-            r1++;
-            break;
-          }
-
-          if (!rawName) {
-            r1++;
-            continue;
-          }
-
-          const dailyVals = [];
-          for (let i = 0; i < days.length; i++) {
-            dailyVals.push(cleanNum(bRows[r1][dayColStart + i]));
-          }
-          branchDailyTotalMap[rawName] = dailyVals;
-          r1++;
-        }
-
-        // หาก combinedDailyTotals ยังไม่มี ให้บวกผลรวมจากตารางบน (ยอดรวมทั้งหมด)
-        if (result.dailyMatrix.combinedDailyTotals.length === 0 || result.dailyMatrix.combinedDailyTotals.every(v => v === 0)) {
-          result.dailyMatrix.combinedDailyTotals = days.map((_, i) => {
-            return Object.values(branchDailyTotalMap).reduce((sum, arr) => sum + (arr[i] || 0), 0);
-          });
-        }
-
-        // ตารางที่ 2: เคสเก่ารายวัน (ตารางล่าง)
-        let headerRow2 = -1;
-        for (let r = r1; r < bRows.length; r++) {
-          for (let c = 0; c < bRows[r].length; c++) {
-            const d1 = parseDayNum(bRows[r][c]);
-            const d2 = parseDayNum(bRows[r][c + 1]);
-            if (d1 === 1 && d2 === 2) {
-              headerRow2 = r;
-              break;
-            }
-          }
-          if (headerRow2 !== -1) break;
-        }
-
+        // -------------------------------------------------------------
+        // ระบบอ่าน 3 บล็อกตรงตามโครงสร้างชีทจริง:
+        // 1. รวมเก่าใหม่: A1:AH21  (0-indexed แถวข้อมูล 1..20)
+        // 2. ใหม่เท่านั้น:  A30:AH49 (0-indexed แถวข้อมูล 30..48)
+        // 3. เก่าเท่านั้น:  A59:AH78 (0-indexed แถวข้อมูล 59..77)
+        // -------------------------------------------------------------
+        const branchDailyCombMap = {};
+        const branchDailyNewMap = {};
         const branchDailyOldMap = {};
-        if (headerRow2 !== -1) {
-          let r2 = headerRow2 + 1;
-          while (r2 < bRows.length) {
-            const rawName = cleanStr(bRows[r2][branchCol]);
-            const rawColA = cleanStr(bRows[r2][0]);
+
+        function readBlock(startRowIdx, endRowIdx, targetBranchMap, targetTotalsArray) {
+          let foundTotal = false;
+          for (let r = startRowIdx; r <= endRowIdx && r < bRows.length; r++) {
+            const rawName = cleanStr(bRows[r][branchCol]) || cleanStr(bRows[r][0]);
+            const rawColA = cleanStr(bRows[r][0]);
             const cName = cleanThai(rawName);
             const cNameA = cleanThai(rawColA);
 
-            const isExplicitTotal = cName === 'รวม' || cName.includes('ยอดรวม') || cName.includes('ทงหมด') || cNameA === 'รวม' || cNameA.includes('ยอดรวม');
-            const isBlankWithBranches = !rawName && Object.keys(branchDailyOldMap).length >= 10;
+            const isTotalWord = cName === 'รวม' || cName.includes('ยอดรวม') || cName.includes('ทงหมด') || cNameA === 'รวม' || cNameA.includes('ยอดรวม');
 
-            if (isExplicitTotal || isBlankWithBranches) {
-              for (let i = 0; i < days.length; i++) {
-                result.dailyMatrix.oldDailyTotals.push(cleanNum(bRows[r2][dayColStart + i]));
-              }
+            // คำนวณผลรวมของตัวเลขในแถวนี้
+            let rowSum = 0;
+            const vals = [];
+            for (let i = 0; i < days.length; i++) {
+              const num = cleanNum(bRows[r][dayColStart + i]);
+              vals.push(num);
+              rowSum += num;
+            }
+
+            // หากเป็นแถวรวมที่มีคำว่า "รวม" และมียอดเงิน
+            if (isTotalWord && rowSum > 0) {
+              targetTotalsArray.length = 0;
+              vals.forEach(v => targetTotalsArray.push(v));
+              foundTotal = true;
               break;
             }
 
-            if (!rawName) {
-              r2++;
-              continue;
+            // ถ้ามีชื่อสาขาและไม่ใช่คำว่ารวม
+            if (rawName && !isTotalWord) {
+              targetBranchMap[rawName] = vals;
+            } else if (!rawName && rowSum > 0 && Object.keys(targetBranchMap).length >= 10) {
+              // กรณีแถวรวมไม่มีคำว่า "รวม" (เช่น เป็นแค่แถวผลรวมตัวเลขด้านล่างตาราง)
+              targetTotalsArray.length = 0;
+              vals.forEach(v => targetTotalsArray.push(v));
+              foundTotal = true;
+              break;
             }
+          }
 
-            const dailyOldVals = [];
+          // Fallback หากไม่มีแถวรวม หรือแถวรวมเป็น 0 ให้บวกยอดรวมจากทุกสาขาในบล็อกนั้น
+          if (!foundTotal || targetTotalsArray.length === 0 || targetTotalsArray.every(v => v === 0)) {
+            targetTotalsArray.length = 0;
             for (let i = 0; i < days.length; i++) {
-              dailyOldVals.push(cleanNum(bRows[r2][dayColStart + i]));
+              let s = 0;
+              for (const k in targetBranchMap) {
+                s += (targetBranchMap[k][i] || 0);
+              }
+              targetTotalsArray.push(s);
             }
-            branchDailyOldMap[rawName] = dailyOldVals;
-            r2++;
           }
         }
 
-        // หาก oldDailyTotals ยังไม่มี ให้บวกผลรวมจากตารางล่าง (เคสเก่า)
+        // ค้นหา Header Row วันที่ (1, 2, 3...) ในชีทจริงเพื่อรองรับทั้งตำแหน่งเป๊ะและกรณีมีแถวแทรก
+        const headerRows = [];
+        for (let r = 0; r < bRows.length; r++) {
+          for (let c = 0; c < Math.min(6, bRows[r].length); c++) {
+            if (parseDayNum(bRows[r][c]) === 1 && parseDayNum(bRows[r][c + 1]) === 2) {
+              headerRows.push({ r: r, c: c });
+              break;
+            }
+          }
+        }
+
+        // กำหนดช่วงแถวของแต่ละบล็อก:
+        // บล็อก 1 (รวมเก่าใหม่ A1:AH21)
+        const b1Header = headerRows[0] ? headerRows[0].r : 0;
+        const b1Start = b1Header + 1;
+        const b1End = headerRows[1] ? headerRows[1].r - 1 : 20;
+
+        // บล็อก 2 (ใหม่เท่านั้น A30:AH49)
+        const b2Header = headerRows[1] ? headerRows[1].r : 29;
+        const b2Start = b2Header + 1;
+        const b2End = headerRows[2] ? headerRows[2].r - 1 : 48;
+
+        // บล็อก 3 (เก่าเท่านั้น A59:AH78)
+        const b3Header = headerRows[2] ? headerRows[2].r : 58;
+        const b3Start = b3Header + 1;
+        const b3End = Math.min(bRows.length - 1, b3Start + 19);
+
+        // 1. อ่านบล็อก 1: รวมเก่าใหม่ (A1:AH21)
+        readBlock(b1Start, b1End, branchDailyCombMap, result.dailyMatrix.combinedDailyTotals);
+
+        // 2. อ่านบล็อก 2: ใหม่เท่านั้น (A30:AH49)
+        readBlock(b2Start, b2End, branchDailyNewMap, result.dailyMatrix.newDailyTotals);
+
+        // 3. อ่านบล็อก 3: เก่าเท่านั้น (A59:AH78)
+        readBlock(b3Start, b3End, branchDailyOldMap, result.dailyMatrix.oldDailyTotals);
+
+        // ตรวจสอบความถูกต้องและเติมเต็มความสัมพันธ์ New + Old = Combined
+        if (result.dailyMatrix.combinedDailyTotals.length === 0 || result.dailyMatrix.combinedDailyTotals.every(v => v === 0)) {
+          result.dailyMatrix.combinedDailyTotals = days.map((_, i) => {
+            return (result.dailyMatrix.newDailyTotals[i] || 0) + (result.dailyMatrix.oldDailyTotals[i] || 0);
+          });
+        }
+        if (result.dailyMatrix.newDailyTotals.length === 0 || result.dailyMatrix.newDailyTotals.every(v => v === 0)) {
+          result.dailyMatrix.newDailyTotals = days.map((_, i) => {
+            const comb = result.dailyMatrix.combinedDailyTotals[i] || 0;
+            const old = result.dailyMatrix.oldDailyTotals[i] || 0;
+            return Math.max(0, comb - old);
+          });
+        }
         if (result.dailyMatrix.oldDailyTotals.length === 0 || result.dailyMatrix.oldDailyTotals.every(v => v === 0)) {
           result.dailyMatrix.oldDailyTotals = days.map((_, i) => {
-            return Object.values(branchDailyOldMap).reduce((sum, arr) => sum + (arr[i] || 0), 0);
+            const comb = result.dailyMatrix.combinedDailyTotals[i] || 0;
+            const nw = result.dailyMatrix.newDailyTotals[i] || 0;
+            return Math.max(0, comb - nw);
           });
         }
 
-        // ⚡ คำนวณยอดเคสใหม่รายวัน (New Daily = Combined Total - Old Daily) เพื่อไม่ให้บวกเคสเก่าซ้ำ 2 รอบ!
-        result.dailyMatrix.newDailyTotals = days.map((_, i) => {
-          const tot = result.dailyMatrix.combinedDailyTotals[i] || 0;
-          const old = result.dailyMatrix.oldDailyTotals[i] || 0;
-          return Math.max(0, tot - old);
-        });
-
         // หาก branches จาก Overview Sheet ว่าง ให้สร้างขึ้นจาก Bot Sheet โดยตรงทันที!
         if (result.branches.length === 0) {
-          const allBotBranchNames = Array.from(new Set([...Object.keys(branchDailyTotalMap), ...Object.keys(branchDailyOldMap)]));
+          const allBotBranchNames = Array.from(new Set([
+            ...Object.keys(branchDailyCombMap),
+            ...Object.keys(branchDailyNewMap),
+            ...Object.keys(branchDailyOldMap)
+          ]));
           allBotBranchNames.forEach(bName => {
-            const dTot = branchDailyTotalMap[bName] || new Array(days.length).fill(0);
-            const dOld = branchDailyOldMap[bName] || new Array(days.length).fill(0);
-            const dNew = days.map((_, i) => Math.max(0, (dTot[i] || 0) - (dOld[i] || 0)));
-            const sumTot = dTot.reduce((a, b) => a + b, 0);
+            const dComb = branchDailyCombMap[bName] || new Array(days.length).fill(0);
+            const dNew = branchDailyNewMap[bName] || days.map((_, i) => Math.max(0, (dComb[i] || 0) - ((branchDailyOldMap[bName] && branchDailyOldMap[bName][i]) || 0)));
+            const dOld = branchDailyOldMap[bName] || days.map((_, i) => Math.max(0, (dComb[i] || 0) - (dNew[i] || 0)));
+            const sumComb = dComb.reduce((a, b) => a + b, 0);
+            const sumNew = dNew.reduce((a, b) => a + b, 0);
             const sumOld = dOld.reduce((a, b) => a + b, 0);
-            const sumNew = Math.max(0, sumTot - sumOld);
             result.branches.push({
               name: bName,
               newCasesCount: 0,
@@ -2148,7 +2171,7 @@ function getCasesDashboardDataFast(ss, customCasesSheetId) {
               installmentAmount: 0,
               newCasesAmount: sumNew,
               oldCasesAmount: sumOld,
-              totalAmount: sumTot,
+              totalAmount: sumComb || (sumNew + sumOld),
               rank: 0,
               consultCount: 0,
               unspecifiedCount: 0,
@@ -2157,7 +2180,7 @@ function getCasesDashboardDataFast(ss, customCasesSheetId) {
               midTermCount: 0,
               dailyNew: dNew,
               dailyOld: dOld,
-              dailyTotal: dTot
+              dailyTotal: dComb
             });
           });
         } else {
@@ -2165,13 +2188,22 @@ function getCasesDashboardDataFast(ss, customCasesSheetId) {
           result.branches.forEach(b => {
             const bCore = normalizeBranchCore(b.name);
 
-            let matchedTotal = null;
+            let matchedComb = null;
+            let matchedNew = null;
             let matchedOld = null;
 
-            for (const k in branchDailyTotalMap) {
+            for (const k in branchDailyCombMap) {
               const kCore = normalizeBranchCore(k);
               if (kCore === bCore || kCore.includes(bCore) || bCore.includes(kCore)) {
-                matchedTotal = branchDailyTotalMap[k];
+                matchedComb = branchDailyCombMap[k];
+                break;
+              }
+            }
+
+            for (const k in branchDailyNewMap) {
+              const kCore = normalizeBranchCore(k);
+              if (kCore === bCore || kCore.includes(bCore) || bCore.includes(kCore)) {
+                matchedNew = branchDailyNewMap[k];
                 break;
               }
             }
@@ -2184,15 +2216,19 @@ function getCasesDashboardDataFast(ss, customCasesSheetId) {
               }
             }
 
-            b.dailyTotal = matchedTotal || new Array(days.length).fill(0);
-            b.dailyOld = matchedOld || new Array(days.length).fill(0);
-            b.dailyNew = days.map((_, i) => Math.max(0, (b.dailyTotal[i] || 0) - (b.dailyOld[i] || 0)));
+            const dComb = matchedComb || (matchedNew && matchedOld ? days.map((_, i) => (matchedNew[i] || 0) + (matchedOld[i] || 0)) : new Array(days.length).fill(0));
+            const dNew = matchedNew || days.map((_, i) => Math.max(0, (dComb[i] || 0) - ((matchedOld && matchedOld[i]) || 0)));
+            const dOld = matchedOld || days.map((_, i) => Math.max(0, (dComb[i] || 0) - (dNew[i] || 0)));
+
+            b.dailyTotal = dComb;
+            b.dailyNew = dNew;
+            b.dailyOld = dOld;
 
             // หาก Overview ไม่มียอดเงินรายสาขา ให้คำนวณจากยอดสะสมรายวันแทน
             if (b.totalAmount === 0) {
-              b.totalAmount = b.dailyTotal.reduce((x, y) => x + y, 0);
-              b.oldCasesAmount = b.dailyOld.reduce((x, y) => x + y, 0);
-              b.newCasesAmount = Math.max(0, b.totalAmount - b.oldCasesAmount);
+              b.totalAmount = dComb.reduce((x, y) => x + y, 0);
+              b.newCasesAmount = dNew.reduce((x, y) => x + y, 0);
+              b.oldCasesAmount = dOld.reduce((x, y) => x + y, 0);
             }
           });
         }

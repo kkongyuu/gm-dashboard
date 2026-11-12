@@ -6599,14 +6599,21 @@
         data = live;
       }
 
-      // ⚡ แยก dailyTotal, dailyOld และ dailyNew ให้ถูกต้อง (ป้องกันการบวกเคสเก่าซ้ำ 2 รอบ)
+      // ⚡ จัดการความสัมพันธ์ dailyTotal, dailyNew, dailyOld ให้ตรงกับ 3 บล็อกจริง
       if (data && Array.isArray(data.branches)) {
         data.branches.forEach(b => {
-          if (!b.dailyTotal && Array.isArray(b.dailyNew)) {
+          const hasTot = Array.isArray(b.dailyTotal) && b.dailyTotal.some(v => v > 0);
+          const hasNew = Array.isArray(b.dailyNew) && b.dailyNew.some(v => v > 0);
+          const hasOld = Array.isArray(b.dailyOld) && b.dailyOld.some(v => v > 0);
+
+          if (!hasTot && hasNew && hasOld) {
+            b.dailyTotal = b.dailyNew.map((n, i) => (n || 0) + ((b.dailyOld && b.dailyOld[i]) || 0));
+          } else if (hasTot && !hasNew && hasOld) {
+            b.dailyNew = b.dailyTotal.map((t, i) => Math.max(0, (t || 0) - ((b.dailyOld && b.dailyOld[i]) || 0)));
+          } else if (hasTot && hasNew && !hasOld) {
+            b.dailyOld = b.dailyTotal.map((t, i) => Math.max(0, (t || 0) - ((b.dailyNew && b.dailyNew[i]) || 0)));
+          } else if (!hasTot && hasNew && !hasOld) {
             b.dailyTotal = [...b.dailyNew];
-          }
-          if (Array.isArray(b.dailyTotal) && Array.isArray(b.dailyOld)) {
-            b.dailyNew = b.dailyTotal.map((tot, i) => Math.max(0, tot - (b.dailyOld[i] || 0)));
           }
         });
       }
