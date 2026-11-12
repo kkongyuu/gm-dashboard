@@ -2026,7 +2026,7 @@ function getCasesDashboardDataFast(ss, customCasesSheetId) {
         result.dailyMatrix.days = days;
 
         const branchCol = Math.max(0, dayColStart - 1); // Col B (index 1)
-        const branchDailyNewMap = {};
+        const branchDailyTotalMap = {}; // ตารางบน: คือยอดรวมทั้งหมดรายวัน (Combined Daily Total: New + Old)
         let r1 = headerRow1 + 1;
 
         while (r1 < bRows.length) {
@@ -2036,11 +2036,11 @@ function getCasesDashboardDataFast(ss, customCasesSheetId) {
           const cNameA = cleanThai(rawColA);
 
           const isExplicitTotal = cName === 'รวม' || cName.includes('ยอดรวม') || cName.includes('ทงหมด') || cNameA === 'รวม' || cNameA.includes('ยอดรวม');
-          const isBlankWithBranches = !rawName && Object.keys(branchDailyNewMap).length >= 10;
+          const isBlankWithBranches = !rawName && Object.keys(branchDailyTotalMap).length >= 10;
 
           if (isExplicitTotal || isBlankWithBranches) {
             for (let i = 0; i < days.length; i++) {
-              result.dailyMatrix.newDailyTotals.push(cleanNum(bRows[r1][dayColStart + i]));
+              result.dailyMatrix.combinedDailyTotals.push(cleanNum(bRows[r1][dayColStart + i]));
             }
             r1++;
             break;
@@ -2055,18 +2055,18 @@ function getCasesDashboardDataFast(ss, customCasesSheetId) {
           for (let i = 0; i < days.length; i++) {
             dailyVals.push(cleanNum(bRows[r1][dayColStart + i]));
           }
-          branchDailyNewMap[rawName] = dailyVals;
+          branchDailyTotalMap[rawName] = dailyVals;
           r1++;
         }
 
-        // หาก newDailyTotals ยังไม่มี ให้บวกผลรวมจากทุกสาขาอัตโนมัติ
-        if (result.dailyMatrix.newDailyTotals.length === 0 || result.dailyMatrix.newDailyTotals.every(v => v === 0)) {
-          result.dailyMatrix.newDailyTotals = days.map((_, i) => {
-            return Object.values(branchDailyNewMap).reduce((sum, arr) => sum + (arr[i] || 0), 0);
+        // หาก combinedDailyTotals ยังไม่มี ให้บวกผลรวมจากตารางบน (ยอดรวมทั้งหมด)
+        if (result.dailyMatrix.combinedDailyTotals.length === 0 || result.dailyMatrix.combinedDailyTotals.every(v => v === 0)) {
+          result.dailyMatrix.combinedDailyTotals = days.map((_, i) => {
+            return Object.values(branchDailyTotalMap).reduce((sum, arr) => sum + (arr[i] || 0), 0);
           });
         }
 
-        // ตารางที่ 2: เคสเก่ารายวัน
+        // ตารางที่ 2: เคสเก่ารายวัน (ตารางล่าง)
         let headerRow2 = -1;
         for (let r = r1; r < bRows.length; r++) {
           for (let c = 0; c < bRows[r].length; c++) {
@@ -2113,28 +2113,30 @@ function getCasesDashboardDataFast(ss, customCasesSheetId) {
           }
         }
 
-        // หาก oldDailyTotals ยังไม่มี ให้บวกผลรวมจากทุกสาขาอัตโนมัติ
+        // หาก oldDailyTotals ยังไม่มี ให้บวกผลรวมจากตารางล่าง (เคสเก่า)
         if (result.dailyMatrix.oldDailyTotals.length === 0 || result.dailyMatrix.oldDailyTotals.every(v => v === 0)) {
           result.dailyMatrix.oldDailyTotals = days.map((_, i) => {
             return Object.values(branchDailyOldMap).reduce((sum, arr) => sum + (arr[i] || 0), 0);
           });
         }
 
-        // รวมยอด Daily Totals (New + Old)
-        result.dailyMatrix.combinedDailyTotals = days.map((_, i) => {
-          const nTot = result.dailyMatrix.newDailyTotals[i] || 0;
-          const oTot = result.dailyMatrix.oldDailyTotals[i] || 0;
-          return nTot + oTot;
+        // ⚡ คำนวณยอดเคสใหม่รายวัน (New Daily = Combined Total - Old Daily) เพื่อไม่ให้บวกเคสเก่าซ้ำ 2 รอบ!
+        result.dailyMatrix.newDailyTotals = days.map((_, i) => {
+          const tot = result.dailyMatrix.combinedDailyTotals[i] || 0;
+          const old = result.dailyMatrix.oldDailyTotals[i] || 0;
+          return Math.max(0, tot - old);
         });
 
         // หาก branches จาก Overview Sheet ว่าง ให้สร้างขึ้นจาก Bot Sheet โดยตรงทันที!
         if (result.branches.length === 0) {
-          const allBotBranchNames = Array.from(new Set([...Object.keys(branchDailyNewMap), ...Object.keys(branchDailyOldMap)]));
+          const allBotBranchNames = Array.from(new Set([...Object.keys(branchDailyTotalMap), ...Object.keys(branchDailyOldMap)]));
           allBotBranchNames.forEach(bName => {
-            const dNew = branchDailyNewMap[bName] || new Array(days.length).fill(0);
+            const dTot = branchDailyTotalMap[bName] || new Array(days.length).fill(0);
             const dOld = branchDailyOldMap[bName] || new Array(days.length).fill(0);
-            const sumNew = dNew.reduce((a, b) => a + b, 0);
+            const dNew = days.map((_, i) => Math.max(0, (dTot[i] || 0) - (dOld[i] || 0)));
+            const sumTot = dTot.reduce((a, b) => a + b, 0);
             const sumOld = dOld.reduce((a, b) => a + b, 0);
+            const sumNew = Math.max(0, sumTot - sumOld);
             result.branches.push({
               name: bName,
               newCasesCount: 0,
@@ -2146,7 +2148,7 @@ function getCasesDashboardDataFast(ss, customCasesSheetId) {
               installmentAmount: 0,
               newCasesAmount: sumNew,
               oldCasesAmount: sumOld,
-              totalAmount: sumNew + sumOld,
+              totalAmount: sumTot,
               rank: 0,
               consultCount: 0,
               unspecifiedCount: 0,
@@ -2154,7 +2156,8 @@ function getCasesDashboardDataFast(ss, customCasesSheetId) {
               shortTermCount: 0,
               midTermCount: 0,
               dailyNew: dNew,
-              dailyOld: dOld
+              dailyOld: dOld,
+              dailyTotal: dTot
             });
           });
         } else {
@@ -2162,13 +2165,13 @@ function getCasesDashboardDataFast(ss, customCasesSheetId) {
           result.branches.forEach(b => {
             const bCore = normalizeBranchCore(b.name);
 
-            let matchedNew = null;
+            let matchedTotal = null;
             let matchedOld = null;
 
-            for (const k in branchDailyNewMap) {
+            for (const k in branchDailyTotalMap) {
               const kCore = normalizeBranchCore(k);
               if (kCore === bCore || kCore.includes(bCore) || bCore.includes(kCore)) {
-                matchedNew = branchDailyNewMap[k];
+                matchedTotal = branchDailyTotalMap[k];
                 break;
               }
             }
@@ -2181,14 +2184,15 @@ function getCasesDashboardDataFast(ss, customCasesSheetId) {
               }
             }
 
-            b.dailyNew = matchedNew || new Array(days.length).fill(0);
+            b.dailyTotal = matchedTotal || new Array(days.length).fill(0);
             b.dailyOld = matchedOld || new Array(days.length).fill(0);
+            b.dailyNew = days.map((_, i) => Math.max(0, (b.dailyTotal[i] || 0) - (b.dailyOld[i] || 0)));
 
             // หาก Overview ไม่มียอดเงินรายสาขา ให้คำนวณจากยอดสะสมรายวันแทน
             if (b.totalAmount === 0) {
-              b.newCasesAmount = b.dailyNew.reduce((x, y) => x + y, 0);
+              b.totalAmount = b.dailyTotal.reduce((x, y) => x + y, 0);
               b.oldCasesAmount = b.dailyOld.reduce((x, y) => x + y, 0);
-              b.totalAmount = b.newCasesAmount + b.oldCasesAmount;
+              b.newCasesAmount = Math.max(0, b.totalAmount - b.oldCasesAmount);
             }
           });
         }
@@ -2214,22 +2218,18 @@ function getCasesDashboardDataFast(ss, customCasesSheetId) {
       result.summary.totalCasesCount = result.summary.newCasesCount + result.summary.oldCasesCount;
     }
 
-    // ⚡ ป้องกันยอดรวมทั้งเดือนขาดหาย / ไม่ตรงกับที่บอทบันทึกรายวันล่าสุด:
-    // หากยอดรวมรายวันสะสมใน dailyMatrix มีมูลค่าสูงกว่าตารางภาพรวม (เช่น บอทเพิ่มวันใหม่เข้ามาต่อเนื่องแต่ตารางสรุปยังไม่อัปเดต) 
-    // ให้อัปเกรดยอดรวมทั้งเดือนให้สะท้อนรายได้จริงสูงสุดเสมอ
+    // ⚡ ป้องกันยอดรวมขาดหาย แต่ต้องไม่บวกเคสเก่าซ้ำ 2 รอบ:
+    // หากยอดรวมสะสมใน combinedDailyTotals มีมูลค่าสูงกว่าตารางภาพรวม ให้ใช้ยอดจาก combinedDailyTotals
     if (result.dailyMatrix && Array.isArray(result.dailyMatrix.combinedDailyTotals) && result.dailyMatrix.combinedDailyTotals.length > 0) {
       const sumCombDaily = result.dailyMatrix.combinedDailyTotals.reduce((a, b) => a + (Number(b) || 0), 0);
-      const sumNewDaily = (result.dailyMatrix.newDailyTotals || []).reduce((a, b) => a + (Number(b) || 0), 0);
       const sumOldDaily = (result.dailyMatrix.oldDailyTotals || []).reduce((a, b) => a + (Number(b) || 0), 0);
 
       if (sumCombDaily > result.summary.totalRevenue) {
         result.summary.totalRevenue = sumCombDaily;
-      }
-      if (sumNewDaily > result.summary.newCasesRevenue) {
-        result.summary.newCasesRevenue = sumNewDaily;
-      }
-      if (sumOldDaily > result.summary.oldCasesRevenue) {
-        result.summary.oldCasesRevenue = sumOldDaily;
+        if (sumOldDaily > 0) {
+          result.summary.oldCasesRevenue = sumOldDaily;
+          result.summary.newCasesRevenue = Math.max(0, sumCombDaily - sumOldDaily);
+        }
       }
     }
 
