@@ -2138,6 +2138,63 @@
         </div>
       </div>
 
+      <!-- 1.5 RECENT DAILY REVENUE PULSE (ยอดเมื่อวาน & ยอดวันนี้ & ยอดเฉลี่ยต่อวัน) -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <!-- Yesterday's Revenue Card -->
+        <div class="bg-white border border-[#D8DCE1] rounded-xl p-4 shadow-2xs">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-[#636E7B] flex items-center space-x-1.5">
+              <i data-lucide="calendar" class="w-4 h-4 text-[#2E475D]"></i>
+              <span id="casesYesterdayTitle">ยอดของเมื่อวานนี้</span>
+            </span>
+            <span class="text-xxs font-bold px-2 py-0.5 rounded-full bg-[#EBF0F5] text-[#2E475D]" id="casesYesterdayDateBadge">วันที่ -</span>
+          </div>
+          <div class="mt-2 text-2xl sm:text-3xl font-black text-[#181A1C] font-mono tracking-tight" id="casesYesterdayRevenueText">
+            0 ฿
+          </div>
+          <div class="mt-1 flex items-center justify-between text-xxs text-[#636E7B] pt-2 border-t border-[#EBECEE]">
+            <span id="casesYesterdayNewText">ใหม่ 0 ฿</span>
+            <span id="casesYesterdayOldText">เก่า 0 ฿</span>
+          </div>
+        </div>
+
+        <!-- Today's Revenue Card -->
+        <div class="bg-white border border-[#D8DCE1] rounded-xl p-4 shadow-2xs">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-[#636E7B] flex items-center space-x-1.5">
+              <i data-lucide="zap" class="w-4 h-4 text-[#4D6B5A]"></i>
+              <span id="casesTodayTitle">ยอดของวันนี้</span>
+            </span>
+            <span class="text-xxs font-bold px-2 py-0.5 rounded-full bg-[#EDF3EF] text-[#4D6B5A]" id="casesTodayDateBadge">วันที่ -</span>
+          </div>
+          <div class="mt-2 text-2xl sm:text-3xl font-black text-[#181A1C] font-mono tracking-tight" id="casesTodayRevenueText">
+            0 ฿
+          </div>
+          <div class="mt-1 flex items-center justify-between text-xxs text-[#636E7B] pt-2 border-t border-[#EBECEE]">
+            <span id="casesTodayStatusText">อัปเดตตามรอบบอทล่าสุด</span>
+            <span class="text-[#4D6B5A] font-bold" id="casesTodaySubText">-</span>
+          </div>
+        </div>
+
+        <!-- Daily Average / Peak Day Card -->
+        <div class="bg-white border border-[#D8DCE1] rounded-xl p-4 shadow-2xs">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-[#636E7B] flex items-center space-x-1.5">
+              <i data-lucide="trending-up" class="w-4 h-4 text-[#B56D4A]"></i>
+              <span>ยอดเฉลี่ยต่อวัน / วันที่สูงสุด</span>
+            </span>
+            <span class="text-xxs font-bold px-2 py-0.5 rounded-full bg-[#F8EFEA] text-[#B56D4A]" id="casesPeakDayBadge">PEAK</span>
+          </div>
+          <div class="mt-2 text-2xl sm:text-3xl font-black text-[#181A1C] font-mono tracking-tight" id="casesDailyAvgRevenueText">
+            0 ฿
+          </div>
+          <div class="mt-1 flex items-center justify-between text-xxs text-[#636E7B] pt-2 border-t border-[#EBECEE]">
+            <span id="casesPeakDayDetailText">วันที่สูงสุด: -</span>
+            <span class="text-[#B56D4A] font-bold" id="casesPeakAmountText">0 ฿</span>
+          </div>
+        </div>
+      </div>
+
       <!-- 2. VISUAL ANALYTICS GRID (4 CHARTS) -->
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
@@ -3067,6 +3124,42 @@
           <span id="casesFsTotalCasesCount">รวมทั้งหมด 0 เคส</span>
           <span>•</span>
           <span id="casesFsAvgPerBranch">เฉลี่ยสาขาละ 0 ฿</span>
+        </div>
+      </div>
+
+      <!-- YESTERDAY & TODAY REVENUE PULSE STRIP (โหมดเต็มจอ) -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div class="bg-[#161B22] border border-[#2B3441] rounded-xl p-3.5 flex items-center justify-between">
+          <div>
+            <span class="text-xxs font-bold text-[#8B949E] block" id="casesFsYesterdayLabel">ยอดของเมื่อวานนี้</span>
+            <div class="text-xl sm:text-2xl font-black text-[#E6EDF3] font-mono tracking-tight" id="casesFsYesterdayAmount">0 ฿</div>
+          </div>
+          <div class="text-right text-xxxs text-[#8B949E]">
+            <div id="casesFsYesterdayBreakdown">ใหม่ 0 ฿ • เก่า 0 ฿</div>
+            <span class="px-1.5 py-0.5 rounded bg-[#212833] text-[#78B38E] font-bold" id="casesFsYesterdayBadge">เมื่อวาน</span>
+          </div>
+        </div>
+
+        <div class="bg-[#161B22] border border-[#2B3441] rounded-xl p-3.5 flex items-center justify-between">
+          <div>
+            <span class="text-xxs font-bold text-[#8B949E] block" id="casesFsTodayLabel">ยอดของวันนี้</span>
+            <div class="text-xl sm:text-2xl font-black text-[#56D364] font-mono tracking-tight" id="casesFsTodayAmount">0 ฿</div>
+          </div>
+          <div class="text-right text-xxxs text-[#8B949E]">
+            <div id="casesFsTodayStatus">กำลังเก็บข้อมูลระหว่างวัน</div>
+            <span class="px-1.5 py-0.5 rounded bg-[#1C3328] text-[#56D364] font-bold" id="casesFsTodayBadge">วันนี้</span>
+          </div>
+        </div>
+
+        <div class="bg-[#161B22] border border-[#2B3441] rounded-xl p-3.5 flex items-center justify-between">
+          <div>
+            <span class="text-xxs font-bold text-[#8B949E] block">ยอดเฉลี่ยต่อวัน (รายได้ / วันที่มีข้อมูล)</span>
+            <div class="text-xl sm:text-2xl font-black text-[#F3C352] font-mono tracking-tight" id="casesFsDailyAvgAmount">0 ฿</div>
+          </div>
+          <div class="text-right text-xxxs text-[#8B949E]">
+            <div id="casesFsPeakDayText">Peak: วันที่ -</div>
+            <span class="px-1.5 py-0.5 rounded bg-[#3B2E15] text-[#F3C352] font-bold">AVG/DAY</span>
+          </div>
         </div>
       </div>
 
@@ -4085,7 +4178,13 @@
         // กรณี B: เชื่อมต่อผ่าน API URL (ดึงครบทั้ง 3 รอบ 1-10, 1-20, 1-31 พร้อมกัน)
         // -------------------------------------------------------------
         const activeApiUrl = dashboardState.apiUrl || DEFAULT_LIVE_API_URL;
-        const refreshSuffix = isForcedRefresh ? '&refresh=true' : '';
+        const refreshSuffix = isForcedRefresh ? `&refresh=true&nocache=1&_t=${Date.now()}` : '';
+        if (isForcedRefresh) {
+          try {
+            localStorage.removeItem(cacheKey);
+            localStorage.removeItem('gm_dash_cache_v11_monthly_live');
+          } catch (e) { /* ignore */ }
+        }
         const response0 = await fetch(`${activeApiUrl}?action=api&period=0${refreshSuffix}`);
         if (!response0.ok) {
           throw new Error(`HTTP ${response0.status}`);
@@ -6435,25 +6534,25 @@
         unspecifiedCount: 4
       },
       branches: [
-        { name: "000มิสทีน", newCasesCount: 21, oldCasesCount: 11, courseCount: 7, singleCount: 6, physicalExamCount: 0, cancelCount: 4, installmentAmount: 0, newCasesAmount: 264969, oldCasesAmount: 179000, totalAmount: 443969, rank: 4, consultCount: 0, unspecifiedCount: 0, totalCount: 21, shortTermCount: 4, midTermCount: 4, dailyNew: [26000, 40840, 53500, 57750, 24250, 39500, 26589, 78540, 67500, 28500], dailyOld: [6000, 40840, 0, 29750, 11250, 19500, 16589, 78540, 48000, 13500] },
-        { name: "001เพชรเกษม", newCasesCount: 28, oldCasesCount: 5, courseCount: 19, singleCount: 5, physicalExamCount: 0, cancelCount: 5, installmentAmount: 5000, newCasesAmount: 591080, oldCasesAmount: 63150, totalAmount: 659230, rank: 2, consultCount: 1, unspecifiedCount: 0, totalCount: 28, shortTermCount: 0, midTermCount: 3, dailyNew: [189750, 70000, 71900, 8290, 13500, 67290, 61250, 57250, 30000, 90000], dailyOld: [189750, 70000, 58000, 8290, 13500, 47290, 61250, 28000, 25000, 90000] },
-        { name: "002รัตนาธิเบศร์", newCasesCount: 27, oldCasesCount: 5, courseCount: 10, singleCount: 6, physicalExamCount: 6, cancelCount: 4, installmentAmount: 0, newCasesAmount: 344680, oldCasesAmount: 81084, totalAmount: 425764, rank: 5, consultCount: 0, unspecifiedCount: 0, totalCount: 27, shortTermCount: 3, midTermCount: 2, dailyNew: [15000, 10000, 74000, 50420, 26000, 28290, 39600, 93499, 38180, 50775], dailyOld: [15000, 10000, 74000, 47000, 26000, 27000, 0, 83500, 38180, 24000] },
-        { name: "003บางนา", newCasesCount: 21, oldCasesCount: 10, courseCount: 10, singleCount: 6, physicalExamCount: 2, cancelCount: 5, installmentAmount: 0, newCasesAmount: 327448, oldCasesAmount: 85595, totalAmount: 413043, rank: 6, consultCount: 0, unspecifiedCount: 0, totalCount: 21, shortTermCount: 3, midTermCount: 0, dailyNew: [127039, 39000, 34430, 35750, 12579, 28000, 32290, 72595, 7900, 23460], dailyOld: [120039, 35000, 27590, 29750, 11289, 28000, 0, 32290, 35590, 7800] },
-        { name: "004เชียงใหม่", newCasesCount: 13, oldCasesCount: 6, courseCount: 5, singleCount: 5, physicalExamCount: 0, cancelCount: 5, installmentAmount: 0, newCasesAmount: 165930, oldCasesAmount: 107370, totalAmount: 273300, rank: 16, consultCount: 0, unspecifiedCount: 0, totalCount: 13, shortTermCount: 2, midTermCount: 1, dailyNew: [30090, 3870, 1290, 57000, 3000, 27000, 6590, 84290, 57000, 3170], dailyOld: [12590, 0, 1290, 35000, 3000, 27000, 6590, 64290, 13000, 3170] },
-        { name: "005พิษณุโลก", newCasesCount: 13, oldCasesCount: 6, courseCount: 6, singleCount: 5, physicalExamCount: 2, cancelCount: 4, installmentAmount: 0, newCasesAmount: 285040, oldCasesAmount: 88950, totalAmount: 373990, rank: 9, consultCount: 0, unspecifiedCount: 0, totalCount: 13, shortTermCount: 0, midTermCount: 0, dailyNew: [57000, 1180, 63090, 35000, 0, 22590, 5680, 131250, 20000, 38200], dailyOld: [57000, 1180, 63090, 35000, 0, 590, 3180, 90000, 0, 35000] },
-        { name: "006ชลบุรี", newCasesCount: 26, oldCasesCount: 3, courseCount: 12, singleCount: 4, physicalExamCount: 5, cancelCount: 3, installmentAmount: 0, newCasesAmount: 411868, oldCasesAmount: 58575, totalAmount: 470443, rank: 3, consultCount: 0, unspecifiedCount: 0, totalCount: 26, shortTermCount: 3, midTermCount: 2, dailyNew: [82299, 102275, 0, 27000, 85000, 47000, 40999, 22870, 63000, 0], dailyOld: [78499, 75500, 0, 27000, 85000, 47000, 40999, 22870, 35000, 0] },
-        { name: "007ขอนแก่น", newCasesCount: 13, oldCasesCount: 6, courseCount: 7, singleCount: 2, physicalExamCount: 1, cancelCount: 5, installmentAmount: 0, newCasesAmount: 244370, oldCasesAmount: 130250, totalAmount: 374620, rank: 8, consultCount: 0, unspecifiedCount: 0, totalCount: 12, shortTermCount: 0, midTermCount: 2, dailyNew: [20000, 34290, 42500, 40000, 0, 33080, 25000, 38250, 73500, 70000], dailyOld: [20000, 34290, 25000, 20000, 0, 1580, 0, 0, 73500, 70000] },
-        { name: "008หาดใหญ่", newCasesCount: 32, oldCasesCount: 7, courseCount: 8, singleCount: 15, physicalExamCount: 3, cancelCount: 4, installmentAmount: 1500, newCasesAmount: 254310, oldCasesAmount: 74590, totalAmount: 330400, rank: 12, consultCount: 2, unspecifiedCount: 1, totalCount: 31, shortTermCount: 2, midTermCount: 1, dailyNew: [14790, 36880, 64590, 49000, 16760, 11790, 4000, 50750, 3000, 78840], dailyOld: [5790, 35890, 64590, 49000, 16760, 10290, 4000, 8000, 3000, 57290] },
-        { name: "009อุบลราชธานี", newCasesCount: 21, oldCasesCount: 7, courseCount: 5, singleCount: 8, physicalExamCount: 5, cancelCount: 2, installmentAmount: 0, newCasesAmount: 183790, oldCasesAmount: 55720, totalAmount: 239510, rank: 18, consultCount: 1, unspecifiedCount: 0, totalCount: 21, shortTermCount: 2, midTermCount: 0, dailyNew: [8000, 4180, 0, 36290, 6000, 60290, 4000, 28250, 49500, 35000], dailyOld: [8000, 2000, 0, 36290, 6000, 56000, 4000, 2000, 37500, 32000] },
-        { name: "010เชียงราย", newCasesCount: 9, oldCasesCount: 4, courseCount: 4, singleCount: 4, physicalExamCount: 0, cancelCount: 2, installmentAmount: 0, newCasesAmount: 114370, oldCasesAmount: 16290, totalAmount: 130660, rank: 19, consultCount: 0, unspecifiedCount: 0, totalCount: 9, shortTermCount: 1, midTermCount: 0, dailyNew: [3200, 2590, 27580, 0, 25000, 9000, 28000, 0, 3500, 31790], dailyOld: [0, 2000, 27580, 0, 25000, 0, 28000, 0, 0, 31790] },
-        { name: "011ระยอง", newCasesCount: 29, oldCasesCount: 3, courseCount: 11, singleCount: 8, physicalExamCount: 4, cancelCount: 3, installmentAmount: 0, newCasesAmount: 338167, oldCasesAmount: 54000, totalAmount: 392167, rank: 7, consultCount: 0, unspecifiedCount: 1, totalCount: 28, shortTermCount: 5, midTermCount: 0, dailyNew: [28860, 36290, 5000, 26250, 15000, 74000, 89497, 88260, 2000, 27000], dailyOld: [28860, 36290, 5000, 0, 15000, 65000, 89497, 69500, 2000, 27000] },
-        { name: "012ดอนเมือง", newCasesCount: 29, oldCasesCount: 15, courseCount: 17, singleCount: 4, physicalExamCount: 2, cancelCount: 7, installmentAmount: 25500, newCasesAmount: 504129, oldCasesAmount: 291395, totalAmount: 821024, rank: 1, consultCount: 1, unspecifiedCount: 1, totalCount: 28, shortTermCount: 2, midTermCount: 2, dailyNew: [113250, 63984, 49000, 33290, 25000, 66750, 184000, 52500, 64250, 109000, 40000], dailyOld: [85250, 50589, 23000, 21290, 25000, 0, 111000, 32000, 16000, 100000, 40000] },
-        { name: "013พระราม 9", newCasesCount: 18, oldCasesCount: 8, courseCount: 9, singleCount: 7, physicalExamCount: 0, cancelCount: 5, installmentAmount: 0, newCasesAmount: 227009, oldCasesAmount: 136700, totalAmount: 363709, rank: 11, consultCount: 0, unspecifiedCount: 0, totalCount: 18, shortTermCount: 1, midTermCount: 1, dailyNew: [56000, 39250, 61100, 9000, 49830, 55000, 32499, 26540, 6000, 17000, 11490], dailyOld: [26000, 21750, 57900, 9000, 2580, 55000, 9999, 15290, 6000, 12000, 11490] },
-        { name: "014สุราษฎร์ธานี", newCasesCount: 31, oldCasesCount: 2, courseCount: 8, singleCount: 14, physicalExamCount: 3, cancelCount: 7, installmentAmount: 0, newCasesAmount: 253810, oldCasesAmount: 13199, totalAmount: 267009, rank: 17, consultCount: 0, unspecifiedCount: 0, totalCount: 31, shortTermCount: 3, midTermCount: 3, dailyNew: [58500, 0, 9360, 3000, 9999, 35590, 21500, 67500, 29000, 6290, 24250], dailyOld: [0, 0, 9360, 0, 0, 0, 0, 0, 0, 0, 3839] },
-        { name: "015ท่าพระ", newCasesCount: 18, oldCasesCount: 3, courseCount: 6, singleCount: 5, physicalExamCount: 1, cancelCount: 4, installmentAmount: 0, newCasesAmount: 220570, oldCasesAmount: 57875, totalAmount: 278445, rank: 15, consultCount: 0, unspecifiedCount: 0, totalCount: 18, shortTermCount: 3, midTermCount: 3, dailyNew: [51300, 7180, 6000, 81465, 12000, 35000, 9000, 11000, 25000, 40500], dailyOld: [17300, 7180, 6000, 24875, 2520, 0, 0, 0, 0, 0] },
-        { name: "016หนองจอก", newCasesCount: 23, oldCasesCount: 3, courseCount: 10, singleCount: 8, physicalExamCount: 2, cancelCount: 2, installmentAmount: 0, newCasesAmount: 307908, oldCasesAmount: 56195, totalAmount: 364103, rank: 10, consultCount: 0, unspecifiedCount: 0, totalCount: 23, shortTermCount: 1, midTermCount: 2, dailyNew: [22749, 34460, 31775, 45999, 21290, 30000, 14000, 32000, 27580, 82000, 22250], dailyOld: [0, 24000, 0, 0, 0, 0, 0, 0, 0, 32195, 0] },
-        { name: "017นครปฐม", newCasesCount: 18, oldCasesCount: 4, courseCount: 7, singleCount: 3, physicalExamCount: 0, cancelCount: 4, installmentAmount: 0, newCasesAmount: 267580, oldCasesAmount: 57853, totalAmount: 325433, rank: 13, consultCount: 0, unspecifiedCount: 0, totalCount: 18, shortTermCount: 3, midTermCount: 5, dailyNew: [8560, 3000, 20000, 23500, 25000, 23800, 8000, 81750, 65000, 47000, 19803], dailyOld: [0, 0, 0, 0, 25000, 0, 0, 0, 0, 32853, 0] },
-        { name: "018ยะลา", newCasesCount: 22, oldCasesCount: 6, courseCount: 8, singleCount: 6, physicalExamCount: 2, cancelCount: 2, installmentAmount: 0, newCasesAmount: 263950, oldCasesAmount: 47595, totalAmount: 311545, rank: 14, consultCount: 0, unspecifiedCount: 0, totalCount: 22, shortTermCount: 3, midTermCount: 3, dailyNew: [42705, 29920, 4000, 48590, 56000, 33000, 38330, 15000, 0, 44000], dailyOld: [0, 0, 0, 0, 0, 0, 0, 0, 0, 47595, 0] }
+        { name: "000มิสทีน", newCasesCount: 21, oldCasesCount: 11, courseCount: 7, singleCount: 6, physicalExamCount: 0, cancelCount: 4, installmentAmount: 0, newCasesAmount: 264969, oldCasesAmount: 179000, totalAmount: 443969, rank: 4, consultCount: 0, unspecifiedCount: 0, totalCount: 21, shortTermCount: 4, midTermCount: 4, dailyNew: [26000, 40840, 53500, 57750, 24250, 39500, 26589, 78540, 67500, 28500, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], dailyOld: [6000, 40840, 0, 29750, 11250, 19500, 16589, 78540, 48000, 13500, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
+        { name: "001เพชรเกษม", newCasesCount: 28, oldCasesCount: 5, courseCount: 19, singleCount: 5, physicalExamCount: 0, cancelCount: 5, installmentAmount: 5000, newCasesAmount: 591080, oldCasesAmount: 63150, totalAmount: 659230, rank: 2, consultCount: 1, unspecifiedCount: 0, totalCount: 28, shortTermCount: 0, midTermCount: 3, dailyNew: [189750, 70000, 71900, 8290, 13500, 67290, 61250, 57250, 30000, 90000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], dailyOld: [189750, 70000, 58000, 8290, 13500, 47290, 61250, 28000, 25000, 90000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
+        { name: "002รัตนาธิเบศร์", newCasesCount: 27, oldCasesCount: 5, courseCount: 10, singleCount: 6, physicalExamCount: 6, cancelCount: 4, installmentAmount: 0, newCasesAmount: 344680, oldCasesAmount: 81084, totalAmount: 425764, rank: 5, consultCount: 0, unspecifiedCount: 0, totalCount: 27, shortTermCount: 3, midTermCount: 2, dailyNew: [15000, 10000, 74000, 50420, 26000, 28290, 39600, 93499, 38180, 50775, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], dailyOld: [15000, 10000, 74000, 47000, 26000, 27000, 0, 83500, 38180, 24000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
+        { name: "003บางนา", newCasesCount: 21, oldCasesCount: 10, courseCount: 10, singleCount: 6, physicalExamCount: 2, cancelCount: 5, installmentAmount: 0, newCasesAmount: 327448, oldCasesAmount: 85595, totalAmount: 413043, rank: 6, consultCount: 0, unspecifiedCount: 0, totalCount: 21, shortTermCount: 3, midTermCount: 0, dailyNew: [127039, 39000, 34430, 35750, 12579, 28000, 32290, 72595, 7900, 0, 23460, 0, 0, 0, 0, 0, 0, 0, 0, 0], dailyOld: [120039, 35000, 27590, 29750, 11289, 28000, 0, 32290, 35590, 7800, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
+        { name: "004เชียงใหม่", newCasesCount: 13, oldCasesCount: 6, courseCount: 5, singleCount: 5, physicalExamCount: 0, cancelCount: 5, installmentAmount: 0, newCasesAmount: 165930, oldCasesAmount: 107370, totalAmount: 273300, rank: 16, consultCount: 0, unspecifiedCount: 0, totalCount: 13, shortTermCount: 2, midTermCount: 1, dailyNew: [30090, 3870, 1290, 57000, 3000, 27000, 6590, 84290, 57000, 3170, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], dailyOld: [12590, 0, 1290, 35000, 3000, 27000, 6590, 64290, 13000, 3170, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
+        { name: "005พิษณุโลก", newCasesCount: 13, oldCasesCount: 6, courseCount: 6, singleCount: 5, physicalExamCount: 2, cancelCount: 4, installmentAmount: 0, newCasesAmount: 285040, oldCasesAmount: 88950, totalAmount: 373990, rank: 9, consultCount: 0, unspecifiedCount: 0, totalCount: 13, shortTermCount: 0, midTermCount: 0, dailyNew: [57000, 1180, 63090, 35000, 0, 22590, 5680, 131250, 20000, 38200, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], dailyOld: [57000, 1180, 63090, 35000, 0, 590, 3180, 90000, 0, 35000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
+        { name: "006ชลบุรี", newCasesCount: 26, oldCasesCount: 3, courseCount: 12, singleCount: 4, physicalExamCount: 5, cancelCount: 3, installmentAmount: 0, newCasesAmount: 411868, oldCasesAmount: 58575, totalAmount: 470443, rank: 3, consultCount: 0, unspecifiedCount: 0, totalCount: 26, shortTermCount: 3, midTermCount: 2, dailyNew: [82299, 102275, 0, 27000, 85000, 47000, 40999, 22870, 63000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], dailyOld: [78499, 75500, 0, 27000, 85000, 47000, 40999, 22870, 35000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
+        { name: "007ขอนแก่น", newCasesCount: 13, oldCasesCount: 6, courseCount: 7, singleCount: 2, physicalExamCount: 1, cancelCount: 5, installmentAmount: 0, newCasesAmount: 244370, oldCasesAmount: 130250, totalAmount: 374620, rank: 8, consultCount: 0, unspecifiedCount: 0, totalCount: 12, shortTermCount: 0, midTermCount: 2, dailyNew: [20000, 34290, 42500, 40000, 0, 33080, 25000, 38250, 73500, 70000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], dailyOld: [20000, 34290, 25000, 20000, 0, 1580, 0, 0, 73500, 70000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
+        { name: "008หาดใหญ่", newCasesCount: 32, oldCasesCount: 7, courseCount: 8, singleCount: 15, physicalExamCount: 3, cancelCount: 4, installmentAmount: 1500, newCasesAmount: 254310, oldCasesAmount: 74590, totalAmount: 330400, rank: 12, consultCount: 2, unspecifiedCount: 1, totalCount: 31, shortTermCount: 2, midTermCount: 1, dailyNew: [14790, 36880, 64590, 49000, 16760, 11790, 4000, 50750, 3000, 78840, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], dailyOld: [5790, 35890, 64590, 49000, 16760, 10290, 4000, 8000, 3000, 57290, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
+        { name: "009อุบลราชธานี", newCasesCount: 21, oldCasesCount: 7, courseCount: 5, singleCount: 8, physicalExamCount: 5, cancelCount: 2, installmentAmount: 0, newCasesAmount: 183790, oldCasesAmount: 55720, totalAmount: 239510, rank: 18, consultCount: 1, unspecifiedCount: 0, totalCount: 21, shortTermCount: 2, midTermCount: 0, dailyNew: [8000, 4180, 0, 36290, 6000, 60290, 4000, 28250, 49500, 35000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], dailyOld: [8000, 2000, 0, 36290, 6000, 56000, 4000, 2000, 37500, 32000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
+        { name: "010เชียงราย", newCasesCount: 9, oldCasesCount: 4, courseCount: 4, singleCount: 4, physicalExamCount: 0, cancelCount: 2, installmentAmount: 0, newCasesAmount: 114370, oldCasesAmount: 16290, totalAmount: 130660, rank: 19, consultCount: 0, unspecifiedCount: 0, totalCount: 9, shortTermCount: 1, midTermCount: 0, dailyNew: [3200, 2590, 27580, 0, 25000, 9000, 28000, 0, 3500, 31790, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], dailyOld: [0, 2000, 27580, 0, 25000, 0, 28000, 0, 0, 31790, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
+        { name: "011ระยอง", newCasesCount: 29, oldCasesCount: 3, courseCount: 11, singleCount: 8, physicalExamCount: 4, cancelCount: 3, installmentAmount: 0, newCasesAmount: 338167, oldCasesAmount: 54000, totalAmount: 392167, rank: 7, consultCount: 0, unspecifiedCount: 1, totalCount: 28, shortTermCount: 5, midTermCount: 0, dailyNew: [28860, 36290, 5000, 26250, 15000, 74000, 89497, 88260, 2000, 27000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], dailyOld: [28860, 36290, 5000, 0, 15000, 65000, 89497, 69500, 2000, 27000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
+        { name: "012ดอนเมือง", newCasesCount: 29, oldCasesCount: 15, courseCount: 17, singleCount: 4, physicalExamCount: 2, cancelCount: 7, installmentAmount: 25500, newCasesAmount: 504129, oldCasesAmount: 291395, totalAmount: 821024, rank: 1, consultCount: 1, unspecifiedCount: 1, totalCount: 28, shortTermCount: 2, midTermCount: 2, dailyNew: [113250, 63984, 49000, 33290, 25000, 66750, 184000, 52500, 64250, 109000, 40000, 0, 0, 0, 0, 0, 0, 0, 0, 0], dailyOld: [85250, 50589, 23000, 21290, 25000, 0, 111000, 32000, 16000, 100000, 40000, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
+        { name: "013พระราม 9", newCasesCount: 18, oldCasesCount: 8, courseCount: 9, singleCount: 7, physicalExamCount: 0, cancelCount: 5, installmentAmount: 0, newCasesAmount: 227009, oldCasesAmount: 136700, totalAmount: 363709, rank: 11, consultCount: 0, unspecifiedCount: 0, totalCount: 18, shortTermCount: 1, midTermCount: 1, dailyNew: [56000, 39250, 61100, 9000, 49830, 55000, 32499, 26540, 6000, 17000, 11490, 0, 0, 0, 0, 0, 0, 0, 0, 0], dailyOld: [26000, 21750, 57900, 9000, 2580, 55000, 9999, 15290, 6000, 12000, 11490, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
+        { name: "014สุราษฎร์ธานี", newCasesCount: 31, oldCasesCount: 2, courseCount: 8, singleCount: 14, physicalExamCount: 3, cancelCount: 7, installmentAmount: 0, newCasesAmount: 253810, oldCasesAmount: 13199, totalAmount: 267009, rank: 17, consultCount: 0, unspecifiedCount: 0, totalCount: 31, shortTermCount: 3, midTermCount: 3, dailyNew: [58500, 0, 9360, 3000, 9999, 35590, 21500, 67500, 29000, 6290, 24250, 0, 0, 0, 0, 0, 0, 0, 0, 0], dailyOld: [0, 0, 9360, 0, 0, 0, 0, 0, 0, 0, 3839, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
+        { name: "015ท่าพระ", newCasesCount: 18, oldCasesCount: 3, courseCount: 6, singleCount: 5, physicalExamCount: 1, cancelCount: 4, installmentAmount: 0, newCasesAmount: 220570, oldCasesAmount: 57875, totalAmount: 278445, rank: 15, consultCount: 0, unspecifiedCount: 0, totalCount: 18, shortTermCount: 3, midTermCount: 3, dailyNew: [51300, 7180, 6000, 81465, 12000, 35000, 9000, 11000, 25000, 40500, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], dailyOld: [17300, 7180, 6000, 24875, 2520, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
+        { name: "016หนองจอก", newCasesCount: 23, oldCasesCount: 3, courseCount: 10, singleCount: 8, physicalExamCount: 2, cancelCount: 2, installmentAmount: 0, newCasesAmount: 307908, oldCasesAmount: 56195, totalAmount: 364103, rank: 10, consultCount: 0, unspecifiedCount: 0, totalCount: 23, shortTermCount: 1, midTermCount: 2, dailyNew: [22749, 34460, 31775, 45999, 21290, 30000, 14000, 32000, 27580, 82000, 22250, 0, 0, 0, 0, 0, 0, 0, 0, 0], dailyOld: [0, 24000, 0, 0, 0, 0, 0, 0, 0, 32195, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
+        { name: "017นครปฐม", newCasesCount: 18, oldCasesCount: 4, courseCount: 7, singleCount: 3, physicalExamCount: 0, cancelCount: 4, installmentAmount: 0, newCasesAmount: 267580, oldCasesAmount: 57853, totalAmount: 325433, rank: 13, consultCount: 0, unspecifiedCount: 0, totalCount: 18, shortTermCount: 3, midTermCount: 5, dailyNew: [8560, 3000, 20000, 23500, 25000, 23800, 8000, 81750, 65000, 47000, 19803, 0, 0, 0, 0, 0, 0, 0, 0, 0], dailyOld: [0, 0, 0, 0, 25000, 0, 0, 0, 0, 32853, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
+        { name: "018ยะลา", newCasesCount: 22, oldCasesCount: 6, courseCount: 8, singleCount: 6, physicalExamCount: 2, cancelCount: 2, installmentAmount: 0, newCasesAmount: 263950, oldCasesAmount: 47595, totalAmount: 311545, rank: 14, consultCount: 0, unspecifiedCount: 0, totalCount: 22, shortTermCount: 3, midTermCount: 3, dailyNew: [42705, 29920, 4000, 48590, 56000, 33000, 38330, 15000, 0, 44000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], dailyOld: [0, 0, 0, 0, 0, 0, 0, 0, 0, 47595, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] }
       ],
       oldCasesBranches: [
         { name: "000มิสทีน", oldCasesCount: 11, courseCount: 10, singleCount: 1, physicalExamCount: 0, cancelCount: 0, installmentAmount: 0, oldCasesAmount: 179000, totalAmount: 179000 },
@@ -6483,7 +6582,7 @@
 
     function getActiveCasesData() {
       const live = dashboardState.data && dashboardState.data.casesAnalytics;
-      if (live && Array.isArray(live.branches) && live.branches.length > 0) {
+      if (live && Array.isArray(live.branches) && live.branches.length > 0 && live.summary && live.summary.totalRevenue > 0) {
         return live;
       }
       return DEFAULT_CASES_ANALYTICS_DATA;
@@ -6550,6 +6649,92 @@
 
       const mTerm = document.getElementById('casesMidTermBadge');
       if (mTerm) mTerm.textContent = `${summary.midTermCount || 0} เคส`;
+
+      // 1.5 Calculate & Populate Yesterday & Today Revenue Pulse Cards
+      const matrix = data.dailyMatrix || {};
+      const days = Array.isArray(matrix.days) && matrix.days.length > 0 ? matrix.days : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
+      const newTotals = Array.isArray(matrix.newDailyTotals) ? matrix.newDailyTotals : [];
+      const oldTotals = Array.isArray(matrix.oldDailyTotals) ? matrix.oldDailyTotals : [];
+      const combTotals = Array.isArray(matrix.combinedDailyTotals) ? matrix.combinedDailyTotals : [];
+
+      let lastActiveIdx = -1;
+      for (let i = combTotals.length - 1; i >= 0; i--) {
+        if (combTotals[i] > 0) {
+          lastActiveIdx = i;
+          break;
+        }
+      }
+
+      const todayCalDay = new Date().getDate();
+      const yesterdayCalDay = todayCalDay > 1 ? todayCalDay - 1 : 1;
+
+      let todayIdx = days.indexOf(todayCalDay);
+      let yesterdayIdx = days.indexOf(yesterdayCalDay);
+
+      if (yesterdayIdx === -1 || (yesterdayIdx > lastActiveIdx && lastActiveIdx !== -1)) {
+        yesterdayIdx = lastActiveIdx > 0 ? lastActiveIdx - 1 : (lastActiveIdx === 0 ? 0 : -1);
+      }
+      if (todayIdx === -1 || (todayIdx > lastActiveIdx && lastActiveIdx !== -1)) {
+        todayIdx = lastActiveIdx;
+      }
+
+      const yesterdayDayNum = yesterdayIdx !== -1 ? days[yesterdayIdx] : yesterdayCalDay;
+      const todayDayNum = todayIdx !== -1 ? days[todayIdx] : todayCalDay;
+
+      const yComb = yesterdayIdx !== -1 ? (combTotals[yesterdayIdx] || 0) : 0;
+      const yNew = yesterdayIdx !== -1 ? (newTotals[yesterdayIdx] || 0) : 0;
+      const yOld = yesterdayIdx !== -1 ? (oldTotals[yesterdayIdx] || 0) : 0;
+
+      const tComb = todayIdx !== -1 ? (combTotals[todayIdx] || 0) : 0;
+      const tNew = todayIdx !== -1 ? (newTotals[todayIdx] || 0) : 0;
+      const tOld = todayIdx !== -1 ? (oldTotals[todayIdx] || 0) : 0;
+
+      let peakVal = 0;
+      let peakIdx = -1;
+      let activeDaysCount = 0;
+      let sumActiveRev = 0;
+      combTotals.forEach((v, idx) => {
+        if (v > 0) {
+          activeDaysCount++;
+          sumActiveRev += v;
+        }
+        if (v > peakVal) {
+          peakVal = v;
+          peakIdx = idx;
+        }
+      });
+      const dailyAvg = activeDaysCount > 0 ? Math.round(sumActiveRev / activeDaysCount) : 0;
+      const peakDayNum = peakIdx !== -1 ? days[peakIdx] : '-';
+
+      // Update Yesterday Card
+      const yTitle = document.getElementById('casesYesterdayTitle');
+      if (yTitle) yTitle.textContent = `ยอดของเมื่อวานนี้`;
+      const yDateBadge = document.getElementById('casesYesterdayDateBadge');
+      if (yDateBadge) yDateBadge.textContent = `วันที่ ${yesterdayDayNum}`;
+      const yRevText = document.getElementById('casesYesterdayRevenueText');
+      if (yRevText) yRevText.textContent = `${Number(yComb).toLocaleString()} ฿`;
+      const yNewText = document.getElementById('casesYesterdayNewText');
+      if (yNewText) yNewText.textContent = `ใหม่ ฿${Number(yNew).toLocaleString()}`;
+      const yOldText = document.getElementById('casesYesterdayOldText');
+      if (yOldText) yOldText.textContent = `เก่า ฿${Number(yOld).toLocaleString()}`;
+
+      // Update Today Card
+      const tTitle = document.getElementById('casesTodayTitle');
+      if (tTitle) tTitle.textContent = `ยอดของวันนี้`;
+      const tDateBadge = document.getElementById('casesTodayDateBadge');
+      if (tDateBadge) tDateBadge.textContent = `วันที่ ${todayDayNum}`;
+      const tRevText = document.getElementById('casesTodayRevenueText');
+      if (tRevText) tRevText.textContent = `${Number(tComb).toLocaleString()} ฿`;
+      const tSubText = document.getElementById('casesTodaySubText');
+      if (tSubText) tSubText.textContent = tComb > 0 ? `ใหม่ ฿${Number(tNew).toLocaleString()} • เก่า ฿${Number(tOld).toLocaleString()}` : `รอข้อมูลบอทรอบวันนี้`;
+
+      // Update Daily Avg Card
+      const avgRevText = document.getElementById('casesDailyAvgRevenueText');
+      if (avgRevText) avgRevText.textContent = `${Number(dailyAvg).toLocaleString()} ฿`;
+      const peakDetailText = document.getElementById('casesPeakDayDetailText');
+      if (peakDetailText) peakDetailText.textContent = `วันที่สูงสุด: วันที่ ${peakDayNum}`;
+      const peakAmtText = document.getElementById('casesPeakAmountText');
+      if (peakAmtText) peakAmtText.textContent = `฿${Number(peakVal).toLocaleString()}`;
 
       // 2. Render Charts
       renderCasesDailyTrendChart(data);
@@ -7410,6 +7595,81 @@
 
       const fsCancel = document.getElementById('casesFsCancelCount');
       if (fsCancel) fsCancel.textContent = `${Number(summary.cancelCount || 0).toLocaleString()} รายการ`;
+
+      // Yesterday & Today Pulse in Fullscreen View
+      const matrix = data.dailyMatrix || {};
+      const days = Array.isArray(matrix.days) && matrix.days.length > 0 ? matrix.days : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
+      const newTotals = Array.isArray(matrix.newDailyTotals) ? matrix.newDailyTotals : [];
+      const oldTotals = Array.isArray(matrix.oldDailyTotals) ? matrix.oldDailyTotals : [];
+      const combTotals = Array.isArray(matrix.combinedDailyTotals) ? matrix.combinedDailyTotals : [];
+
+      let lastActiveIdx = -1;
+      for (let i = combTotals.length - 1; i >= 0; i--) {
+        if (combTotals[i] > 0) {
+          lastActiveIdx = i;
+          break;
+        }
+      }
+
+      const todayCalDay = new Date().getDate();
+      const yesterdayCalDay = todayCalDay > 1 ? todayCalDay - 1 : 1;
+
+      let todayIdx = days.indexOf(todayCalDay);
+      let yesterdayIdx = days.indexOf(yesterdayCalDay);
+
+      if (yesterdayIdx === -1 || (yesterdayIdx > lastActiveIdx && lastActiveIdx !== -1)) {
+        yesterdayIdx = lastActiveIdx > 0 ? lastActiveIdx - 1 : (lastActiveIdx === 0 ? 0 : -1);
+      }
+      if (todayIdx === -1 || (todayIdx > lastActiveIdx && lastActiveIdx !== -1)) {
+        todayIdx = lastActiveIdx;
+      }
+
+      const yesterdayDayNum = yesterdayIdx !== -1 ? days[yesterdayIdx] : yesterdayCalDay;
+      const todayDayNum = todayIdx !== -1 ? days[todayIdx] : todayCalDay;
+
+      const yComb = yesterdayIdx !== -1 ? (combTotals[yesterdayIdx] || 0) : 0;
+      const yNew = yesterdayIdx !== -1 ? (newTotals[yesterdayIdx] || 0) : 0;
+      const yOld = yesterdayIdx !== -1 ? (oldTotals[yesterdayIdx] || 0) : 0;
+
+      const tComb = todayIdx !== -1 ? (combTotals[todayIdx] || 0) : 0;
+      const tNew = todayIdx !== -1 ? (newTotals[todayIdx] || 0) : 0;
+      const tOld = todayIdx !== -1 ? (oldTotals[todayIdx] || 0) : 0;
+
+      let peakVal = 0;
+      let peakIdx = -1;
+      let activeDaysCount = 0;
+      let sumActiveRev = 0;
+      combTotals.forEach((v, idx) => {
+        if (v > 0) {
+          activeDaysCount++;
+          sumActiveRev += v;
+        }
+        if (v > peakVal) {
+          peakVal = v;
+          peakIdx = idx;
+        }
+      });
+      const dailyAvg = activeDaysCount > 0 ? Math.round(sumActiveRev / activeDaysCount) : 0;
+      const peakDayNum = peakIdx !== -1 ? days[peakIdx] : '-';
+
+      const fsYLabel = document.getElementById('casesFsYesterdayLabel');
+      if (fsYLabel) fsYLabel.textContent = `ยอดของเมื่อวานนี้ (วันที่ ${yesterdayDayNum})`;
+      const fsYAmt = document.getElementById('casesFsYesterdayAmount');
+      if (fsYAmt) fsYAmt.textContent = `฿ ${Number(yComb).toLocaleString()}`;
+      const fsYBd = document.getElementById('casesFsYesterdayBreakdown');
+      if (fsYBd) fsYBd.textContent = `ใหม่ ฿${Number(yNew).toLocaleString()} • เก่า ฿${Number(yOld).toLocaleString()}`;
+
+      const fsTLabel = document.getElementById('casesFsTodayLabel');
+      if (fsTLabel) fsTLabel.textContent = `ยอดของวันนี้ (วันที่ ${todayDayNum})`;
+      const fsTAmt = document.getElementById('casesFsTodayAmount');
+      if (fsTAmt) fsTAmt.textContent = `฿ ${Number(tComb).toLocaleString()}`;
+      const fsTSt = document.getElementById('casesFsTodayStatus');
+      if (fsTSt) fsTSt.textContent = tComb > 0 ? `ใหม่ ฿${Number(tNew).toLocaleString()} • เก่า ฿${Number(tOld).toLocaleString()}` : `รอข้อมูลบอทรอบวันนี้`;
+
+      const fsAvgAmt = document.getElementById('casesFsDailyAvgAmount');
+      if (fsAvgAmt) fsAvgAmt.textContent = `฿ ${Number(dailyAvg).toLocaleString()}`;
+      const fsPeakText = document.getElementById('casesFsPeakDayText');
+      if (fsPeakText) fsPeakText.textContent = `Peak: วันที่ ${peakDayNum} (฿${Number(peakVal).toLocaleString()})`;
 
       // 19 Branches Grid (Sorted by Total Amount)
       const branchGrid = document.getElementById('casesFsBranchGrid');

@@ -55,7 +55,9 @@ function doGet(e) {
       const cache = CacheService.getScriptCache();
 
       // ⚡ FAST CACHE: หากมีแคชและไม่ได้สั่งรีเฟรช ตอบกลับทันทีใน 0.1-0.2 วินาที!
-      if (!isForcedRefresh) {
+      if (isForcedRefresh) {
+        cache.remove(cacheKey);
+      } else {
         const cachedJson = cache.get(cacheKey);
         if (cachedJson) {
           return ContentService.createTextOutput(cachedJson).setMimeType(ContentService.MimeType.JSON);
@@ -66,7 +68,7 @@ function doGet(e) {
       const data = getAllDashboardData(periodParam);
       const jsonOutput = JSON.stringify({
         status: 'success',
-        cached: true,
+        cached: !isForcedRefresh,
         timestamp: new Date().toISOString(),
         data: data
       });
@@ -1656,17 +1658,6 @@ function getCasesDashboardDataFast(ss) {
   try {
     if (!ss) ss = SpreadsheetApp.openById(SPREADSHEET_ID);
     const allSheets = ss.getSheets();
-    let overviewSheet = null;
-    let botSheet = null;
-
-    allSheets.forEach(sheet => {
-      const name = sheet.getName().trim();
-      if (name === 'ภาพรวมเดือนนี้' || name.indexOf('ภาพรวมเดือน') !== -1) {
-        overviewSheet = sheet;
-      } else if (name === 'From บอทรายงานเคสเก่าใหม่' || name.indexOf('บอทรายงานเคสเก่าใหม่') !== -1) {
-        botSheet = sheet;
-      }
-    });
 
     function cleanNum(val) {
       if (val === null || val === undefined || val === '') return 0;
@@ -1677,8 +1668,59 @@ function getCasesDashboardDataFast(ss) {
     }
 
     function cleanStr(val) {
-      return val ? String(val).trim() : '';
+      return val !== null && val !== undefined ? String(val).trim() : '';
     }
+
+    function cleanThai(str) {
+      if (!str) return '';
+      return String(str)
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[\u0E31\u0E34-\u0E3A\u0E47-\u0E4E]/g, '') // ลบสระบน-ล่างและวรรณยุกต์
+        .replace(/[\s\-_]/g, '')
+        .replace(/\u00A0/g, '')
+        .replace(/\uFEFF/g, '')
+        .toLowerCase();
+    }
+
+    function normalizeBranchCore(name) {
+      if (!name) return '';
+      let s = String(name).trim()
+        .replace(/^\d{1,4}/, '') // ตัดรหัสตัวเลขด้านหน้า เช่น 000, 001, 012
+        .replace(/^สาขา/g, '')   // ตัดคำว่า "สาขา" ด้านหน้า
+        .replace(/[\s\-_]/g, ''); // ตัดช่องว่าง
+      let c = cleanThai(s);
+      c = c.replace(/เกา/g, '9').replace(/พระราม9/g, 'พระราม9');
+      c = c.replace(/มิตรทน/g, 'มสทน').replace(/มดทาวน/g, 'มสทน').replace(/มสทน/g, 'มสทน');
+      return c;
+    }
+
+    function parseDayNum(cell) {
+      if (cell === null || cell === undefined || cell === '') return null;
+      if (cell instanceof Date) {
+        return cell.getDate();
+      }
+      if (typeof cell === 'number') {
+        const n = Math.round(cell);
+        return (n >= 1 && n <= 31) ? n : null;
+      }
+      const s = String(cell).trim();
+      const n = parseInt(s, 10);
+      return (!isNaN(n) && n >= 1 && n <= 31) ? n : null;
+    }
+
+    let overviewSheet = null;
+    let botSheet = null;
+
+    allSheets.forEach(sheet => {
+      const name = sheet.getName();
+      const c = cleanThai(name);
+      if (c.includes('ภาพรวมเดอน') || c.includes('ภาพรวม')) {
+        overviewSheet = sheet;
+      } else if (c.includes('บอทรายงาน') || c.includes('เคสเกาใหม') || c.includes('fromบอท')) {
+        botSheet = sheet;
+      }
+    });
 
     let result = {
       monthTitle: 'November 2026',
@@ -1706,6 +1748,13 @@ function getCasesDashboardDataFast(ss) {
         newDailyTotals: [],
         oldDailyTotals: [],
         combinedDailyTotals: []
+      },
+      debugInfo: {
+        overviewFound: !!overviewSheet,
+        overviewName: overviewSheet ? overviewSheet.getName() : '',
+        botFound: !!botSheet,
+        botName: botSheet ? botSheet.getName() : '',
+        allSheetNames: allSheets.map(s => s.getName())
       }
     };
 
@@ -1715,25 +1764,25 @@ function getCasesDashboardDataFast(ss) {
     if (overviewSheet) {
       const oRows = overviewSheet.getDataRange().getValues();
       if (oRows.length > 2) {
-        // หาชื่อเดือน เช่น November 2026
         for (let r = 0; r < Math.min(5, oRows.length); r++) {
           for (let c = 0; c < oRows[r].length; c++) {
             const v = cleanStr(oRows[r][c]);
-            if (v.toLowerCase().includes('november') || v.toLowerCase().includes('2026') || v.includes('พฤศจิกายน') || v.includes('เดือน')) {
+            const cLower = v.toLowerCase();
+            if (cLower.includes('november') || cLower.includes('2026') || v.includes('พฤศจิกายน') || v.includes('เดือน')) {
               result.monthTitle = v;
               break;
             }
           }
-          if (result.monthTitle !== 'November 2026') break;
         }
 
         // หาจุดเริ่มต้นของตารางที่ 1 (เคสใหม่ / ภาพรวมหลัก)
         let t1HeaderRow = -1;
-        let colBranch = 3; // default Col D (index 3)
+        let colBranch = -1;
 
         for (let r = 0; r < Math.min(10, oRows.length); r++) {
           for (let c = 0; c < oRows[r].length; c++) {
-            if (cleanStr(oRows[r][c]) === 'สาขา') {
+            const v = cleanThai(oRows[r][c]);
+            if (v === 'สาขา' || v.includes('สาขา')) {
               t1HeaderRow = r;
               colBranch = c;
               break;
@@ -1742,18 +1791,22 @@ function getCasesDashboardDataFast(ss) {
           if (t1HeaderRow !== -1) break;
         }
 
-        if (t1HeaderRow !== -1) {
-          // อ่านรายการสาขาในตารางที่ 1 (จนถึงแถว 'รวม')
+        if (t1HeaderRow === -1 && oRows.length > 3) {
+          t1HeaderRow = 3; // default Row 4 (index 3)
+          colBranch = 4;   // default Col E (index 4)
+        }
+
+        if (t1HeaderRow !== -1 && colBranch !== -1) {
           let r = t1HeaderRow + 1;
           while (r < oRows.length) {
-            const bName = cleanStr(oRows[r][colBranch]);
-            if (!bName) {
+            const rawName = cleanStr(oRows[r][colBranch]);
+            const cName = cleanThai(rawName);
+            if (!rawName) {
               r++;
               continue;
             }
 
-            if (bName === 'รวม' || bName.includes('ยอดรวม') || bName.includes('ทั้งหมด')) {
-              // บันทึกแถวรวมของตารางที่ 1
+            if (cName === 'รวม' || cName.includes('ยอดรวม') || cName.includes('ทงหมด')) {
               result.summary.newCasesCount = cleanNum(oRows[r][colBranch + 1]);
               result.summary.oldCasesCount = cleanNum(oRows[r][colBranch + 2]);
               result.summary.courseCount = cleanNum(oRows[r][colBranch + 3]);
@@ -1772,9 +1825,12 @@ function getCasesDashboardDataFast(ss) {
               break;
             }
 
-            // แถวสาขา
-            const bItem = {
-              name: bName,
+            const newAmt = cleanNum(oRows[r][colBranch + 8]);
+            const oldAmt = cleanNum(oRows[r][colBranch + 9]);
+            const totAmt = cleanNum(oRows[r][colBranch + 10]) || (newAmt + oldAmt);
+
+            result.branches.push({
+              name: rawName,
               newCasesCount: cleanNum(oRows[r][colBranch + 1]),
               oldCasesCount: cleanNum(oRows[r][colBranch + 2]),
               courseCount: cleanNum(oRows[r][colBranch + 3]),
@@ -1782,9 +1838,9 @@ function getCasesDashboardDataFast(ss) {
               physicalExamCount: cleanNum(oRows[r][colBranch + 5]),
               cancelCount: cleanNum(oRows[r][colBranch + 6]),
               installmentAmount: cleanNum(oRows[r][colBranch + 7]),
-              newCasesAmount: cleanNum(oRows[r][colBranch + 8]),
-              oldCasesAmount: cleanNum(oRows[r][colBranch + 9]),
-              totalAmount: cleanNum(oRows[r][colBranch + 10]),
+              newCasesAmount: newAmt,
+              oldCasesAmount: oldAmt,
+              totalAmount: totAmt,
               rank: cleanNum(oRows[r][colBranch + 11]),
               consultCount: cleanNum(oRows[r][colBranch + 12]),
               unspecifiedCount: cleanNum(oRows[r][colBranch + 13]),
@@ -1793,15 +1849,15 @@ function getCasesDashboardDataFast(ss) {
               midTermCount: cleanNum(oRows[r][colBranch + 16]),
               dailyNew: [],
               dailyOld: []
-            };
-            result.branches.push(bItem);
+            });
             r++;
           }
 
-          // หาจุดเริ่มต้นของตารางที่ 2 (เคสเก่า แถว 28 เป็นต้นไป)
+          // ตารางที่ 2: เคสเก่า
           let t2HeaderRow = -1;
           for (let rIdx = r + 1; rIdx < oRows.length; rIdx++) {
-            if (cleanStr(oRows[rIdx][colBranch]) === 'สาขา') {
+            const v = cleanThai(oRows[rIdx][colBranch]);
+            if (v === 'สาขา' || v.includes('สาขา')) {
               t2HeaderRow = rIdx;
               break;
             }
@@ -1810,15 +1866,16 @@ function getCasesDashboardDataFast(ss) {
           if (t2HeaderRow !== -1) {
             let r2 = t2HeaderRow + 1;
             while (r2 < oRows.length) {
-              const bName = cleanStr(oRows[r2][colBranch]);
-              if (!bName) {
+              const rawName = cleanStr(oRows[r2][colBranch]);
+              const cName = cleanThai(rawName);
+              if (!rawName) {
                 r2++;
                 continue;
               }
-              if (bName === 'รวม' || bName.includes('ยอดรวม')) break;
+              if (cName === 'รวม' || cName.includes('ยอดรวม') || cName.includes('ทงหมด')) break;
 
               result.oldCasesBranches.push({
-                name: bName,
+                name: rawName,
                 oldCasesCount: cleanNum(oRows[r2][colBranch + 2]),
                 courseCount: cleanNum(oRows[r2][colBranch + 3]),
                 singleCount: cleanNum(oRows[r2][colBranch + 4]),
@@ -1841,16 +1898,16 @@ function getCasesDashboardDataFast(ss) {
     if (botSheet) {
       const bRows = botSheet.getDataRange().getValues();
       if (bRows.length > 1) {
-        // หาตารางที่ 1: เคสใหม่รายวัน
         let headerRow1 = -1;
-        let dayColStart = 2; // default Col C (index 2)
+        let dayColStart = -1;
         let days = [];
 
-        // ตรวจหาแถวหัวตารางวันที่
-        for (let r = 0; r < Math.min(6, bRows.length); r++) {
-          for (let c = 1; c < bRows[r].length; c++) {
-            const v = parseInt(bRows[r][c]);
-            if (v === 1 && parseInt(bRows[r][c + 1]) === 2) {
+        // ค้นหาแถวหัวตารางวันที่ เช่น 1, 2, 3...
+        for (let r = 0; r < Math.min(8, bRows.length); r++) {
+          for (let c = 0; c < bRows[r].length; c++) {
+            const d1 = parseDayNum(bRows[r][c]);
+            const d2 = parseDayNum(bRows[r][c + 1]);
+            if (d1 === 1 && d2 === 2) {
               headerRow1 = r;
               dayColStart = c;
               break;
@@ -1859,127 +1916,211 @@ function getCasesDashboardDataFast(ss) {
           if (headerRow1 !== -1) break;
         }
 
-        if (headerRow1 !== -1) {
-          for (let c = dayColStart; c < bRows[headerRow1].length; c++) {
-            const dVal = parseInt(bRows[headerRow1][c]);
-            if (!isNaN(dVal) && dVal >= 1 && dVal <= 31) {
-              days.push(dVal);
-            } else {
+        if (headerRow1 === -1) {
+          headerRow1 = 0;
+          dayColStart = 2; // default Col C
+        }
+
+        // ดึงรายการวันที่ทั้งหมด (1..31)
+        for (let c = dayColStart; c < bRows[headerRow1].length; c++) {
+          const dVal = parseDayNum(bRows[headerRow1][c]);
+          if (dVal !== null) {
+            days.push(dVal);
+          } else if (days.length > 0) {
+            break;
+          }
+        }
+
+        if (days.length === 0) {
+          for (let d = 1; d <= 31; d++) days.push(d);
+        }
+        result.dailyMatrix.days = days;
+
+        const branchCol = Math.max(0, dayColStart - 1); // Col B (index 1)
+        const branchDailyNewMap = {};
+        let r1 = headerRow1 + 1;
+
+        while (r1 < bRows.length) {
+          const rawName = cleanStr(bRows[r1][branchCol]);
+          const rawColA = cleanStr(bRows[r1][0]);
+          const cName = cleanThai(rawName);
+          const cNameA = cleanThai(rawColA);
+
+          const isExplicitTotal = cName === 'รวม' || cName.includes('ยอดรวม') || cName.includes('ทงหมด') || cNameA === 'รวม' || cNameA.includes('ยอดรวม');
+          const isBlankWithBranches = !rawName && Object.keys(branchDailyNewMap).length >= 10;
+
+          if (isExplicitTotal || isBlankWithBranches) {
+            for (let i = 0; i < days.length; i++) {
+              result.dailyMatrix.newDailyTotals.push(cleanNum(bRows[r1][dayColStart + i]));
+            }
+            r1++;
+            break;
+          }
+
+          if (!rawName) {
+            r1++;
+            continue;
+          }
+
+          const dailyVals = [];
+          for (let i = 0; i < days.length; i++) {
+            dailyVals.push(cleanNum(bRows[r1][dayColStart + i]));
+          }
+          branchDailyNewMap[rawName] = dailyVals;
+          r1++;
+        }
+
+        // หาก newDailyTotals ยังไม่มี ให้บวกผลรวมจากทุกสาขาอัตโนมัติ
+        if (result.dailyMatrix.newDailyTotals.length === 0 || result.dailyMatrix.newDailyTotals.every(v => v === 0)) {
+          result.dailyMatrix.newDailyTotals = days.map((_, i) => {
+            return Object.values(branchDailyNewMap).reduce((sum, arr) => sum + (arr[i] || 0), 0);
+          });
+        }
+
+        // ตารางที่ 2: เคสเก่ารายวัน
+        let headerRow2 = -1;
+        for (let r = r1; r < bRows.length; r++) {
+          for (let c = 0; c < bRows[r].length; c++) {
+            const d1 = parseDayNum(bRows[r][c]);
+            const d2 = parseDayNum(bRows[r][c + 1]);
+            if (d1 === 1 && d2 === 2) {
+              headerRow2 = r;
               break;
             }
           }
-          result.dailyMatrix.days = days;
+          if (headerRow2 !== -1) break;
+        }
 
-          // ดึงยอดรายวันของเคสใหม่ (จากแถว headerRow1 + 1 จนถึงแถว 'รวม')
-          let r1 = headerRow1 + 1;
-          const branchCol = dayColStart - 1; // Col B (index 1)
-          const branchDailyNewMap = {};
+        const branchDailyOldMap = {};
+        if (headerRow2 !== -1) {
+          let r2 = headerRow2 + 1;
+          while (r2 < bRows.length) {
+            const rawName = cleanStr(bRows[r2][branchCol]);
+            const rawColA = cleanStr(bRows[r2][0]);
+            const cName = cleanThai(rawName);
+            const cNameA = cleanThai(rawColA);
 
-          while (r1 < bRows.length) {
-            const bName = cleanStr(bRows[r1][branchCol]);
-            if (!bName) {
-              r1++;
+            const isExplicitTotal = cName === 'รวม' || cName.includes('ยอดรวม') || cName.includes('ทงหมด') || cNameA === 'รวม' || cNameA.includes('ยอดรวม');
+            const isBlankWithBranches = !rawName && Object.keys(branchDailyOldMap).length >= 10;
+
+            if (isExplicitTotal || isBlankWithBranches) {
+              for (let i = 0; i < days.length; i++) {
+                result.dailyMatrix.oldDailyTotals.push(cleanNum(bRows[r2][dayColStart + i]));
+              }
+              break;
+            }
+
+            if (!rawName) {
+              r2++;
               continue;
             }
-            if (bName === 'รวม' || bName.includes('ยอดรวม')) {
-              // แถวรวมรายวันของเคสใหม่
-              for (let i = 0; i < days.length; i++) {
-                result.dailyMatrix.newDailyTotals.push(cleanNum(bRows[r1][dayColStart + i]));
-              }
-              break;
-            }
 
-            // ยอดรายวันของแต่ละสาขา
-            const dailyVals = [];
+            const dailyOldVals = [];
             for (let i = 0; i < days.length; i++) {
-              dailyVals.push(cleanNum(bRows[r1][dayColStart + i]));
+              dailyOldVals.push(cleanNum(bRows[r2][dayColStart + i]));
             }
-            branchDailyNewMap[bName] = dailyVals;
-            r1++;
+            branchDailyOldMap[rawName] = dailyOldVals;
+            r2++;
           }
+        }
 
-          // หาตารางที่ 2: เคสเก่ารายวัน (ช่วงแถว 28-35 เป็นต้นไป)
-          let headerRow2 = -1;
-          for (let r = r1 + 1; r < bRows.length; r++) {
-            for (let c = 1; c < bRows[r].length; c++) {
-              const v = parseInt(bRows[r][c]);
-              if (v === 1 && parseInt(bRows[r][c + 1]) === 2) {
-                headerRow2 = r;
-                break;
-              }
-            }
-            if (headerRow2 !== -1) break;
-          }
+        // หาก oldDailyTotals ยังไม่มี ให้บวกผลรวมจากทุกสาขาอัตโนมัติ
+        if (result.dailyMatrix.oldDailyTotals.length === 0 || result.dailyMatrix.oldDailyTotals.every(v => v === 0)) {
+          result.dailyMatrix.oldDailyTotals = days.map((_, i) => {
+            return Object.values(branchDailyOldMap).reduce((sum, arr) => sum + (arr[i] || 0), 0);
+          });
+        }
 
-          const branchDailyOldMap = {};
-          if (headerRow2 !== -1) {
-            let r2 = headerRow2 + 1;
-            while (r2 < bRows.length) {
-              const bName = cleanStr(bRows[r2][branchCol]);
-              if (!bName) {
-                r2++;
-                continue;
-              }
-              if (bName === 'รวม' || bName.includes('ยอดรวม')) {
-                // แถวรวมรายวันของเคสเก่า
-                for (let i = 0; i < days.length; i++) {
-                  result.dailyMatrix.oldDailyTotals.push(cleanNum(bRows[r2][dayColStart + i]));
-                }
-                break;
-              }
+        // รวมยอด Daily Totals (New + Old)
+        result.dailyMatrix.combinedDailyTotals = days.map((_, i) => {
+          const nTot = result.dailyMatrix.newDailyTotals[i] || 0;
+          const oTot = result.dailyMatrix.oldDailyTotals[i] || 0;
+          return nTot + oTot;
+        });
 
-              const dailyOldVals = [];
-              for (let i = 0; i < days.length; i++) {
-                dailyOldVals.push(cleanNum(bRows[r2][dayColStart + i]));
-              }
-              branchDailyOldMap[bName] = dailyOldVals;
-              r2++;
-            }
-          }
-
-          // รวมยอด Daily Totals (New + Old)
-          for (let i = 0; i < days.length; i++) {
-            const nTot = result.dailyMatrix.newDailyTotals[i] || 0;
-            const oTot = result.dailyMatrix.oldDailyTotals[i] || 0;
-            result.dailyMatrix.combinedDailyTotals.push(nTot + oTot);
-          }
-
-          // Map ข้อมูลรายวันกลับเข้าไปใน result.branches แต่ละสาขา
+        // หาก branches จาก Overview Sheet ว่าง ให้สร้างขึ้นจาก Bot Sheet โดยตรงทันที!
+        if (result.branches.length === 0) {
+          const allBotBranchNames = Array.from(new Set([...Object.keys(branchDailyNewMap), ...Object.keys(branchDailyOldMap)]));
+          allBotBranchNames.forEach(bName => {
+            const dNew = branchDailyNewMap[bName] || new Array(days.length).fill(0);
+            const dOld = branchDailyOldMap[bName] || new Array(days.length).fill(0);
+            const sumNew = dNew.reduce((a, b) => a + b, 0);
+            const sumOld = dOld.reduce((a, b) => a + b, 0);
+            result.branches.push({
+              name: bName,
+              newCasesCount: 0,
+              oldCasesCount: 0,
+              courseCount: 0,
+              singleCount: 0,
+              physicalExamCount: 0,
+              cancelCount: 0,
+              installmentAmount: 0,
+              newCasesAmount: sumNew,
+              oldCasesAmount: sumOld,
+              totalAmount: sumNew + sumOld,
+              rank: 0,
+              consultCount: 0,
+              unspecifiedCount: 0,
+              totalCount: 0,
+              shortTermCount: 0,
+              midTermCount: 0,
+              dailyNew: dNew,
+              dailyOld: dOld
+            });
+          });
+        } else {
+          // Map ข้อมูลรายวันด้วยระบบ Normalize Branch Core ที่ตัดทั้งตัวเลขและคำว่า "สาขา"
           result.branches.forEach(b => {
-            let matchedNew = branchDailyNewMap[b.name];
-            let matchedOld = branchDailyOldMap[b.name];
+            const bCore = normalizeBranchCore(b.name);
 
-            if (!matchedNew) {
-              const bKey = Object.keys(branchDailyNewMap).find(k => k.includes(b.name) || b.name.includes(k));
-              if (bKey) matchedNew = branchDailyNewMap[bKey];
+            let matchedNew = null;
+            let matchedOld = null;
+
+            for (const k in branchDailyNewMap) {
+              const kCore = normalizeBranchCore(k);
+              if (kCore === bCore || kCore.includes(bCore) || bCore.includes(kCore)) {
+                matchedNew = branchDailyNewMap[k];
+                break;
+              }
             }
-            if (!matchedOld) {
-              const bKey = Object.keys(branchDailyOldMap).find(k => k.includes(b.name) || b.name.includes(k));
-              if (bKey) matchedOld = branchDailyOldMap[bKey];
+
+            for (const k in branchDailyOldMap) {
+              const kCore = normalizeBranchCore(k);
+              if (kCore === bCore || kCore.includes(bCore) || bCore.includes(kCore)) {
+                matchedOld = branchDailyOldMap[k];
+                break;
+              }
             }
 
             b.dailyNew = matchedNew || new Array(days.length).fill(0);
             b.dailyOld = matchedOld || new Array(days.length).fill(0);
+
+            // หาก Overview ไม่มียอดเงินรายสาขา ให้คำนวณจากยอดสะสมรายวันแทน
+            if (b.totalAmount === 0) {
+              b.newCasesAmount = b.dailyNew.reduce((x, y) => x + y, 0);
+              b.oldCasesAmount = b.dailyOld.reduce((x, y) => x + y, 0);
+              b.totalAmount = b.newCasesAmount + b.oldCasesAmount;
+            }
           });
         }
       }
     }
 
-    // คำนวณสรุปเพิ่มเติมหากในแถวรวมยังไม่มี
+    // คำนวณสรุปผลรวมหากยังเป็น 0
     if (result.summary.totalRevenue === 0 && result.branches.length > 0) {
       result.branches.forEach(b => {
-        result.summary.newCasesRevenue += b.newCasesAmount;
-        result.summary.oldCasesRevenue += b.oldCasesAmount;
-        result.summary.totalRevenue += b.totalAmount;
-        result.summary.newCasesCount += b.newCasesCount;
-        result.summary.oldCasesCount += b.oldCasesCount;
-        result.summary.courseCount += b.courseCount;
-        result.summary.singleCount += b.singleCount;
-        result.summary.physicalExamCount += b.physicalExamCount;
-        result.summary.cancelCount += b.cancelCount;
-        result.summary.installmentAmount += b.installmentAmount;
-        result.summary.shortTermCount += b.shortTermCount;
-        result.summary.midTermCount += b.midTermCount;
+        result.summary.newCasesRevenue += (b.newCasesAmount || 0);
+        result.summary.oldCasesRevenue += (b.oldCasesAmount || 0);
+        result.summary.totalRevenue += (b.totalAmount || 0);
+        result.summary.newCasesCount += (b.newCasesCount || 0);
+        result.summary.oldCasesCount += (b.oldCasesCount || 0);
+        result.summary.courseCount += (b.courseCount || 0);
+        result.summary.singleCount += (b.singleCount || 0);
+        result.summary.physicalExamCount += (b.physicalExamCount || 0);
+        result.summary.cancelCount += (b.cancelCount || 0);
+        result.summary.installmentAmount += (b.installmentAmount || 0);
+        result.summary.shortTermCount += (b.shortTermCount || 0);
+        result.summary.midTermCount += (b.midTermCount || 0);
       });
       result.summary.totalCasesCount = result.summary.newCasesCount + result.summary.oldCasesCount;
     }
@@ -1987,6 +2128,7 @@ function getCasesDashboardDataFast(ss) {
     return result;
 
   } catch (err) {
+    console.error('getCasesDashboardDataFast error:', err);
     return {
       error: err.message,
       monthTitle: 'November 2026',
