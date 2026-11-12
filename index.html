@@ -2056,12 +2056,18 @@
           <!-- Top Row: Total Case Revenue & Core Status -->
           <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-[#2B3138] pb-5">
             <div>
-              <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-[#1F332A] border border-[#2E5240] text-[#9AC7AF] text-xs font-bold">
-                <i data-lucide="layers" class="w-3.5 h-3.5 text-[#5B826D]"></i>
-                <span id="casesMonthBadge">รายงานเคสประจำเดือน พฤศจิกายน 2569</span>
+              <div class="flex flex-wrap items-center gap-2">
+                <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-[#1F332A] border border-[#2E5240] text-[#9AC7AF] text-xs font-bold">
+                  <i data-lucide="layers" class="w-3.5 h-3.5 text-[#5B826D]"></i>
+                  <span id="casesMonthBadge">รายงานเคสประจำเดือน พฤศจิกายน 2569</span>
+                </div>
+                <button type="button" onclick="toggleCasesFullscreenView(true)" title="เปิดโหมดเต็มจอเน้นเฉพาะยอดเงิน (Fullscreen Focus)" class="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-[#243547] hover:bg-[#30475E] border border-[#3E5C7D] text-[#B8D5F2] text-xs font-bold transition shadow-xs active:scale-95 cursor-pointer">
+                  <i data-lucide="maximize-2" class="w-3.5 h-3.5 text-[#7CAADB]"></i>
+                  <span>🖥️ โหมดเต็มจอ (เห็นแต่ยอด)</span>
+                </button>
               </div>
               <div class="flex items-baseline space-x-3 mt-2.5">
-                <div class="text-3xl sm:text-4xl font-black tracking-tight text-[#E6EDF3]" id="casesTotalRevenueBanner">0 ฿</div>
+                <div class="text-3xl sm:text-5xl font-black tracking-tight text-white font-mono" id="casesTotalRevenueBanner">0 ฿</div>
                 <span class="text-xs text-[#8A95A0] font-medium">ยอดรายได้รวมทุกเคส (19 สาขา)</span>
               </div>
               <p class="text-xxs sm:text-xs text-[#8A95A0] mt-1" id="casesSubBannerText">
@@ -2237,11 +2243,15 @@
               <p class="text-xs text-slate-500 mt-0.5">เลือกสลับมุมมองระหว่าง **สรุปภาพรวม 19 สาขา**, **ตารางไขว้รายวัน 1–31 (Matrix)**, หรือ **ตารางเคสเก่าโดยเฉพาะ**</p>
             </div>
 
-            <!-- 3 Mode Buttons -->
+            <!-- 4 Mode Buttons -->
             <div class="inline-flex flex-wrap items-center bg-slate-200/80 p-1 rounded-xl border border-slate-300/80 gap-1 self-start lg:self-auto">
               <button type="button" onclick="setCasesViewMode('overview')" id="btnCasesMode-overview" class="px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 bg-white text-slate-900 shadow-2xs">
                 <i data-lucide="table" class="w-3.5 h-3.5 text-teal-600"></i>
                 <span>สรุปภาพรวมสาขา</span>
+              </button>
+              <button type="button" onclick="setCasesViewMode('revenue_only')" id="btnCasesMode-revenue_only" class="px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center space-x-1.5 text-slate-600 hover:text-slate-900">
+                <i data-lucide="coins" class="w-3.5 h-3.5 text-emerald-600"></i>
+                <span>เน้นเฉพาะยอดเงิน</span>
               </button>
               <button type="button" onclick="setCasesViewMode('matrix')" id="btnCasesMode-matrix" class="px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center space-x-1.5 text-slate-600 hover:text-slate-900">
                 <i data-lucide="calendar" class="w-3.5 h-3.5 text-indigo-600"></i>
@@ -3013,6 +3023,135 @@
   <div id="globalToast" class="fixed bottom-5 right-5 z-50 px-4 py-3 rounded-2xl bg-slate-900 text-white text-xs font-semibold shadow-2xl border border-slate-700 flex items-center space-x-2.5 transition-all duration-300 opacity-0 translate-y-4 pointer-events-none">
     <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
     <span id="globalToastText">ดำเนินการสำเร็จ</span>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- 🖥️ FULL SCREEN REVENUE EXECUTIVE DISPLAY (โหมดเต็มจอเน้นเฉพาะยอดเงิน) -->
+  <!-- ===================================================================== -->
+  <div id="casesRevenueFullscreenModal" class="fixed inset-0 z-50 bg-[#0C0E10] text-[#E6EDF3] overflow-y-auto hidden select-none">
+    <div class="min-h-screen p-4 sm:p-6 md:p-8 lg:p-10 flex flex-col justify-between max-w-[1700px] mx-auto space-y-6">
+      
+      <!-- Top Control Bar -->
+      <div class="flex items-center justify-between border-b border-[#22272E] pb-4">
+        <div class="flex items-center space-x-3">
+          <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xxs font-bold bg-[#1B2B23] text-[#78B38E] border border-[#2B4737]">
+            <span class="w-2 h-2 mr-1.5 rounded-full bg-[#46A76E] animate-pulse"></span>
+            EXECUTIVE REVENUE DISPLAY
+          </span>
+          <span class="text-xs sm:text-sm font-bold text-[#8B949E]" id="casesFsMonthText">พฤศจิกายน 2569</span>
+        </div>
+        
+        <div class="flex items-center space-x-2">
+          <button type="button" onclick="toggleNativeBrowserFullscreen()" title="สลับเต็มจอเบราว์เซอร์" class="px-3 py-1.5 rounded-xl bg-[#1A1E24] hover:bg-[#252C36] text-[#C9D1D9] text-xs font-semibold border border-[#30363D] transition flex items-center space-x-1.5 cursor-pointer">
+            <i data-lucide="expand" class="w-3.5 h-3.5"></i>
+            <span class="hidden sm:inline">สลับเต็มจอเบราว์เซอร์</span>
+          </button>
+          <button type="button" onclick="toggleCasesFullscreenView(false)" title="ออกจากโหมดเต็มจอ (ESC)" class="px-3.5 py-1.5 rounded-xl bg-[#2D1B1B] hover:bg-[#3D2222] text-[#F87171] text-xs font-bold border border-[#522929] transition flex items-center space-x-1.5 cursor-pointer">
+            <i data-lucide="x" class="w-4 h-4"></i>
+            <span>ปิดเต็มจอ (ESC)</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- MAIN HERO: GIANT TOTAL REVENUE -->
+      <div class="text-center py-4 sm:py-6">
+        <span class="text-xs sm:text-sm font-bold tracking-widest text-[#8B949E] uppercase block mb-1">
+          ยอดรายได้รวมทุกเคส (GRAND TOTAL REVENUE)
+        </span>
+        <div class="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black tracking-tight text-white font-mono" id="casesFsTotalRevenue">
+          0 ฿
+        </div>
+        <div class="flex flex-wrap items-center justify-center gap-3 sm:gap-6 mt-3 text-xs sm:text-sm text-[#8B949E] font-medium">
+          <span id="casesFsTotalBranchesBadge">19 สาขาทั่วประเทศ</span>
+          <span>•</span>
+          <span id="casesFsTotalCasesCount">รวมทั้งหมด 0 เคส</span>
+          <span>•</span>
+          <span id="casesFsAvgPerBranch">เฉลี่ยสาขาละ 0 ฿</span>
+        </div>
+      </div>
+
+      <!-- SECONDARY SPLIT: NEW CASES vs OLD CASES (2 GIANT CARDS) -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
+        <!-- New Cases Card -->
+        <div class="bg-[#141A18] border-2 border-[#1E3B2E] rounded-2xl p-5 sm:p-7 relative overflow-hidden">
+          <div class="flex items-center justify-between mb-3">
+            <span class="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[#1C3328] text-[#86CDA5] border border-[#274B39]">
+              <i data-lucide="sparkles" class="w-3.5 h-3.5 text-[#5B826D]"></i>
+              <span>เคสใหม่ (NEW CASES)</span>
+            </span>
+            <span class="text-sm font-black text-[#86CDA5]" id="casesFsNewPct">0% ของรายได้</span>
+          </div>
+          <div class="text-4xl sm:text-5xl lg:text-6xl font-black text-[#E6EDF3] font-mono tracking-tight" id="casesFsNewAmount">
+            0 ฿
+          </div>
+          <div class="mt-3 flex items-center justify-between text-xs text-[#8B949E] pt-3 border-t border-[#1E3B2E]/60">
+            <span id="casesFsNewCountText">0 เคส</span>
+            <span id="casesFsNewAvgText">เฉลี่ยเคสละ 0 ฿</span>
+          </div>
+        </div>
+
+        <!-- Old Cases Card -->
+        <div class="bg-[#1C1714] border-2 border-[#452A1C] rounded-2xl p-5 sm:p-7 relative overflow-hidden">
+          <div class="flex items-center justify-between mb-3">
+            <span class="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[#332219] text-[#E0A080] border border-[#523322]">
+              <i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-[#C58569]"></i>
+              <span>เคสเก่า (OLD CASES)</span>
+            </span>
+            <span class="text-sm font-black text-[#E0A080]" id="casesFsOldPct">0% ของรายได้</span>
+          </div>
+          <div class="text-4xl sm:text-5xl lg:text-6xl font-black text-[#E6EDF3] font-mono tracking-tight" id="casesFsOldAmount">
+            0 ฿
+          </div>
+          <div class="mt-3 flex items-center justify-between text-xs text-[#8B949E] pt-3 border-t border-[#452A1C]/60">
+            <span id="casesFsOldCountText">0 เคส</span>
+            <span id="casesFsOldAvgText">เฉลี่ยเคสละ 0 ฿</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 19 BRANCH REVENUE LEADERBOARD (ALL 19 BRANCHES IN FULL GLORY) -->
+      <div class="bg-[#121519] border border-[#21262D] rounded-2xl p-5 sm:p-6 space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#21262D] pb-3.5">
+          <div class="flex items-center space-x-2">
+            <i data-lucide="trophy" class="w-4 h-4 text-[#D9A74A]"></i>
+            <h3 class="font-bold text-sm sm:text-base text-[#E6EDF3]">ยอดเงินเรียงลำดับรายสาขา (ครบทั้ง 19 สาขา)</h3>
+          </div>
+          <div class="text-xxs sm:text-xs text-[#8B949E]">
+            💡 แถบสีเขียว = สัดส่วนยอดเคสใหม่ | แถบสีส้มอิฐ = สัดส่วนยอดเคสเก่า
+          </div>
+        </div>
+
+        <!-- 19 Branch Cards Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3" id="casesFsBranchGrid">
+          <!-- Populated dynamically via JS -->
+        </div>
+      </div>
+
+      <!-- BOTTOM REVENUE TYPES STRIP -->
+      <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 pt-2 text-center text-xs">
+        <div class="bg-[#161B22] p-3 rounded-xl border border-[#21262D]">
+          <span class="text-[#8B949E] block text-xxxs">ยอดชำระงวด</span>
+          <span class="font-black text-sm sm:text-base text-[#D8B983] mt-0.5 block" id="casesFsInstallment">0 ฿</span>
+        </div>
+        <div class="bg-[#161B22] p-3 rounded-xl border border-[#21262D]">
+          <span class="text-[#8B949E] block text-xxxs">เคสรายคอร์ส</span>
+          <span class="font-black text-sm sm:text-base text-[#E6EDF3] mt-0.5 block" id="casesFsCourseCount">0 รายการ</span>
+        </div>
+        <div class="bg-[#161B22] p-3 rounded-xl border border-[#21262D]">
+          <span class="text-[#8B949E] block text-xxxs">เคสรายครั้ง</span>
+          <span class="font-black text-sm sm:text-base text-[#E6EDF3] mt-0.5 block" id="casesFsSingleCount">0 รายการ</span>
+        </div>
+        <div class="bg-[#161B22] p-3 rounded-xl border border-[#21262D]">
+          <span class="text-[#8B949E] block text-xxxs">ตรวจร่างกาย</span>
+          <span class="font-black text-sm sm:text-base text-[#91C7A8] mt-0.5 block" id="casesFsExamCount">0 รายการ</span>
+        </div>
+        <div class="bg-[#161B22] p-3 rounded-xl border border-[#21262D] col-span-2 sm:col-span-1">
+          <span class="text-[#8B949E] block text-xxxs">ยกเลิก</span>
+          <span class="font-black text-sm sm:text-base text-[#E8A3A3] mt-0.5 block" id="casesFsCancelCount">0 รายการ</span>
+        </div>
+      </div>
+
+    </div>
   </div>
 
   <!-- JAVASCRIPT LOGIC -->
@@ -6420,6 +6559,12 @@
       // 3. Render Table
       renderCasesTable();
 
+      // 4. Update Fullscreen View if open
+      const fsModal = document.getElementById('casesRevenueFullscreenModal');
+      if (fsModal && !fsModal.classList.contains('hidden')) {
+        renderCasesFullscreenView();
+      }
+
       lucide.createIcons();
     }
 
@@ -6730,20 +6875,22 @@
     }
 
     // -------------------------------------------------------------------------
-    // 3 VIEW MODES: OVERVIEW / MATRIX / OLD CASES
+    // 4 VIEW MODES: OVERVIEW / REVENUE ONLY / MATRIX / OLD CASES
     // -------------------------------------------------------------------------
     function setCasesViewMode(mode) {
       dashboardState.casesViewMode = mode;
 
       const btnOv = document.getElementById('btnCasesMode-overview');
+      const btnRev = document.getElementById('btnCasesMode-revenue_only');
       const btnMat = document.getElementById('btnCasesMode-matrix');
       const btnOld = document.getElementById('btnCasesMode-old_cases');
 
-      [btnOv, btnMat, btnOld].forEach(b => {
+      [btnOv, btnRev, btnMat, btnOld].forEach(b => {
         if (b) b.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center space-x-1.5 text-slate-600 hover:text-slate-900';
       });
 
       if (mode === 'overview' && btnOv) btnOv.className = 'px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 bg-white text-slate-900 shadow-2xs';
+      if (mode === 'revenue_only' && btnRev) btnRev.className = 'px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 bg-white text-slate-900 shadow-2xs';
       if (mode === 'matrix' && btnMat) btnMat.className = 'px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 bg-white text-slate-900 shadow-2xs';
       if (mode === 'old_cases' && btnOld) btnOld.className = 'px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 bg-white text-slate-900 shadow-2xs';
 
@@ -6782,7 +6929,83 @@
         return;
       }
 
-      if (mode === 'overview') {
+      if (mode === 'revenue_only') {
+        // MODE D: REVENUE ONLY FOCUSED TABLE (เน้นเฉพาะยอดเงินล้วนๆ)
+        const sortedRevBranches = [...branches].sort((a, b) => (b.totalAmount || 0) - (a.totalAmount || 0));
+        const grandTotal = data.summary?.totalRevenue || 1;
+
+        let html = `
+          <table class="w-full text-left text-xs whitespace-nowrap">
+            <thead class="bg-[#F8F9FA] text-[#4A5568] font-bold border-b border-[#E2E8F0]">
+              <tr>
+                <th class="py-3 px-3.5 text-center w-12">อันดับ</th>
+                <th class="py-3 px-3.5">สาขา</th>
+                <th class="py-3 px-4 text-right font-black text-teal-800">ยอดเคสใหม่ (฿)</th>
+                <th class="py-3 px-4 text-right font-black text-amber-800">ยอดเคสเก่า (฿)</th>
+                <th class="py-3 px-4 text-right font-black text-slate-900 bg-slate-100">ยอดรวมทั้งหมด (฿)</th>
+                <th class="py-3 px-3 text-right">ยอดชำระงวด (฿)</th>
+                <th class="py-3 px-4 text-center">สัดส่วนรายได้ต่อบริษัท</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-[#E2E8F0] text-[#2D3748]">
+        `;
+
+        sortedRevBranches.forEach((b, idx) => {
+          const totAmt = b.totalAmount || (b.newCasesAmount + b.oldCasesAmount);
+          const sharePct = grandTotal > 0 ? ((totAmt / grandTotal) * 100).toFixed(1) : '0.0';
+          const rank = idx + 1;
+
+          html += `
+            <tr class="hover:bg-slate-50/80 transition">
+              <td class="py-3 px-3.5 text-center font-bold">
+                <span class="inline-flex items-center justify-center w-6 h-6 rounded-lg ${rank === 1 ? 'bg-amber-100 text-amber-900 font-black ring-1 ring-amber-300' : (rank <= 3 ? 'bg-slate-200 text-slate-800 font-bold' : 'text-slate-500 font-medium')}">${rank}</span>
+              </td>
+              <td class="py-3 px-3.5 font-bold text-slate-900 text-sm">
+                ${b.name}
+              </td>
+              <td class="py-3 px-4 text-right font-bold text-teal-700 text-sm">
+                ฿${Number(b.newCasesAmount || 0).toLocaleString()}
+                <span class="block text-xxxs text-slate-400 font-normal">(${b.newCasesCount || 0} เคส)</span>
+              </td>
+              <td class="py-3 px-4 text-right font-bold text-amber-700 text-sm">
+                ฿${Number(b.oldCasesAmount || 0).toLocaleString()}
+                <span class="block text-xxxs text-slate-400 font-normal">(${b.oldCasesCount || 0} เคส)</span>
+              </td>
+              <td class="py-3 px-4 text-right font-black text-slate-900 bg-slate-50 text-base font-mono">
+                ฿${Number(totAmt).toLocaleString()}
+              </td>
+              <td class="py-3 px-3 text-right font-semibold text-slate-700">
+                ${b.installmentAmount > 0 ? '฿' + Number(b.installmentAmount).toLocaleString() : '-'}
+              </td>
+              <td class="py-3 px-4 text-center">
+                <div class="inline-flex items-center space-x-2 w-32">
+                  <div class="flex-1 bg-slate-200 h-2 rounded-full overflow-hidden">
+                    <div class="bg-indigo-600 h-full rounded-full" style="width: ${Math.min(sharePct * 3.5, 100)}%"></div>
+                  </div>
+                  <span class="text-xs font-black text-slate-800 w-10 text-right">${sharePct}%</span>
+                </div>
+              </td>
+            </tr>
+          `;
+        });
+
+        const sum = data.summary || {};
+        html += `
+            <tr class="bg-slate-100 font-black text-slate-900 border-t-2 border-slate-300">
+              <td class="py-3.5 px-3.5 text-center font-black">รวม</td>
+              <td class="py-3.5 px-3.5 font-black text-sm">ทั้งหมด ${sortedRevBranches.length} สาขา</td>
+              <td class="py-3.5 px-4 text-right text-teal-800 text-sm font-black font-mono">฿${Number(sum.newCasesRevenue || 0).toLocaleString()}</td>
+              <td class="py-3.5 px-4 text-right text-amber-800 text-sm font-black font-mono">฿${Number(sum.oldCasesRevenue || 0).toLocaleString()}</td>
+              <td class="py-3.5 px-4 text-right text-slate-900 bg-slate-200 text-lg font-black font-mono">฿${Number(sum.totalRevenue || 0).toLocaleString()}</td>
+              <td class="py-3.5 px-3 text-right font-black">฿${Number(sum.installmentAmount || 0).toLocaleString()}</td>
+              <td class="py-3.5 px-4 text-center text-xs font-black">100%</td>
+            </tr>
+          </tbody>
+        </table>
+        `;
+        container.innerHTML = html;
+
+      } else if (mode === 'overview') {
         // MODE A: SUMMARY OVERVIEW TABLE
         let html = `
           <table class="w-full text-left text-xs whitespace-nowrap">
@@ -7065,6 +7288,188 @@
       URL.revokeObjectURL(url);
       showToast('📥 ส่งออกไฟล์ CSV สำหรับเคสเรียบร้อยแล้ว');
     }
+
+    // -------------------------------------------------------------------------
+    // FULLSCREEN EXECUTIVE REVENUE VIEW LOGIC
+    // -------------------------------------------------------------------------
+    function toggleCasesFullscreenView(isOpen) {
+      const modal = document.getElementById('casesRevenueFullscreenModal');
+      if (!modal) return;
+      if (isOpen) {
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        renderCasesFullscreenView();
+        try {
+          if (document.documentElement.requestFullscreen && !document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(() => {});
+          }
+        } catch (e) {}
+      } else {
+        modal.classList.add('hidden');
+        document.body.style.overflow = '';
+        try {
+          if (document.fullscreenElement && document.exitFullscreen) {
+            document.exitFullscreen().catch(() => {});
+          }
+        } catch (e) {}
+      }
+      lucide.createIcons();
+    }
+
+    function toggleNativeBrowserFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen().catch(() => {});
+        }
+      }
+    }
+
+    function renderCasesFullscreenView() {
+      const data = getActiveCasesData();
+      if (!data) return;
+
+      const summary = data.summary || {};
+      const branches = Array.isArray(data.branches) ? [...data.branches] : [];
+
+      // Month
+      const fsMonth = document.getElementById('casesFsMonthText');
+      if (fsMonth) fsMonth.textContent = data.monthTitle || 'พฤศจิกายน 2569';
+
+      // Giant Total Revenue
+      const fsTotal = document.getElementById('casesFsTotalRevenue');
+      if (fsTotal) fsTotal.textContent = `฿ ${Number(summary.totalRevenue || 0).toLocaleString()}`;
+
+      const fsBranches = document.getElementById('casesFsTotalBranchesBadge');
+      if (fsBranches) fsBranches.textContent = `${branches.length} สาขาทั่วประเทศ`;
+
+      const fsCasesCount = document.getElementById('casesFsTotalCasesCount');
+      if (fsCasesCount) fsCasesCount.textContent = `รวมทั้งหมด ${(summary.newCasesCount || 0) + (summary.oldCasesCount || 0)} เคส`;
+
+      const fsAvgPerBranch = document.getElementById('casesFsAvgPerBranch');
+      if (fsAvgPerBranch) {
+        const avg = branches.length > 0 ? Math.round((summary.totalRevenue || 0) / branches.length) : 0;
+        fsAvgPerBranch.textContent = `เฉลี่ยสาขาละ ฿${avg.toLocaleString()}`;
+      }
+
+      // New Cases Card
+      const fsNewAmt = document.getElementById('casesFsNewAmount');
+      if (fsNewAmt) fsNewAmt.textContent = `฿ ${Number(summary.newCasesRevenue || 0).toLocaleString()}`;
+
+      const totRev = Number(summary.totalRevenue || 0);
+      const newRev = Number(summary.newCasesRevenue || 0);
+      const oldRev = Number(summary.oldCasesRevenue || 0);
+
+      const fsNewPct = document.getElementById('casesFsNewPct');
+      if (fsNewPct) {
+        const p = totRev > 0 ? ((newRev / totRev) * 100).toFixed(1) : '0';
+        fsNewPct.textContent = `${p}% ของรายได้`;
+      }
+
+      const fsNewCount = document.getElementById('casesFsNewCountText');
+      if (fsNewCount) fsNewCount.textContent = `${summary.newCasesCount || 0} เคส`;
+
+      const fsNewAvg = document.getElementById('casesFsNewAvgText');
+      if (fsNewAvg) {
+        const avg = (summary.newCasesCount || 0) > 0 ? Math.round(newRev / summary.newCasesCount) : 0;
+        fsNewAvg.textContent = `เฉลี่ยเคสละ ฿${avg.toLocaleString()}`;
+      }
+
+      // Old Cases Card
+      const fsOldAmt = document.getElementById('casesFsOldAmount');
+      if (fsOldAmt) fsOldAmt.textContent = `฿ ${Number(summary.oldCasesRevenue || 0).toLocaleString()}`;
+
+      const fsOldPct = document.getElementById('casesFsOldPct');
+      if (fsOldPct) {
+        const p = totRev > 0 ? ((oldRev / totRev) * 100).toFixed(1) : '0';
+        fsOldPct.textContent = `${p}% ของรายได้`;
+      }
+
+      const fsOldCount = document.getElementById('casesFsOldCountText');
+      if (fsOldCount) fsOldCount.textContent = `${summary.oldCasesCount || 0} เคส`;
+
+      const fsOldAvg = document.getElementById('casesFsOldAvgText');
+      if (fsOldAvg) {
+        const avg = (summary.oldCasesCount || 0) > 0 ? Math.round(oldRev / summary.oldCasesCount) : 0;
+        fsOldAvg.textContent = `เฉลี่ยเคสละ ฿${avg.toLocaleString()}`;
+      }
+
+      // Financial details strip
+      const fsInst = document.getElementById('casesFsInstallment');
+      if (fsInst) fsInst.textContent = `฿ ${Number(summary.installmentAmount || 0).toLocaleString()}`;
+
+      const fsCourse = document.getElementById('casesFsCourseCount');
+      if (fsCourse) fsCourse.textContent = `${Number(summary.courseCount || 0).toLocaleString()} รายการ`;
+
+      const fsSingle = document.getElementById('casesFsSingleCount');
+      if (fsSingle) fsSingle.textContent = `${Number(summary.singleCount || 0).toLocaleString()} รายการ`;
+
+      const fsExam = document.getElementById('casesFsExamCount');
+      if (fsExam) fsExam.textContent = `${Number(summary.physicalExamCount || 0).toLocaleString()} รายการ`;
+
+      const fsCancel = document.getElementById('casesFsCancelCount');
+      if (fsCancel) fsCancel.textContent = `${Number(summary.cancelCount || 0).toLocaleString()} รายการ`;
+
+      // 19 Branches Grid (Sorted by Total Amount)
+      const branchGrid = document.getElementById('casesFsBranchGrid');
+      if (branchGrid) {
+        const sorted = branches.sort((a, b) => (b.totalAmount || 0) - (a.totalAmount || 0));
+        let gridHtml = '';
+
+        sorted.forEach((b, idx) => {
+          const rank = idx + 1;
+          const tot = b.totalAmount || (b.newCasesAmount + b.oldCasesAmount);
+          const share = totRev > 0 ? ((tot / totRev) * 100).toFixed(1) : '0.0';
+          const newPct = tot > 0 ? Math.round((b.newCasesAmount / tot) * 100) : 0;
+          const oldPct = 100 - newPct;
+
+          let rankBadge = `<span class="w-5 h-5 rounded-md bg-[#21262D] text-[#8B949E] text-xxxs font-bold inline-flex items-center justify-center">#${rank}</span>`;
+          if (rank === 1) rankBadge = `<span class="w-5 h-5 rounded-md bg-[#3B2E15] text-[#F3C352] text-xxxs font-black inline-flex items-center justify-center ring-1 ring-[#7A5A1A]">🥇</span>`;
+          else if (rank === 2) rankBadge = `<span class="w-5 h-5 rounded-md bg-[#252C36] text-[#C9D1D9] text-xxxs font-black inline-flex items-center justify-center ring-1 ring-[#3E4A5B]">🥈</span>`;
+          else if (rank === 3) rankBadge = `<span class="w-5 h-5 rounded-md bg-[#33211A] text-[#DE9B72] text-xxxs font-black inline-flex items-center justify-center ring-1 ring-[#6B3B24]">🥉</span>`;
+
+          gridHtml += `
+            <div class="bg-[#161B22] border border-[#262C36] hover:border-[#384252] rounded-xl p-3.5 transition flex flex-col justify-between space-y-2">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-1.5 truncate">
+                  ${rankBadge}
+                  <span class="font-bold text-xs text-[#E6EDF3] truncate">${b.name}</span>
+                </div>
+                <span class="text-xxxs font-bold px-1.5 py-0.5 rounded bg-[#1C232D] text-[#8FA4B5]">${share}%</span>
+              </div>
+              <div>
+                <div class="text-lg font-black text-white font-mono tracking-tight">
+                  ฿${Number(tot).toLocaleString()}
+                </div>
+                <div class="mt-1 flex items-center h-1.5 rounded-full overflow-hidden bg-[#21262D]">
+                  <div class="bg-[#0D9488] h-full" style="width: ${newPct}%" title="เคสใหม่ ${newPct}%"></div>
+                  <div class="bg-[#C58569] h-full" style="width: ${oldPct}%" title="เคสเก่า ${oldPct}%"></div>
+                </div>
+              </div>
+              <div class="flex items-center justify-between text-xxxs text-[#8B949E] pt-1 border-t border-[#21262D]">
+                <span class="text-[#78B38E]">ใหม่ ฿${Number(b.newCasesAmount || 0).toLocaleString()}</span>
+                <span class="text-[#DE9B72]">เก่า ฿${Number(b.oldCasesAmount || 0).toLocaleString()}</span>
+              </div>
+            </div>
+          `;
+        });
+
+        branchGrid.innerHTML = gridHtml;
+      }
+
+      lucide.createIcons();
+    }
+
+    // Listen for ESC to exit fullscreen
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        const modal = document.getElementById('casesRevenueFullscreenModal');
+        if (modal && !modal.classList.contains('hidden')) {
+          toggleCasesFullscreenView(false);
+        }
+      }
+    });
 
 
     // =========================================================================
