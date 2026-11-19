@@ -340,7 +340,7 @@ function handleManagerAction(action, params) {
       let mSheet = findSheet(manager, 'Meeting');
       if (!mSheet) {
         mSheet = ss.insertSheet('Meeting');
-        mSheet.appendRow(['วันที่ประชุม', 'สาขา', 'เนื้อหาการประชุม', 'ผู้รับผิดชอบ', 'ผู้ไม่เข้าร่วม']);
+        mSheet.appendRow(['วันที่ประชุม', 'สาขา', 'เนื้อหาการประชุม', 'ผู้รับผิดชอบ', 'ผู้ไม่เข้าร่วม', 'เวลาที่บันทึก']);
       }
 
       const rawDateInput = String(params.date || '').trim();
@@ -390,16 +390,40 @@ function handleManagerAction(action, params) {
         return { status: 'error', message: 'กรุณากรอกเนื้อหาการประชุม' };
       }
 
+      // เวลาที่บันทึกอัตโนมัติ (Timestamp ตามเวลาจริงประเทศไทย GMT+7)
+      const now = new Date();
+      const nowD = String(now.getDate()).padStart(2, '0');
+      const nowM = String(now.getMonth() + 1).padStart(2, '0');
+      const nowYTh = now.getFullYear() + 543;
+      const nowTime = Utilities.formatDate(now, "Asia/Bangkok", "HH:mm:ss");
+      const autoTimestamp = params.recordedTime ? String(params.recordedTime).trim() : `${nowD}/${nowM}/${nowYTh} ${nowTime}`;
+
+      // ตรวจสอบและตั้งชื่อหัวตารางคอลัมน์ F (เวลาที่บันทึก) อัตโนมัติ
+      try {
+        const lastCol = Math.max(6, mSheet.getLastColumn());
+        const headerVals = mSheet.getRange(1, 1, 1, lastCol).getValues()[0];
+        if (!headerVals[5] || String(headerVals[5]).trim() === '') {
+          mSheet.getRange(1, 6).setValue('เวลาที่บันทึก');
+        }
+      } catch (hErr) {}
+
       const targetRow = findFirstEmptyMeetingRow(mSheet);
-      mSheet.getRange(targetRow, 1, 1, 5).setValues([[dateObjToWrite, branch, content, responsible, attendees]]);
+      mSheet.getRange(targetRow, 1, 1, 6).setValues([[dateObjToWrite, branch, content, responsible, attendees, autoTimestamp]]);
       SpreadsheetApp.flush();
 
       // ซิงค์คู่ขนานไปยังไฟล์หลัก (หากชีทหลักไม่ได้ใช้ IMPORTRANGE)
       try {
         const mainMSheet = findMainOutputSheet(manager, 'Meeting');
         if (mainMSheet && !sheetHasImportRange(mainMSheet)) {
+          try {
+            const mCols = Math.max(6, mainMSheet.getLastColumn());
+            const mHeaders = mainMSheet.getRange(1, 1, 1, mCols).getValues()[0];
+            if (!mHeaders[5] || String(mHeaders[5]).trim() === '') {
+              mainMSheet.getRange(1, 6).setValue('เวลาที่บันทึก');
+            }
+          } catch (mhErr) {}
           const mainRow = findFirstEmptyMeetingRow(mainMSheet);
-          mainMSheet.getRange(mainRow, 1, 1, 5).setValues([[dateObjToWrite, branch, content, responsible, attendees]]);
+          mainMSheet.getRange(mainRow, 1, 1, 6).setValues([[dateObjToWrite, branch, content, responsible, attendees, autoTimestamp]]);
           SpreadsheetApp.flush();
         }
       } catch (syncErr) {
@@ -415,21 +439,23 @@ function handleManagerAction(action, params) {
         branch: branch,
         content: content,
         responsible: responsible,
-        attendees: attendees
+        attendees: attendees,
+        recordedTime: autoTimestamp
       });
 
       clearDashboardCaches();
 
       return {
         status: 'success',
-        message: `บันทึกการประชุมลงชีทของ ผจก.${manager} (แถวที่ ${targetRow}) สำเร็จแล้ว`,
+        message: `บันทึกการประชุมลงชีทของ ผจก.${manager} (แถวที่ ${targetRow}) สำเร็จแล้ว พร้อมบันทึกเวลาอัตโนมัติ (${autoTimestamp})`,
         record: {
           rowIndex: targetRow,
           date: displayDateTh,
           branch: branch,
           content: content,
           responsible: responsible,
-          attendees: attendees
+          attendees: attendees,
+          recordedTime: autoTimestamp
         }
       };
     }
@@ -514,7 +540,16 @@ function handleManagerAction(action, params) {
           matched = rowIndex;
         }
         if (matched !== -1) {
-          sheet.getRange(matched, 1, 1, 5).setValues([[dateObjToWrite, branch, content, responsible, attendees]]);
+          try {
+            const lastCol = Math.max(6, sheet.getLastColumn());
+            const headerVals = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+            if (!headerVals[5] || String(headerVals[5]).trim() === '') {
+              sheet.getRange(1, 6).setValue('เวลาที่บันทึก');
+            }
+          } catch (hErr) {}
+          const existingTime = (mData[matched - 1] && mData[matched - 1].length > 5) ? mData[matched - 1][5] : '';
+          const autoTimestamp = params.recordedTime ? String(params.recordedTime).trim() : (existingTime ? String(existingTime) : `${dd}/${mm}/${yyyyTh} ${Utilities.formatDate(new Date(), "Asia/Bangkok", "HH:mm:ss")}`);
+          sheet.getRange(matched, 1, 1, 6).setValues([[dateObjToWrite, branch, content, responsible, attendees, autoTimestamp]]);
         }
         return matched;
       }
@@ -536,6 +571,8 @@ function handleManagerAction(action, params) {
 
       SpreadsheetApp.flush();
 
+      const updatedTimestamp = params.recordedTime ? String(params.recordedTime).trim() : `${dd}/${mm}/${yyyyTh} ${Utilities.formatDate(new Date(), "Asia/Bangkok", "HH:mm:ss")}`;
+
       recordPendingSyncAction({
         type: 'updateMeeting',
         manager: manager,
@@ -546,21 +583,23 @@ function handleManagerAction(action, params) {
         branch: branch,
         content: content,
         responsible: responsible,
-        attendees: attendees
+        attendees: attendees,
+        recordedTime: updatedTimestamp
       });
 
       clearDashboardCaches();
 
       return {
         status: 'success',
-        message: `แก้ไขข้อมูลการประชุมในชีทของ ผจก.${manager} (แถวที่ ${matchedRow !== -1 ? matchedRow : matchedMainRow}) สำเร็จแล้ว`,
+        message: `แก้ไขข้อมูลการประชุมในชีทของ ผจก.${manager} (แถวที่ ${matchedRow !== -1 ? matchedRow : matchedMainRow}) สำเร็จแล้ว พร้อมบันทึกเวลา (${updatedTimestamp})`,
         record: {
           rowIndex: matchedRow !== -1 ? matchedRow : rowIndex,
           date: displayDateTh,
           branch: branch,
           content: content,
           responsible: responsible,
-          attendees: attendees
+          attendees: attendees,
+          recordedTime: updatedTimestamp
         }
       };
     }
@@ -588,6 +627,7 @@ function handleManagerAction(action, params) {
 
       const targetRow = findFirstEmptyProblemRow(pSheet);
       const rowNum = targetRow - 1;
+      const probCode = 'PB-' + String(rowNum).padStart(2, '0');
       const existingColA = pSheet.getRange(targetRow, 1).getValue();
       const existingFormulaA = pSheet.getRange(targetRow, 1).getFormula();
       if (!existingFormulaA && (existingColA === '' || existingColA === null)) {
@@ -615,6 +655,7 @@ function handleManagerAction(action, params) {
 
       recordPendingSyncAction({
         type: 'addProblem',
+        code: probCode,
         manager: manager,
         rowIndex: targetRow,
         branch: branch,
@@ -631,8 +672,9 @@ function handleManagerAction(action, params) {
 
       return {
         status: 'success',
-        message: `แจ้งปัญหาหน้างานลงชีทของ ผจก.${manager} (แถวที่ ${targetRow}) สำเร็จแล้ว`,
+        message: `แจ้งปัญหาหน้างานลงชีทของ ผจก.${manager} (รหัส ${probCode} / แถวที่ ${targetRow}) สำเร็จแล้ว`,
         record: {
+          code: probCode,
           rowIndex: targetRow,
           manager: manager,
           branch: branch,
@@ -723,8 +765,11 @@ function handleManagerAction(action, params) {
 
       SpreadsheetApp.flush();
 
+      const probCode = params.code || ('PB-' + String(matchedRow !== -1 ? matchedRow - 1 : (rowIndex ? rowIndex - 1 : 1)).padStart(2, '0'));
+
       recordPendingSyncAction({
         type: 'updateProblem',
+        code: probCode,
         manager: manager,
         rowIndex: matchedRow !== -1 ? matchedRow : rowIndex,
         branch: targetBranch,
@@ -743,7 +788,19 @@ function handleManagerAction(action, params) {
 
       return {
         status: 'success',
-        message: `อัปเดตข้อมูลปัญหาในชีทของ ผจก.${manager} (แถวที่ ${matchedRow !== -1 ? matchedRow : matchedMainRow}) สำเร็จแล้ว`
+        message: `อัปเดตข้อมูลปัญหาในชีทของ ผจก.${manager} (รหัส ${probCode} / แถวที่ ${matchedRow !== -1 ? matchedRow : matchedMainRow}) สำเร็จแล้ว`,
+        record: {
+          code: probCode,
+          rowIndex: matchedRow !== -1 ? matchedRow : rowIndex,
+          branch: newBranch || targetBranch,
+          subject: newSubject || targetSubject,
+          needsGmHelp: params.needsGmHelp,
+          category: params.category,
+          status: params.status,
+          urgency: params.urgency,
+          colH: params.colH,
+          colI: params.colI
+        }
       };
     }
 
@@ -1042,6 +1099,7 @@ function getGmDashboardDataFast(periodInfo) {
           if (val !== '' && val !== null && val !== undefined) {
             let dateStr = parseMeetingDateStr(val, periodInfo.month, periodInfo.year);
             if (dateStr) {
+              const recordedTime = (mData[r].length > 5 && mData[r][5] !== undefined && mData[r][5] !== null) ? String(mData[r][5]).trim() : '';
               meetingDates.push(dateStr);
               meetingLogs.push({
                 rowIndex: r + 1,
@@ -1050,7 +1108,8 @@ function getGmDashboardDataFast(periodInfo) {
                 branch: String(mData[r][1] || '').trim(),
                 content: String(mData[r][2] || '').trim(),
                 responsible: String(mData[r][3] || '').trim(),
-                attendees: String(mData[r][4] || '').trim()
+                attendees: String(mData[r][4] || '').trim(),
+                recordedTime: recordedTime
               });
             }
           }
@@ -1073,7 +1132,8 @@ function getGmDashboardDataFast(periodInfo) {
             branch: pm.branch || '',
             content: pm.content || '',
             responsible: pm.responsible || `ผจก. ${managerName}`,
-            attendees: pm.attendees || 'ครบทุกคน'
+            attendees: pm.attendees || 'ครบทุกคน',
+            recordedTime: pm.recordedTime || ''
           });
         }
       });
@@ -1095,6 +1155,7 @@ function getGmDashboardDataFast(periodInfo) {
             if (mu.content !== undefined) log.content = mu.content;
             if (mu.responsible !== undefined) log.responsible = mu.responsible;
             if (mu.attendees !== undefined) log.attendees = mu.attendees;
+            if (mu.recordedTime !== undefined) log.recordedTime = mu.recordedTime;
           }
         }
       });
@@ -1230,7 +1291,9 @@ function getGmDashboardDataFast(periodInfo) {
             isNeedGm = true;
           }
 
+          const probCode = 'PB-' + String(allProblemsList.length + 1).padStart(2, '0');
           const probItem = {
+            code: probCode,
             rowIndex: pRow.rowIndex,
             manager: managerName,
             branch: bKey,
