@@ -134,7 +134,18 @@ function autoWarmDashboardCache() {
 // 1.3 ล้างแคชและประมวลผลคำสั่ง Input สำหรับ ผจก. 12 ท่าน
 // ==============================================================================
 const MANAGER_PINS = {
-  "default": "1234",
+  "กาญจน์": "4826",
+  "นัท": "7319",
+  "ซอฟ": "2591",
+  "ลูกกุ้ง": "8642",
+  "อัจ": "3175",
+  "รัตน์": "9428",
+  "อี้": "5831",
+  "หมิว": "6294",
+  "จาเน่": "1753",
+  "โชว์": "8369",
+  "เปีย": "5147",
+  "ส้มโอ": "3926",
   "master": "9999",
   "gm": "9999"
 };
@@ -208,11 +219,11 @@ function handleManagerAction(action, params) {
     // ก. ตรวจสอบรหัส PIN
     if (action === 'verifyPin') {
       const pin = String(params.pin || '').trim();
-      const expectedPin = (manager && MANAGER_PINS[manager]) ? MANAGER_PINS[manager] : MANAGER_PINS["default"];
-      if (pin === expectedPin || pin === MANAGER_PINS["master"] || pin === MANAGER_PINS["gm"]) {
+      const expectedPin = (manager && MANAGER_PINS[manager]) ? MANAGER_PINS[manager] : null;
+      if ((expectedPin && pin === expectedPin) || pin === MANAGER_PINS["master"] || pin === MANAGER_PINS["gm"]) {
         return { status: 'success', message: 'เข้าสู่ระบบสำเร็จ', manager: manager };
       }
-      return { status: 'error', message: 'รหัส PIN ไม่ถูกต้อง (PIN เริ่มต้น: 1234)' };
+      return { status: 'error', message: 'รหัส PIN ไม่ถูกต้อง' };
     }
 
     if (!manager) {

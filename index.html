@@ -2479,7 +2479,7 @@
       </div>
 
       <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between flex-shrink-0">
-        <span class="text-xxs text-slate-400">💡 ทุกคนเข้าสู่ระบบด้วยรหัส PIN เริ่มต้น: <strong>1234</strong></span>
+        <span class="text-xxs text-slate-400">💡 แต่ละท่านมีรหัส PIN ส่วนตัวเฉพาะบุคคล 4 หลัก</span>
         <button onclick="closeManagerLinksModal()" class="px-4 py-2 text-xs font-medium text-slate-600 hover:text-slate-800 bg-slate-100 rounded-xl">ปิด</button>
       </div>
     </div>
@@ -2502,7 +2502,7 @@
 
       <div class="mb-4">
         <input type="password" id="pinInput" maxlength="6" pattern="[0-9]*" inputmode="numeric" placeholder="••••" class="w-36 text-center text-2xl font-mono tracking-widest py-2 border-2 border-slate-300 rounded-2xl focus:border-blue-600 outline-none">
-        <p class="text-xxs text-slate-400 mt-1.5" id="pinHintText">รหัส PIN เริ่มต้นคือ: <strong>1234</strong></p>
+        <p class="text-xxs text-slate-400 mt-1.5" id="pinHintText">กรอกรหัส PIN 4 หลักประจำตัวของคุณ</p>
       </div>
 
       <!-- Numeric Keypad for Mobile -->
@@ -9324,6 +9324,22 @@
       "ส้มโอ": "x8z2c7v4b9n1"
     };
 
+    // รหัส PIN ส่วนตัวเฉพาะบุคคล 4 หลักสำหรับ ผจก. 12 ท่าน
+    const MANAGER_PINS = {
+      "กาญจน์": "4826",
+      "นัท": "7319",
+      "ซอฟ": "2591",
+      "ลูกกุ้ง": "8642",
+      "อัจ": "3175",
+      "รัตน์": "9428",
+      "อี้": "5831",
+      "หมิว": "6294",
+      "จาเน่": "1753",
+      "โชว์": "8369",
+      "เปีย": "5147",
+      "ส้มโอ": "3926"
+    };
+
     // ลิงก์ไฟล์ Google Sheets ปลายทางสำหรับบันทึก Input ของผู้จัดการแต่ละท่าน
     const MANAGER_SHEET_URLS = {
       "กาญจน์": "https://docs.google.com/spreadsheets/d/1MGBtJ2qnD6Nz9nkuWR_m6YBokcY4pVmXgicclM0WIfY/edit",
@@ -9512,6 +9528,7 @@
                   <div class="flex items-center gap-1.5">
                     <span class="font-bold text-slate-900 text-sm">ผจก. ${escapeHtml(mgrName)}</span>
                     <span class="text-xxs px-1.5 py-0.5 rounded bg-slate-200/80 text-slate-600 font-semibold">#${idx + 1}</span>
+                    <span class="text-xxs px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 font-mono font-bold border border-blue-200">🔑 PIN: ${MANAGER_PINS[mgrName] || '-'}</span>
                   </div>
                   <div class="text-xxs text-slate-500 mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
                     <span>🏢 ${branchCount} สาขา</span>
@@ -9554,9 +9571,10 @@
 
     function copySingleManagerLink(managerName) {
       const link = getManagerPersonalUrl(managerName);
-      const text = `📌 ลิงก์พื้นที่ปฏิบัติงานส่วนตัว: ผจก.${managerName}\n🔗 ${link}\n🔑 รหัส PIN เข้าใช้งาน: 1234`;
+      const pin = MANAGER_PINS[managerName] || '4826';
+      const text = `📌 ลิงก์พื้นที่ปฏิบัติงานส่วนตัว: ผจก.${managerName}\n🔗 ${link}\n🔑 รหัส PIN เข้าใช้งาน: ${pin}`;
       navigator.clipboard.writeText(text).then(() => {
-        showToast(`📋 คัดลอกลิงก์ของ ผจก.${managerName} เรียบร้อยแล้ว!`);
+        showToast(`📋 คัดลอกลิงก์และรหัส PIN ของ ผจก.${managerName} เรียบร้อยแล้ว!`);
       });
     }
 
@@ -9564,14 +9582,15 @@
       const lines = [
         `📋 สรุปลิงก์พื้นที่ปฏิบัติงานส่วนตัว ผู้จัดการเขต 12 ท่าน`,
         `(ลิงก์ส่วนตัวเฉพาะบุคคล — ดูได้เฉพาะข้อมูลในเขตของตนเอง ไม่สามารถดูภาพรวมคนอื่นได้)`,
-        `🔑 รหัส PIN เริ่มต้นสำหรับทุกท่าน: 1234`,
+        `🔑 รหัส PIN ส่วนตัวเฉพาะบุคคล 4 หลัก`,
         `━━━━━━━━━━━━━━━━━━`
       ];
       MANAGERS_LIST.forEach((mgr, i) => {
-        lines.push(`${i + 1}. ผจก.${mgr}: ${getManagerPersonalUrl(mgr)}`);
+        const pin = MANAGER_PINS[mgr] || '';
+        lines.push(`${i + 1}. ผจก.${mgr}: ${getManagerPersonalUrl(mgr)} (PIN: ${pin})`);
       });
       navigator.clipboard.writeText(lines.join('\n')).then(() => {
-        showToast('📋 คัดลอกสรุปลิงก์ ผจก. ทั้ง 12 ท่านสำหรับส่งกลุ่ม LINE แล้ว!');
+        showToast('📋 คัดลอกสรุปลิงก์และ PIN ผจก. ทั้ง 12 ท่านสำหรับส่งกลุ่ม LINE แล้ว!');
       });
     }
 
@@ -9649,8 +9668,9 @@
         return;
       }
 
-      // ตรวจสอบ PIN มาตรฐาน (1234 หรือ 9999) ทันทีเพื่อความรวดเร็ว หรือเช็คผ่าน API
-      if (pin === '1234' || pin === '9999') {
+      // ตรวจสอบ PIN ส่วนตัวเฉพาะบุคคล หรือ Master PIN (9999) ทันทีเพื่อความรวดเร็ว
+      const expectedPin = MANAGER_PINS[mgr];
+      if ((expectedPin && pin === expectedPin) || pin === '9999') {
         markManagerPinUnlocked(mgr, pin === '9999');
         closeManagerPinModal(true);
         activateManagerSession(mgr);
@@ -9671,12 +9691,12 @@
           activateManagerSession(mgr);
           showToast(`✅ เข้าสู่ระบบพื้นที่งาน ผจก.${mgr} สำเร็จ`);
         } else {
-          showToast(`❌ ${res?.message || 'รหัส PIN ไม่ถูกต้อง (ค่าเริ่มต้น: 1234)'}`);
+          showToast(`❌ ${res?.message || 'รหัส PIN ไม่ถูกต้อง'}`);
           input.value = '';
           input.focus();
         }
       } catch (err) {
-        showToast('❌ รหัส PIN ไม่ถูกต้อง (รหัสเริ่มต้นคือ 1234)');
+        showToast('❌ รหัส PIN ไม่ถูกต้อง');
         input.value = '';
         input.focus();
       } finally {
