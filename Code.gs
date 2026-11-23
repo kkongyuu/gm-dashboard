@@ -51,6 +51,18 @@ function doGet(e) {
     return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
   }
 
+  // 1.0.1 คำสั่งล้างแคชและข้อมูลค้าง (Pending Sync) ทันที
+  if (action === 'clearPendingSync' || action === 'purgeSync') {
+    const res = clearAllPendingSyncActions(params.manager || '');
+    return ContentService.createTextOutput(JSON.stringify(res)).setMimeType(ContentService.MimeType.JSON);
+  }
+
+  // 1.0.2 คำสั่งค้นหาและล้างข้อมูลทดสอบ (เช่น แถวที่มีคำว่า "ทดสอบ") จากชีทจริงและแคช
+  if (action === 'cleanTestData') {
+    const res = cleanTestRecords(params.manager || '');
+    return ContentService.createTextOutput(JSON.stringify(res)).setMimeType(ContentService.MimeType.JSON);
+  }
+
   // 1.1 ขอข้อมูลเป็น JSON API (สำหรับเว็บเบราว์เซอร์ / Frontend)
   if (action === 'api' || action === 'getData' || params.format === 'json') {
     try {
@@ -174,6 +186,9 @@ function recordPendingSyncAction(entry) {
     }
     entry.ts = Date.now();
     list.push(entry);
+    // ลบรายการที่เก่าเกิน 15 นาทีออกอัตโนมัติ เพื่อป้องกันข้อมูลที่ผู้ใช้ลบในชีทฟื้นกลับมา
+    const cutoff = Date.now() - (15 * 60 * 1000);
+    list = list.filter(item => item && item.ts && item.ts > cutoff);
     // เก็บเฉพาะ 120 รายการล่าสุดเพื่อไม่ให้เกินขนาด PropertiesService
     if (list.length > 120) {
       list = list.slice(list.length - 120);
@@ -189,10 +204,109 @@ function getPendingSyncActions() {
     const raw = PropertiesService.getScriptProperties().getProperty('MGR_PENDING_SYNC_V2');
     if (!raw) return [];
     const list = JSON.parse(raw);
-    return Array.isArray(list) ? list : [];
+    if (!Array.isArray(list)) return [];
+    // กรองเฉพาะรายการที่ไม่เกิน 15 นาทีล่าสุด (จากเดิมไม่มีวันหมดอายุ ทำให้ข้อมูลที่ถูกลบในชีทยังถูกคืนชีพตลอดเวลา)
+    const cutoff = Date.now() - (15 * 60 * 1000);
+    return list.filter(item => item && item.ts && item.ts > cutoff);
   } catch (e) {
     return [];
   }
+}
+
+function clearAllPendingSyncActions(targetManager) {
+  try {
+    const props = PropertiesService.getScriptProperties();
+    if (targetManager) {
+      const raw = props.getProperty('MGR_PENDING_SYNC_V2');
+      if (raw) {
+        let list = JSON.parse(raw) || [];
+        list = list.filter(item => item.manager !== targetManager);
+        props.setProperty('MGR_PENDING_SYNC_V2', JSON.stringify(list));
+      }
+    } else {
+      props.deleteProperty('MGR_PENDING_SYNC_V2');
+    }
+    clearDashboardCaches();
+    return { status: 'success', message: 'ล้างข้อมูล Pending Sync และแคชเรียบร้อยแล้ว' };
+  } catch (e) {
+    return { status: 'error', message: e.message };
+  }
+}
+
+function cleanTestRecords(targetManager) {
+  const cleaned = [];
+  const mgrList = targetManager ? [targetManager] : MANAGERS;
+
+  // 1. ล้างข้อมูล Pending Sync
+  clearAllPendingSyncActions(targetManager);
+
+  // 2. ตรวจสอบและลบแถวทดสอบใน Main Master Spreadsheet
+  try {
+    const mainSs = SpreadsheetApp.openById(SPREADSHEET_ID);
+    mgrList.forEach(m => {
+      ['Meeting', 'Problem List'].forEach(t => {
+        try {
+          const exact1 = `${m} - ${t}`;
+          const exact2 = `${m}-${t}`;
+          let s = mainSs.getSheetByName(exact1) || mainSs.getSheetByName(exact2);
+          if (!s) {
+            const allS = mainSs.getSheets();
+            for (let i = 0; i < allS.length; i++) {
+              const name = allS[i].getName();
+              if (name.includes(m) && (name.includes(t) || (t === 'Meeting' && name.includes('ประชุม')) || (t === 'Problem List' && name.includes('ปัญหา')))) {
+                s = allS[i];
+                break;
+              }
+            }
+          }
+          if (s) {
+            const vals = s.getDataRange().getValues();
+            for (let r = vals.length - 1; r >= 1; r--) {
+              const rowStr = vals[r].join(' ');
+              if (rowStr.includes('ทดสอบ')) {
+                s.deleteRow(r + 1);
+                cleaned.push(`ลบแถวทดสอบที่ ${r + 1} ในไฟล์หลัก [${s.getName()}]`);
+              }
+            }
+          }
+        } catch (subErr) {
+          cleaned.push(`เตือนไฟล์หลัก [${m} - ${t}]: ${subErr.message}`);
+        }
+      });
+    });
+  } catch (e) {
+    cleaned.push(`เตือน Main Spreadsheet: ${e.message}`);
+  }
+
+  // 3. ตรวจสอบและลบแถวทดสอบในไฟล์ส่วนตัวของผู้จัดการ
+  mgrList.forEach(m => {
+    try {
+      const targetId = MANAGER_SPREADSHEET_IDS[m];
+      if (targetId) {
+        const mgrSs = SpreadsheetApp.openById(targetId);
+        const sheets = mgrSs.getSheets();
+        sheets.forEach(s => {
+          try {
+            const vals = s.getDataRange().getValues();
+            for (let r = vals.length - 1; r >= 1; r--) {
+              const rowStr = vals[r].join(' ');
+              if (rowStr.includes('ทดสอบ')) {
+                s.deleteRow(r + 1);
+                cleaned.push(`ลบแถวทดสอบที่ ${r + 1} ในชีทส่วนตัว ผจก.${m} [${s.getName()}]`);
+              }
+            }
+          } catch (rowErr) {
+            cleaned.push(`เตือนชีท ${s.getName()}: ${rowErr.message}`);
+          }
+        });
+      }
+    } catch (e) {
+      cleaned.push(`เตือนไฟล์ส่วนตัว ผจก.${m}: ${e.message}`);
+    }
+  });
+
+  clearDashboardCaches();
+  return { status: 'success', manager: targetManager, cleaned: cleaned };
 }
 
 function sheetHasImportRange(sheet) {

@@ -2403,8 +2403,13 @@
         <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 text-xxs text-slate-600 space-y-1">
           <p class="font-semibold text-slate-700">ข้อมูลการเชื่อมต่อระบบ:</p>
           <p>• ระบบซิงค์ข้อมูลอัตโนมัติแบบ Real-Time พร้อมระบบ Fast Cache ความเร็วสูง</p>
-          <p>• สามารถกดปุ่ม "รีเซ็ตค่าเริ่มต้น" เพื่อกลับไปใช้ Endpoint หลักขององค์กรได้ทันที</p>
+          <p>• หากมีการลบแถวข้อมูลใน Google Sheet โดยตรงแล้วเว็บยังแสดงผลอยู่ ให้กดปุ่มด้านล่างเพื่อล้างข้อมูลค้าง</p>
         </div>
+
+        <button type="button" onclick="purgeAllCacheAndSync()" class="w-full py-2 px-3 text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-xl transition flex items-center justify-center space-x-1.5">
+          <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+          <span>ล้างแคชและข้อมูลค้างทั้งหมด (Purge Stale Sync & Cache)</span>
+        </button>
       </div>
 
       <div class="mt-6 flex items-center justify-end space-x-2 pt-3 border-t border-slate-100">
@@ -3344,9 +3349,9 @@
         if (!raw) return [];
         const list = JSON.parse(raw);
         if (!Array.isArray(list)) return [];
-        // เก็บรายการภายใน 7 วันล่าสุด
-        const cutoff = Date.now() - (7 * 24 * 60 * 60 * 1000);
-        return list.filter(item => item && (!item.ts || item.ts > cutoff));
+        // เก็บเฉพาะรายการภายใน 15 นาทีล่าสุด (จากเดิม 7 วัน) เพื่อป้องกันข้อมูลที่ผู้ใช้ลบใน Google Sheet ฟื้นกลับมาแสดงซ้ำ
+        const cutoff = Date.now() - (15 * 60 * 1000);
+        return list.filter(item => item && item.ts && item.ts > cutoff);
       } catch (e) {
         return [];
       }
@@ -4146,7 +4151,9 @@
       let hasLocalCache = false;
 
       // ⚡ ขั้นตอนที่ 1: ตรวจสอบแคชข้อมูลจริงจาก Google Sheet ในเบราว์เซอร์
-      if (!isForcedRefresh) {
+      if (isForcedRefresh) {
+        clearLocalDashboardCache();
+      } else {
         try {
           const cachedStr = localStorage.getItem(cacheKey);
           if (cachedStr) {
@@ -9451,7 +9458,23 @@
         Object.keys(localStorage)
           .filter(k => k.startsWith('gm_dash_cache'))
           .forEach(k => localStorage.removeItem(k));
+        localStorage.removeItem(PENDING_SYNC_STORAGE_KEY);
       } catch (e) { /* ignore */ }
+    }
+
+    async function purgeAllCacheAndSync() {
+      clearLocalDashboardCache();
+      showToast('⏳ กำลังล้างแคชและรายการค้างในระบบ...');
+      try {
+        const base = dashboardState.apiUrl || DEFAULT_LIVE_API_URL;
+        const url = `${base}?action=clearPendingSync&refresh=true`;
+        await fetch(url, { mode: 'no-cors' });
+      } catch (e) {
+        console.warn('Backend purge warning:', e);
+      }
+      closeSettingsModal();
+      await fetchDashboardData(true);
+      showToast('✅ ล้างข้อมูลแคชและซิงค์ใหม่จาก Google Sheets เรียบร้อยแล้ว');
     }
 
     // -------------------------------------------------------------------------
