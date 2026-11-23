@@ -3,7 +3,15 @@
 // เน้นข้อมูลในไฟล์เดียวกัน (Problem List, Meeting, ReportGM) ทำงานเร็วขึ้น 10 เท่า
 // ==============================================================================
 
-const CHANNEL_ACCESS_TOKEN = 'EeY78cILRYnIUFMXuUOQlaLnI+OhWJijw77S+dsg19faiWliiTdfcfCLO9PVD1z+J45IWKvQ68vln7yVxaAebohplWJX4rxjEW4SGECCyXjHt1IS1Zv/papeVducU94Gmbh/TS/mUikjPtA9qUaWOQdB04t89/1O/w1cDnyilFU='; 
+// 🔒 ดึง LINE Channel Access Token จาก Script Properties ปลอดภัย 100% ไม่หลุดลง Git
+function getChannelAccessToken() {
+  try {
+    return PropertiesService.getScriptProperties().getProperty('CHANNEL_ACCESS_TOKEN') || '';
+  } catch (e) {
+    return '';
+  }
+}
+const CHANNEL_ACCESS_TOKEN = getChannelAccessToken(); 
 const SPREADSHEET_ID = '1ZVxDG93kElikrhKxvMplHFrzBbwYAEvdf3RawZbuNvI'; 
 const SHEET_NAME = 'Sheet1'; 
 const OVERVIEW_GROUP_ID = 'C0ab9e253cf3f8a5aa1f5bd0e6302f0b6'; 
@@ -2597,10 +2605,12 @@ function extractSpreadsheetId(urlOrId) {
 }
 
 function getGroupSummary(groupId) {
+  const token = CHANNEL_ACCESS_TOKEN || getChannelAccessToken();
+  if (!token) return 'กลุ่ม LINE';
   const url = `https://api.line.me/v2/bot/group/${groupId}/summary`;
   const options = {
     'method': 'get',
-    'headers': { 'Authorization': `Bearer ${CHANNEL_ACCESS_TOKEN}` },
+    'headers': { 'Authorization': `Bearer ${token}` },
     'muteHttpExceptions': true
   };
   try {
@@ -2619,6 +2629,11 @@ function saveDataToSheet(groupId, groupName) {
 }
 
 function replyMessage(replyToken, payload) {
+  const token = CHANNEL_ACCESS_TOKEN || getChannelAccessToken();
+  if (!token) {
+    console.warn('CHANNEL_ACCESS_TOKEN is not configured in Script Properties.');
+    return;
+  }
   let messages = [];
   if (typeof payload === 'string') {
     messages = [{ type: 'text', text: payload }];
@@ -2628,11 +2643,21 @@ function replyMessage(replyToken, payload) {
   const url = 'https://api.line.me/v2/bot/message/reply';
   const options = {
     'method': 'post',
-    'headers': { 'Content-Type': 'application/json', 'Authorization': `Bearer ${CHANNEL_ACCESS_TOKEN}` },
+    'headers': { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
     'payload': JSON.stringify({ 'replyToken': replyToken, 'messages': messages }),
     'muteHttpExceptions': true
   };
   try { UrlFetchApp.fetch(url, options); } catch (e) { console.error(e); }
+}
+
+// ฟังก์ชันช่วยเหลือสำหรับบันทึก Channel Access Token ลง Script Properties (รันครั้งเดียวใน Apps Script Editor ได้)
+function setLineChannelAccessToken(token) {
+  if (token && typeof token === 'string') {
+    PropertiesService.getScriptProperties().setProperty('CHANNEL_ACCESS_TOKEN', token.trim());
+    console.log('บันทึก CHANNEL_ACCESS_TOKEN ลง Script Properties สำเร็จแล้ว');
+    return true;
+  }
+  return false;
 }
 
 function createSectionBubble(titleText, bgColor, contentsArray, periodText) {
