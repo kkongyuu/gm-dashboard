@@ -11819,17 +11819,15 @@
         }
         if (empBranches.length === 0) return;
 
+        const totalMonthDays = dates.length;
         const rowCount = empBranches.length;
-        const avgScore = emp.maxPossibleScore > 0 ? (emp.totalScore / (emp.maxPossibleScore / 5)) : 0;
-        const overallPct = emp.maxPossibleScore > 0 ? Math.round((emp.totalScore / emp.maxPossibleScore) * 100) : 0;
         const empBg = (empIdx % 2 === 0) ? 'bg-white' : 'bg-slate-50/40';
 
-        empBranches.forEach((branchName, bIdx) => {
-          const isFirstBranch = (bIdx === 0);
-          const isLastBranch = (bIdx === rowCount - 1);
-          const rowBottomBorder = isLastBranch ? 'border-b-2 border-slate-200' : 'border-b border-slate-100';
+        let empTotalScoreAllBranches = 0;
+        const empSubmittedDaysCount = Object.keys(emp.days || {}).length;
 
-          // คำนวณคะแนนเฉลี่ยเดือนเฉพาะสาขานี้
+        // คำนวณคะแนนของแต่ละสาขาก่อน โดยคิดครบทุกวันในเดือน (วันที่ไม่ส่งคิดเป็น 0 คะแนน)
+        const branchDataList = empBranches.map((branchName, bIdx) => {
           let bTotalScore = 0;
           let bEvaluatedDays = 0;
 
@@ -11838,8 +11836,8 @@
             const dayItem = emp.days ? emp.days[d] : null;
             if (!dayItem) {
               return `
-                <td class="px-1 py-1.5 text-center border-l border-slate-100 ${rowBottomBorder}">
-                  <button type="button" onclick="openEvaDayDetailModal('${emp.name}', '${d}', '${branchName}')" class="w-full py-1.5 px-0.5 rounded text-center text-slate-300 hover:text-sky-600 hover:bg-sky-50 transition text-xxs cursor-pointer font-medium" title="${emp.name} (${d}): ไม่มีข้อมูลประเมิน (วันหยุด หรือยังไม่ได้ส่ง - ไม่นำมาคิดคะแนนเป็น 0)">
+                <td class="px-1 py-1.5 text-center border-l border-slate-100 ${bIdx === rowCount - 1 ? 'border-b-2 border-slate-200' : 'border-b border-slate-100'}">
+                  <button type="button" onclick="openEvaDayDetailModal('${emp.name}', '${d}', '${branchName}')" class="w-full py-1.5 px-0.5 rounded text-center text-slate-300 hover:text-sky-600 hover:bg-sky-50 transition text-xxs cursor-pointer font-medium" title="${emp.name} (${d}): ไม่พบการส่งผลประเมิน (คิดเป็น 0 คะแนน)">
                     -
                   </button>
                 </td>
@@ -11862,8 +11860,8 @@
 
             if (cScore === null) {
               return `
-                <td class="px-1 py-1.5 text-center border-l border-slate-100 ${rowBottomBorder}">
-                  <button type="button" onclick="openEvaDayDetailModal('${emp.name}', '${d}', '${branchName}')" class="w-full py-1.5 px-0.5 rounded text-center text-slate-300 hover:text-sky-600 hover:bg-sky-50 transition text-xxs cursor-pointer font-medium" title="${emp.name} - ${branchName} (${d}): ไม่มีข้อมูลประเมินของสาขานี้ (ไม่นำมาคิดคะแนนเป็น 0)">
+                <td class="px-1 py-1.5 text-center border-l border-slate-100 ${bIdx === rowCount - 1 ? 'border-b-2 border-slate-200' : 'border-b border-slate-100'}">
+                  <button type="button" onclick="openEvaDayDetailModal('${emp.name}', '${d}', '${branchName}')" class="w-full py-1.5 px-0.5 rounded text-center text-slate-300 hover:text-sky-600 hover:bg-sky-50 transition text-xxs cursor-pointer font-medium" title="${emp.name} - ${branchName} (${d}): ไม่ได้ส่งแบบประเมินของสาขานี้ (คิดเป็น 0 คะแนน)">
                     -
                   </button>
                 </td>
@@ -11881,14 +11879,14 @@
             const scoreDesc = cScore === 5 ? 'ผ่านครบ 5 ข้อสมบูรณ์' :
                               cScore >= 3 ? `ผ่าน ${cScore}/5 ข้อ` :
                               cScore > 0  ? `ผ่านเพียง ${cScore}/5 ข้อ` :
-                                            'ประเมินแล้ว: 0/5 ข้อ (ไม่ผ่านทั้ง 5 ข้อ - คิดเป็นคะแนน 0)';
+                                            'ประเมินแล้ว: 0/5 ข้อ (ไม่ผ่านทั้ง 5 ข้อ - คิดเป็น 0 คะแนน)';
 
             const badgeContent = (cScore === 0)
               ? `<span class="inline-flex items-center space-x-0.5"><span class="w-1.5 h-1.5 rounded-full bg-rose-600 inline-block animate-pulse"></span><span>0/5</span></span>`
               : `${cScore}/5`;
 
             return `
-              <td class="px-1 py-1.5 text-center border-l border-slate-100 ${rowBottomBorder}">
+              <td class="px-1 py-1.5 text-center border-l border-slate-100 ${bIdx === rowCount - 1 ? 'border-b-2 border-slate-200' : 'border-b border-slate-100'}">
                 <button type="button" onclick="openEvaDayDetailModal('${emp.name}', '${d}', '${branchName}')" class="w-full py-1.5 px-0.5 rounded-lg text-center border font-bold text-xxs ${cBg} transition hover:ring-2 hover:ring-sky-400 hover:shadow-xs cursor-pointer" title="${emp.name} - ${branchName} (${d}): ${cScore}/5 คะแนน • ${scoreDesc} (คลิกดู 5 ขั้นตอน)">
                   ${badgeContent}
                 </button>
@@ -11896,8 +11894,33 @@
             `;
           }).join('');
 
-          const bAvgScore = bEvaluatedDays > 0 ? (bTotalScore / bEvaluatedDays) : 0;
+          empTotalScoreAllBranches += bTotalScore;
+
+          // คำนวณคะแนนเฉลี่ยเดือนเฉพาะสาขานี้ โดยคิดครบทุกวันในเดือน (วันที่ไม่ส่งคิดเป็น 0 คะแนน)
+          const bAvgScore = totalMonthDays > 0 ? (bTotalScore / totalMonthDays) : 0;
           const bPct = Math.round((bAvgScore / 5) * 100);
+
+          return {
+            branchName,
+            bIdx,
+            bTotalScore,
+            bEvaluatedDays,
+            bAvgScore,
+            bPct,
+            dateCellsHtml
+          };
+        });
+
+        // ภาพรวมของ ผจก. ท่านนี้ (คิดครบทุกวันและทุกสาขา วันที่ไม่ส่งคิดเป็น 0 คะแนน)
+        const empMaxPossibleTotal = rowCount * totalMonthDays * 5;
+        const empOverallAvg = (rowCount * totalMonthDays) > 0 ? (empTotalScoreAllBranches / (rowCount * totalMonthDays)) : 0;
+        const empOverallPct = empMaxPossibleTotal > 0 ? Math.round((empTotalScoreAllBranches / empMaxPossibleTotal) * 100) : 0;
+        const empMissedDays = Math.max(0, totalMonthDays - empSubmittedDaysCount);
+
+        branchDataList.forEach((st, bIdx) => {
+          const isFirstBranch = (bIdx === 0);
+          const isLastBranch = (bIdx === rowCount - 1);
+          const rowBottomBorder = isLastBranch ? 'border-b-2 border-slate-200' : 'border-b border-slate-100';
 
           matrixRowsHtml += `
             <tr class="hover:bg-sky-50/30 transition-colors">
@@ -11905,25 +11928,27 @@
                 <td rowspan="${rowCount}" class="px-3.5 py-3 align-top border-r border-b-2 border-slate-200 sticky left-0 z-20 ${empBg} w-[130px] min-w-[130px] max-w-[130px]">
                   <div class="font-black text-slate-800 text-xs sm:text-sm truncate" title="${emp.name}">${emp.name}</div>
                   <span class="inline-block mt-1 text-xxxs px-2 py-0.5 rounded-full font-bold bg-sky-50 text-sky-700 border border-sky-200">
-                    ${emp.clinicsCount} สาขา
+                    ${rowCount} สาขา
                   </span>
-                  <div class="mt-2 text-xxxs text-slate-500 font-semibold leading-tight">
-                    เฉลี่ย: <strong class="text-slate-800 font-bold">${avgScore.toFixed(1)}/5</strong>
-                    <span class="block text-slate-400">(${overallPct}%) • ${emp.daysCount} วัน</span>
+                  <div class="mt-2 text-xxxs text-slate-600 font-semibold leading-tight">
+                    เฉลี่ย: <strong class="text-slate-900 font-bold text-xs">${empOverallAvg.toFixed(1)}/5</strong>
+                    <span class="block text-slate-500 font-medium">(${empOverallPct}%) • ส่ง ${empSubmittedDaysCount}/${totalMonthDays} วัน</span>
+                    ${empMissedDays > 0 ? `<span class="inline-block mt-1 text-xxxs text-rose-700 font-bold bg-rose-50 border border-rose-200/80 px-1.5 py-0.5 rounded">ขาดส่ง ${empMissedDays} วัน</span>` : `<span class="inline-block mt-1 text-xxxs text-emerald-700 font-bold bg-emerald-50 border border-emerald-200/80 px-1.5 py-0.5 rounded">ครบทุกวัน</span>`}
                   </div>
                 </td>
               ` : ''}
 
               <td class="px-3.5 py-2.5 border-r border-slate-200 sticky left-[130px] z-20 shadow-xs ${empBg} ${rowBottomBorder} w-[150px] min-w-[150px] max-w-[150px]">
-                <div class="font-bold text-slate-800 text-xs truncate" title="${branchName}">
-                  ${branchName}
+                <div class="font-bold text-slate-800 text-xs truncate" title="${st.branchName}">
+                  ${st.branchName}
                 </div>
-                <div class="text-xxxs text-slate-400 font-medium mt-0.5">
-                  ${bEvaluatedDays > 0 ? `เฉลี่ย ${bAvgScore.toFixed(1)}/5 (${bPct}%)` : 'ยังไม่มีผล'}
+                <div class="text-xxxs text-slate-500 font-medium mt-0.5 leading-tight">
+                  <span class="font-bold text-slate-800">เฉลี่ย ${st.bAvgScore.toFixed(1)}/5</span> (${st.bPct}%)
+                  <span class="block text-slate-400 mt-0.5">ส่ง ${st.bEvaluatedDays}/${totalMonthDays} วัน</span>
                 </div>
               </td>
 
-              ${dateCellsHtml}
+              ${st.dateCellsHtml}
             </tr>
           `;
         });
@@ -11934,11 +11959,11 @@
           <div class="flex flex-wrap items-center gap-2">
             <span class="text-xs font-bold text-slate-700">ภาพรวมรายเดือน:</span>
             <span class="text-xs font-semibold px-2 py-0.5 bg-white border border-slate-200 rounded-lg text-slate-800">${evaState.selectedMonth}</span>
-            <span class="text-xxs text-slate-500 font-medium">(${employees.length} ผู้จัดการ • ครอบคลุม ${allUniqueClinics.size} สาขา)</span>
+            <span class="text-xxs text-slate-500 font-medium">(${employees.length} ผู้จัดการ • ครอบคลุม ${allUniqueClinics.size} สาขา • รวมทั้งสิ้น ${dates.length} วัน)</span>
           </div>
 
-          <!-- แถบอธิบายสัญลักษณ์ (Legend): แยกความแตกต่างระหว่าง 0/5 กับ เว้นว่าง (-) -->
-          <div class="flex flex-wrap items-center gap-2.5 text-xxxs text-slate-600 font-medium">
+          <!-- แถบอธิบายสัญลักษณ์ (Legend): แยกความแตกต่างระหว่าง 0/5 กับ เว้นว่าง (-) และระบุนโยบายคิดทุกวัน -->
+          <div class="flex flex-wrap items-center gap-2 text-xxxs text-slate-600 font-medium">
             <span class="flex items-center space-x-1" title="ผ่านครบทั้ง 5 ข้อ">
               <span class="w-2.5 h-2.5 rounded bg-emerald-500 inline-block"></span>
               <span>5/5 (เต็ม)</span>
@@ -11951,13 +11976,13 @@
               <span class="w-2.5 h-2.5 rounded bg-amber-500 inline-block"></span>
               <span>1-2/5</span>
             </span>
-            <span class="flex items-center space-x-1 bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200" title="ส่งประเมินแล้ว แต่ไม่ผ่านทั้ง 5 ข้อ (นำมาคิดคะแนนเป็น 0)">
+            <span class="flex items-center space-x-1 bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200" title="ส่งประเมินแล้ว แต่ไม่ผ่านทั้ง 5 ข้อ (ได้ 0 คะแนน)">
               <span class="w-2 h-2 rounded-full bg-rose-600 inline-block animate-pulse"></span>
-              <strong class="text-rose-700">0/5 (ประเมินแล้วตกทุกข้อ)</strong>
+              <strong class="text-rose-700">0/5 (ส่งแล้วตกทุกข้อ = 0 คะแนน)</strong>
             </span>
-            <span class="flex items-center space-x-1 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200" title="วันหยุด หรือยังไม่มีการประเมินในวันนี้ (ไม่นำมาคิดเป็นคะแนน 0)">
+            <span class="flex items-center space-x-1 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200" title="ไม่ได้ส่งแบบประเมิน (คิดเป็น 0 คะแนนในการคำนวณเฉลี่ยของเดือน)">
               <span class="font-bold text-slate-400">-</span>
-              <span class="text-slate-600">เว้นว่าง (ไม่มีประเมิน/วันหยุด)</span>
+              <span class="text-slate-600">เว้นว่าง (ไม่ส่ง = 0 คะแนน)</span>
             </span>
           </div>
         </div>
@@ -12144,7 +12169,7 @@
       if (modal) modal.classList.add('hidden');
     }
 
-    // 📈 อัปเดต Summary KPI Cards ประจำเดือน
+    // 📈 อัปเดต Summary KPI Cards ประจำเดือน (คิดคะแนนรวมทุกวัน วันที่ไม่ส่ง = 0 คะแนน)
     function updateEvaMonthKpiCards(employees, dates, totalClinicsCount) {
       if (!Array.isArray(employees) || employees.length === 0) {
         document.getElementById('evaKpiEvaluatedCount').textContent = '0';
@@ -12158,33 +12183,56 @@
         return;
       }
 
+      const totalDays = dates.length;
+      let totalExpectedSubmissions = 0;
       let grandTotalScore = 0;
-      let grandMaxScore = 0;
-      let totalSubmissions = 0;
+      let actualSubmissions = 0;
       let fullPassSubmissions = 0;
       const stepFails = [0, 0, 0, 0, 0];
 
       employees.forEach(emp => {
-        grandTotalScore += (emp.totalScore || 0);
-        grandMaxScore += (emp.maxPossibleScore || 0);
+        const empBranches = emp.clinicsList || [];
+        const bCount = empBranches.length || 1;
+        totalExpectedSubmissions += (bCount * totalDays);
 
-        Object.values(emp.days || {}).forEach(dItem => {
-          totalSubmissions++;
-          const parsed = parseEvaEmployeeDailyItem(dItem);
-          if (parsed) {
-            if (parsed.pct === 100) fullPassSubmissions++;
-            parsed.clinics.forEach(cl => {
-              cl.steps.forEach((st, sIdx) => {
-                if (st !== 'check' && sIdx < 5) stepFails[sIdx]++;
-              });
-            });
-          }
+        empBranches.forEach(bName => {
+          dates.forEach(d => {
+            const dayItem = emp.days ? emp.days[d] : null;
+            if (dayItem) {
+              let cScore = null;
+              if (Array.isArray(dayItem.value) && dayItem.value.length > 0 && dayItem.value[0].clinic !== undefined) {
+                const found = dayItem.value.find(v => isBranchMatch(v.clinic, bName));
+                if (found && found.scores !== undefined && found.scores !== '') {
+                  cScore = Number(found.scores) || 0;
+                  if (Array.isArray(found.value)) {
+                    found.value.forEach((sv, sIdx) => {
+                      const st = normalizeEvaStepScore(sv.scoresSub || sv.score);
+                      if (st !== 'check' && sIdx < 5) stepFails[sIdx]++;
+                    });
+                  }
+                }
+              } else if (bCount === 1) {
+                cScore = Number(dayItem.summary?.totalScore ?? dayItem.scores) || 0;
+                const val = dayItem.value || [];
+                val.forEach((sv, sIdx) => {
+                  const st = normalizeEvaStepScore(sv.score || sv.scoresSub);
+                  if (st !== 'check' && sIdx < 5) stepFails[sIdx]++;
+                });
+              }
+              if (cScore !== null) {
+                grandTotalScore += cScore;
+                actualSubmissions++;
+                if (cScore === 5) fullPassSubmissions++;
+              }
+            }
+          });
         });
       });
 
-      const avgPct = grandMaxScore > 0 ? Math.round((grandTotalScore / grandMaxScore) * 100) : 0;
-      const avgScore5 = (avgPct / 100) * 5;
-      const passRate = totalSubmissions > 0 ? Math.round((fullPassSubmissions / totalSubmissions) * 100) : 0;
+      const grandMaxPossible = totalExpectedSubmissions * 5;
+      const avgPct = grandMaxPossible > 0 ? Math.round((grandTotalScore / grandMaxPossible) * 100) : 0;
+      const avgScore5 = grandMaxPossible > 0 ? (grandTotalScore / totalExpectedSubmissions) : 0;
+      const passRate = totalExpectedSubmissions > 0 ? Math.round((fullPassSubmissions / totalExpectedSubmissions) * 100) : 0;
 
       let maxFailIdx = 0;
       for (let i = 1; i < 5; i++) {
@@ -12195,9 +12243,9 @@
       document.getElementById('evaKpiEvaluatedCount').textContent = `${employees.length} ท่าน`;
       document.getElementById('evaKpiEvaluatedSub').textContent = `ครอบคลุม ${totalClinicsCount} สาขา`;
       document.getElementById('evaKpiAvgScore').textContent = `${avgScore5.toFixed(1)} / 5.0`;
-      document.getElementById('evaKpiAvgScoreSub').textContent = `เฉลี่ยคิดเป็น ${avgPct}% ของเกณฑ์`;
-      document.getElementById('evaKpiFullPassCount').textContent = `${passRate}% (${fullPassSubmissions} วัน)`;
-      document.getElementById('evaKpiFullPassSub').textContent = `จากทั้งหมด ${totalSubmissions} วันที่ประเมิน`;
+      document.getElementById('evaKpiAvgScoreSub').textContent = `เฉลี่ยทั้งเดือนคิดเป็น ${avgPct}% (คิดรวมทุกวัน)`;
+      document.getElementById('evaKpiFullPassCount').textContent = `${passRate}% (${fullPassSubmissions} ครั้ง)`;
+      document.getElementById('evaKpiFullPassSub').textContent = `ส่งครบ 5 ข้อจากเป้าหมาย ${totalExpectedSubmissions} ครั้ง`;
       document.getElementById('evaKpiFocusArea').textContent = focusStepName;
       document.getElementById('evaKpiFocusAreaSub').textContent = `ตกหล่นสะสม ${stepFails[maxFailIdx]} ครั้ง`;
     }
@@ -12212,6 +12260,7 @@
       let csv = "\uFEFF"; // UTF-8 BOM
       csv += `รายงานแบบประเมิน Process ผู้จัดการเขต ประจำเดือน ${evaState.selectedMonth}\n`;
       const dates = evaState.monthData.dates || [];
+      const totalDays = dates.length;
       csv += `ลำดับ,ชื่อ ผจก.,สาขา,คะแนนเฉลี่ยสาขา (เต็ม 5),คิดเป็น %,${dates.map(d => d.split('-')[2]).join(',')}\n`;
 
       let emps = evaState.monthData.employees || [];
@@ -12245,8 +12294,9 @@
             return `${cScore}/5`;
           }).join(',');
 
-          const bAvg = bDays > 0 ? (bTotal / bDays).toFixed(1) : '0.0';
-          const bPct = bDays > 0 ? Math.round(((bTotal / bDays) / 5) * 100) : 0;
+          // คิดคะแนนเฉลี่ยหารด้วยจำนวนวันทั้งหมดในเดือน (วันที่ขาดส่งคิดเป็น 0 คะแนน)
+          const bAvg = totalDays > 0 ? (bTotal / totalDays).toFixed(1) : '0.0';
+          const bPct = totalDays > 0 ? Math.round(((bTotal / totalDays) / 5) * 100) : 0;
           csv += `"${count++}","${e.name}","${bName}","${bAvg}","${bPct}%",${rowDates}\n`;
         });
       });
