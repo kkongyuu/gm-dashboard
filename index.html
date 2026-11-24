@@ -546,6 +546,11 @@
           <span>วิเคราะห์เคส บอท & ภาพรวม</span>
         </button>
 
+        <button onclick="switchTab('tab-evaluation')" id="nav-tab-evaluation" class="tab-btn px-3 py-2 text-xs sm:text-sm font-medium rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 flex items-center space-x-1.5 whitespace-nowrap">
+          <i data-lucide="clipboard-check" class="w-4 h-4 text-sky-600"></i>
+          <span>ประเมิน Process ผจก.</span>
+        </button>
+
         <button onclick="switchTab('tab-manager')" id="nav-tab-manager" class="tab-btn px-3 py-2 text-xs sm:text-sm font-medium rounded-lg text-indigo-700 bg-indigo-50 hover:bg-indigo-100 flex items-center space-x-1.5 whitespace-nowrap border border-indigo-200">
           <i data-lucide="user-check" class="w-4 h-4 text-indigo-600"></i>
           <span id="navManagerLabel">พื้นที่งาน ผจก. (12 คน)</span>
@@ -2347,7 +2352,176 @@
     </section>
 
     <!-- ===================================================================== -->
-    <!-- 6. TAB: MANAGER PERSONAL PORTAL & INPUT (พื้นที่ ผจก. 12 ท่าน) -->
+    <!-- 7. TAB: MANAGER PROCESS EVALUATION (แบบประเมิน Process ผู้จัดการเขต) -->
+    <!-- ===================================================================== -->
+    <section id="tab-evaluation" class="tab-content hidden space-y-6">
+
+      <!-- Header & View Mode Switcher -->
+      <div class="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/80 shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div>
+          <div class="flex items-center space-x-2.5">
+            <span class="p-2 rounded-xl bg-sky-50 text-sky-600 border border-sky-100 flex items-center justify-center shadow-sm">
+              <i data-lucide="clipboard-check" class="w-5 h-5"></i>
+            </span>
+            <div>
+              <div class="flex items-center space-x-2">
+                <h2 class="text-base sm:text-lg font-bold text-slate-800 tracking-tight">แบบประเมิน Process การปฏิบัติงานผู้จัดการเขต</h2>
+                <span class="text-xxs px-2 py-0.5 rounded-full font-bold bg-sky-50 text-sky-700 border border-sky-200">รายวัน & รายเดือน</span>
+              </div>
+              <p class="text-xs text-slate-500">ติดตามและประเมินผลการทำงาน 5 ขั้นตอนหลักประจำวัน รายบุคคลและรายคลินิก</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filter Controls -->
+        <div class="flex flex-wrap items-center gap-2 sm:gap-2.5">
+          <!-- Month Selector -->
+          <div class="flex items-center space-x-1.5 bg-slate-50 px-2.5 py-1.5 rounded-xl border border-slate-200 text-xs">
+            <i data-lucide="calendar" class="w-3.5 h-3.5 text-slate-400"></i>
+            <span class="text-slate-500 font-medium">เดือน:</span>
+            <select id="evaMonthSelect" onchange="changeEvaMonth(this.value)" class="bg-transparent font-semibold text-slate-800 outline-none cursor-pointer">
+              <!-- Options populated dynamically -->
+            </select>
+          </div>
+
+          <!-- View Mode Toggle (Daily Table vs Monthly Matrix) -->
+          <div class="inline-flex p-1 bg-slate-100 rounded-xl border border-slate-200/80 text-xs font-semibold">
+            <button type="button" id="evaModeDailyBtn" onclick="changeEvaViewMode('daily')" class="px-3 py-1 rounded-lg bg-white text-slate-800 shadow-sm transition">
+              📅 ตารางรายวัน
+            </button>
+            <button type="button" id="evaModeMonthlyBtn" onclick="changeEvaViewMode('monthly')" class="px-3 py-1 rounded-lg text-slate-500 hover:text-slate-800 transition">
+              📊 สรุปทั้งเดือน
+            </button>
+          </div>
+
+          <!-- Date Picker for Daily View -->
+          <div id="evaDatePickerContainer" class="flex items-center space-x-1.5 bg-slate-50 px-2.5 py-1.5 rounded-xl border border-slate-200 text-xs">
+            <span class="text-slate-500 font-medium">วันที่:</span>
+            <input type="date" id="evaDatePicker" onchange="changeEvaDate(this.value)" class="bg-transparent font-semibold text-slate-800 outline-none cursor-pointer">
+          </div>
+
+          <!-- Search Input -->
+          <div class="relative">
+            <i data-lucide="search" class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+            <input type="text" id="evaSearchInput" oninput="filterEvaData()" placeholder="ค้นหาชื่อ หรือคลินิก..." class="pl-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-sky-500 outline-none w-36 sm:w-44 transition">
+          </div>
+
+          <!-- Export CSV Button -->
+          <button type="button" onclick="exportEvaDataCsv()" title="ส่งออกข้อมูลเป็น CSV" class="p-2 text-slate-600 hover:text-slate-900 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition shadow-sm">
+            <i data-lucide="download" class="w-4 h-4"></i>
+          </button>
+
+          <!-- Refresh Button -->
+          <button type="button" onclick="refreshEvaData()" id="evaRefreshBtn" title="รีเฟรชข้อมูลประเมิน" class="p-2 text-slate-600 hover:text-slate-900 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition shadow-sm">
+            <i data-lucide="rotate-cw" id="evaRefreshIcon" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Config Missing / Setup Alert Banner -->
+      <div id="evaConfigAlert" class="hidden bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-4 sm:p-5 text-xs text-amber-900">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="flex items-start space-x-3">
+            <div class="p-2 rounded-xl bg-amber-100 text-amber-700 mt-0.5">
+              <i data-lucide="shield-alert" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <h4 class="font-bold text-amber-950 text-sm">ยังไม่ได้ระบุ URL เชื่อมต่อ API แบบประเมิน Process</h4>
+              <p class="text-amber-800 mt-0.5">เพื่อความปลอดภัยขั้นสูงสุด URL จะถูกจัดเก็บไว้เฉพาะในระบบหลังบ้านและในเครื่องของคุณ โดยไม่มีการบันทึกลง Git</p>
+            </div>
+          </div>
+          <button type="button" onclick="openSettingsModal()" class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl shadow-sm text-xs transition whitespace-nowrap self-start sm:self-auto">
+            ⚙️ ตั้งค่า API ทันที
+          </button>
+        </div>
+      </div>
+
+      <!-- Summary KPI Metric Cards -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
+            <i data-lucide="users" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <p class="text-xxs font-medium text-slate-400 uppercase tracking-wider">ผู้จัดการที่ประเมิน</p>
+            <h3 class="text-base sm:text-lg font-bold text-slate-800" id="evaKpiEvaluatedCount">-</h3>
+            <span class="text-xxs text-slate-500" id="evaKpiEvaluatedSub">กำลังโหลด...</span>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
+            <i data-lucide="check-circle-2" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <p class="text-xxs font-medium text-slate-400 uppercase tracking-wider">คะแนนเฉลี่ย Process</p>
+            <h3 class="text-base sm:text-lg font-bold text-slate-800" id="evaKpiAvgScore">-</h3>
+            <span class="text-xxs text-emerald-600 font-semibold" id="evaKpiAvgScoreSub">คะแนนเต็ม 5.0</span>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center font-bold">
+            <i data-lucide="building-2" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <p class="text-xxs font-medium text-slate-400 uppercase tracking-wider">คลินิกที่ผ่าน 100%</p>
+            <h3 class="text-base sm:text-lg font-bold text-slate-800" id="evaKpiFullPassCount">-</h3>
+            <span class="text-xxs text-slate-500" id="evaKpiFullPassSub">ครบ 5 ขั้นตอน</span>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center font-bold">
+            <i data-lucide="clipboard-list" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <p class="text-xxs font-medium text-slate-400 uppercase tracking-wider">ขั้นตอนที่ต้องติดตาม</p>
+            <h3 class="text-xs sm:text-sm font-bold text-slate-800 truncate" id="evaKpiFocusArea">-</h3>
+            <span class="text-xxs text-purple-600 font-medium" id="evaKpiFocusAreaSub">ข้อที่คะแนนต่ำสุด</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Process 5-Step Explanation Legend -->
+      <div class="bg-slate-50/80 rounded-2xl p-3 sm:p-4 border border-slate-200/80">
+        <div class="text-xs font-bold text-slate-700 mb-2 flex items-center space-x-1.5">
+          <i data-lucide="info" class="w-3.5 h-3.5 text-blue-500"></i>
+          <span>เกณฑ์ 5 ขั้นตอนการประเมิน Process ประจำวันของผู้จัดการ:</span>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 text-xxs text-slate-600">
+          <div class="p-2 rounded-xl bg-white border border-slate-200 flex items-center space-x-2 shadow-2xs">
+            <span class="w-5 h-5 rounded-lg bg-blue-100 text-blue-700 font-bold flex items-center justify-center shrink-0">1</span>
+            <span class="font-medium">การจัดการก่อนเข้างาน</span>
+          </div>
+          <div class="p-2 rounded-xl bg-white border border-slate-200 flex items-center space-x-2 shadow-2xs">
+            <span class="w-5 h-5 rounded-lg bg-blue-100 text-blue-700 font-bold flex items-center justify-center shrink-0">2</span>
+            <span class="font-medium">วางแผนประชุมเช้า</span>
+          </div>
+          <div class="p-2 rounded-xl bg-white border border-slate-200 flex items-center space-x-2 shadow-2xs">
+            <span class="w-5 h-5 rounded-lg bg-blue-100 text-blue-700 font-bold flex items-center justify-center shrink-0">3</span>
+            <span class="font-medium">วางแผน follow up แผนก</span>
+          </div>
+          <div class="p-2 rounded-xl bg-white border border-slate-200 flex items-center space-x-2 shadow-2xs">
+            <span class="w-5 h-5 rounded-lg bg-blue-100 text-blue-700 font-bold flex items-center justify-center shrink-0">4</span>
+            <span class="font-medium">คุยกับ PT ก่อนเลิกงาน</span>
+          </div>
+          <div class="p-2 rounded-xl bg-white border border-slate-200 flex items-center space-x-2 shadow-2xs">
+            <span class="w-5 h-5 rounded-lg bg-blue-100 text-blue-700 font-bold flex items-center justify-center shrink-0">5</span>
+            <span class="font-medium">ผจก. ตรวจงาน นอกเวลา</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Evaluation Table View Container -->
+      <div id="evaTableContainer" class="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden">
+        <!-- Rendered dynamically by JavaScript -->
+      </div>
+
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- 8. TAB: MANAGER PERSONAL PORTAL & INPUT (พื้นที่ ผจก. 12 ท่าน) -->
     <!-- ===================================================================== -->
     <section id="tab-manager" class="tab-content hidden space-y-6">
       <div id="managerPortalContainer">
@@ -2398,6 +2572,15 @@
           </div>
           <input type="text" id="casesSheetIdInput" placeholder="วางลิงก์ Google Sheets หรือ ID เช่น 1ZVxDG93kElikrhKxvMplHFrzBbwYAEvdf3RawZbuNvI" class="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
           <p class="text-xxs text-slate-400">หากชีทเคสถูกแยกไปไว้คนละไฟล์ หรือเป็นชีทคัดลอกใหม่ สามารถวางลิงก์ไฟล์ที่นี่ได้โดยตรง</p>
+        </div>
+
+        <div id="evaApiUrlContainer" class="space-y-1.5 pt-2 border-t border-slate-100">
+          <div class="flex items-center justify-between">
+            <label class="block text-xs font-semibold text-slate-700">EVA Manager API Endpoint (แบบประเมิน Process):</label>
+            <span class="text-xxs font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">🔒 ปลอดภัย ไม่ขึ้น Git</span>
+          </div>
+          <input type="text" id="evaApiUrlInput" placeholder="ระบุ URL ของ API เช่น https://.../user/eva-manager" class="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-mono">
+          <p class="text-xxs text-slate-400">จัดเก็บไว้เฉพาะในเบราว์เซอร์และ Script Properties หลังบ้าน เพื่อความปลอดภัยสูงสุด</p>
         </div>
 
         <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 text-xxs text-slate-600 space-y-1">
@@ -9073,6 +9256,8 @@
           renderManagerPortal();
         } else if (tabId === 'tab-cases') {
           renderCasesDashboard();
+        } else if (tabId === 'tab-evaluation') {
+          initEvaEvaluation();
         }
 
         lucide.createIcons();
@@ -9208,12 +9393,16 @@
       document.getElementById('managerModal').classList.add('hidden');
     }
 
-    // Settings Modal (Live Google Sheets API URL & Cases Spreadsheet ID)
+    // Settings Modal (Live Google Sheets API URL & Cases Spreadsheet ID & EVA API)
     function openSettingsModal() {
       document.getElementById('gasApiUrlInput').value = dashboardState.apiUrl || DEFAULT_LIVE_API_URL;
       const casesInput = document.getElementById('casesSheetIdInput');
       if (casesInput) {
         casesInput.value = localStorage.getItem('gm_cases_spreadsheet_id') || '';
+      }
+      const evaInput = document.getElementById('evaApiUrlInput');
+      if (evaInput) {
+        evaInput.value = localStorage.getItem('gm_eva_api_url') || '';
       }
       document.getElementById('settingsModal').classList.remove('hidden');
     }
@@ -9241,8 +9430,24 @@
         localStorage.setItem('gm_cases_spreadsheet_id', val);
       }
 
+      const evaInput = document.getElementById('evaApiUrlInput');
+      if (evaInput) {
+        let evaUrl = evaInput.value.trim().replace(/\/+$/, '');
+        evaUrl = evaUrl.replace(/\/\d{4}-\d{2}-\d{2}$/, '');
+        localStorage.setItem('gm_eva_api_url', evaUrl);
+        if (evaUrl) {
+          try {
+            const base = dashboardState.apiUrl || DEFAULT_LIVE_API_URL;
+            fetch(`${base}?action=setEvaApiUrl&url=${encodeURIComponent(evaUrl)}`, { mode: 'no-cors' });
+          } catch (e) {}
+        }
+      }
+
       closeSettingsModal();
       fetchDashboardData(true);
+      if (!document.getElementById('tab-evaluation').classList.contains('hidden')) {
+        refreshEvaData();
+      }
     }
 
     // Export CSV
@@ -9491,6 +9696,8 @@
         'tab-kpi',
         'tab-problems',
         'tab-accounting',
+        'tab-cases',
+        'tab-evaluation',
         'executivePeriodBanner',
         'mainNavTabs',
         'btnManagerLinksHeader',
@@ -11043,6 +11250,793 @@
           submitBtn.innerHTML = '<i data-lucide="save" class="w-4 h-4"></i><span>บันทึก ReportGM ทั้ง 3 รอบ</span>';
           lucide.createIcons();
         }
+      }
+    }
+
+    // =========================================================================
+    // 5.9 EVA MANAGER PROCESS EVALUATION MODULE (แบบประเมิน Process ผู้จัดการเขต)
+    // ระบบติดตามและประเมินผลการทำงาน 5 ขั้นตอนหลักประจำวัน (ความปลอดภัยสูง: ไม่มี URL หลุดลง Git)
+    // =========================================================================
+    const evaState = {
+      isInitialized: false,
+      viewMode: 'daily', // 'daily' | 'monthly'
+      selectedDate: '',
+      selectedMonth: '',
+      dailyData: null,
+      monthData: null,
+      searchQuery: '',
+      isLoading: false,
+      expandedEmployees: new Set()
+    };
+
+    const EVA_PROCESS_STEPS = [
+      { id: 1, title: 'การจัดการก่อนเข้างาน', short: '1. ก่อนเข้างาน' },
+      { id: 2, title: 'วางแผนประชุมเช้า', short: '2. ประชุมเช้า' },
+      { id: 3, title: 'วางแผนตำแหน่ง follow up แยกแผนก', short: '3. Follow up แผนก' },
+      { id: 4, title: 'คุยกับ PT ก่อนเลิกงาน', short: '4. คุย PT เลิกงาน' },
+      { id: 5, title: 'ผจก. ตรวจงาน แอคชั่นงานช่วง นอกเวลา', short: '5. ตรวจงานนอกเวลา' }
+    ];
+
+    function normalizeEvaStepScore(val) {
+      if (!val) return 'none';
+      const s = String(val).toLowerCase().trim();
+      if (s === 'check') return 'check';
+      if (s === 'unchecked') return 'unchecked';
+      return 'none';
+    }
+
+    function renderEvaScoreIcon(status, customTitle = '') {
+      if (status === 'check') {
+        return `<span class="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-200/80 shadow-2xs" title="${customTitle || 'ผ่านเกณฑ์ (ทำครบ)'}"><i data-lucide="check" class="w-3.5 h-3.5 stroke-[2.5]"></i></span>`;
+      }
+      if (status === 'unchecked') {
+        return `<span class="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-rose-50 text-rose-600 border border-rose-200/80 shadow-2xs" title="${customTitle || 'ไม่ผ่าน / ยังไม่ทำ'}"><i data-lucide="x" class="w-3.5 h-3.5 stroke-[2.5]"></i></span>`;
+      }
+      return `<span class="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-slate-50 text-slate-400 border border-slate-200 shadow-2xs font-bold text-xs" title="${customTitle || 'ไม่มีข้อมูล'}">-</span>`;
+    }
+
+    function getEvaConfiguredUrl() {
+      return (localStorage.getItem('gm_eva_api_url') || '').trim().replace(/\/+$/, '').replace(/\/\d{4}-\d{2}-\d{2}$/, '');
+    }
+
+    function initEvaEvaluation() {
+      if (!evaState.selectedDate) {
+        // กำหนดวันที่เริ่มต้น (ใช้วันนี้ตามเวลาประเทศไทย GMT+7)
+        const now = new Date();
+        const y = now.getFullYear();
+        const m = String(now.getMonth() + 1).padStart(2, '0');
+        const d = String(now.getDate()).padStart(2, '0');
+        evaState.selectedDate = `${y}-${m}-${d}`;
+        evaState.selectedMonth = `${y}-${m}`;
+      }
+
+      // เซ็ตอัป Dropdown รายการเดือน (ย้อนหลัง 3 เดือน และล่วงหน้า 1 เดือน)
+      const moSelect = document.getElementById('evaMonthSelect');
+      if (moSelect && moSelect.options.length === 0) {
+        const monthsList = [
+          { val: '2026-11', label: 'พฤศจิกายน 2569' },
+          { val: '2026-10', label: 'ตุลาคม 2569' },
+          { val: '2026-12', label: 'ธันวาคม 2569' },
+          { val: '2027-01', label: 'มกราคม 2570' }
+        ];
+        moSelect.innerHTML = monthsList.map(item => `
+          <option value="${item.val}" ${item.val === evaState.selectedMonth ? 'selected' : ''}>${item.label}</option>
+        `).join('');
+      }
+
+      const datePicker = document.getElementById('evaDatePicker');
+      if (datePicker && !datePicker.value) {
+        datePicker.value = evaState.selectedDate;
+      }
+
+      // ตรวจสอบว่าเคยตั้งค่า API URL ไว้หรือไม่
+      const configuredUrl = getEvaConfiguredUrl();
+      const alertEl = document.getElementById('evaConfigAlert');
+      if (alertEl) {
+        if (!configuredUrl) {
+          alertEl.classList.remove('hidden');
+        } else {
+          alertEl.classList.add('hidden');
+        }
+      }
+
+      if (!evaState.isInitialized) {
+        evaState.isInitialized = true;
+        refreshEvaData();
+      }
+    }
+
+    function changeEvaViewMode(mode) {
+      evaState.viewMode = mode;
+      const dailyBtn = document.getElementById('evaModeDailyBtn');
+      const monthlyBtn = document.getElementById('evaModeMonthlyBtn');
+      const dateContainer = document.getElementById('evaDatePickerContainer');
+
+      if (mode === 'daily') {
+        dailyBtn.className = 'px-3 py-1 rounded-lg bg-white text-slate-800 shadow-sm transition font-bold';
+        monthlyBtn.className = 'px-3 py-1 rounded-lg text-slate-500 hover:text-slate-800 transition font-normal';
+        if (dateContainer) dateContainer.classList.remove('hidden');
+      } else {
+        monthlyBtn.className = 'px-3 py-1 rounded-lg bg-white text-slate-800 shadow-sm transition font-bold';
+        dailyBtn.className = 'px-3 py-1 rounded-lg text-slate-500 hover:text-slate-800 transition font-normal';
+        if (dateContainer) dateContainer.classList.add('hidden');
+      }
+
+      refreshEvaData();
+    }
+
+    function changeEvaDate(dateVal) {
+      if (!dateVal) return;
+      evaState.selectedDate = dateVal;
+      const parts = dateVal.split('-');
+      if (parts.length >= 2) {
+        evaState.selectedMonth = `${parts[0]}-${parts[1]}`;
+        const moSelect = document.getElementById('evaMonthSelect');
+        if (moSelect) moSelect.value = evaState.selectedMonth;
+      }
+      if (evaState.viewMode === 'daily') {
+        fetchEvaDailyData();
+      }
+    }
+
+    function changeEvaMonth(monthVal) {
+      if (!monthVal) return;
+      evaState.selectedMonth = monthVal;
+      // ปรับวันที่ให้สอดคล้องกับเดือนที่เลือก
+      if (evaState.selectedDate && !evaState.selectedDate.startsWith(monthVal)) {
+        evaState.selectedDate = `${monthVal}-23`;
+        const dp = document.getElementById('evaDatePicker');
+        if (dp) dp.value = evaState.selectedDate;
+      }
+      refreshEvaData();
+    }
+
+    function filterEvaData() {
+      const input = document.getElementById('evaSearchInput');
+      evaState.searchQuery = input ? input.value.trim().toLowerCase() : '';
+      if (evaState.viewMode === 'daily') {
+        renderEvaDailyTable();
+      } else {
+        renderEvaMonthlyMatrix();
+      }
+    }
+
+    function toggleEvaEmployeeAccordion(empName) {
+      if (evaState.expandedEmployees.has(empName)) {
+        evaState.expandedEmployees.delete(empName);
+      } else {
+        evaState.expandedEmployees.add(empName);
+      }
+      renderEvaDailyTable();
+    }
+
+    async function refreshEvaData() {
+      if (evaState.viewMode === 'daily') {
+        await fetchEvaDailyData(true);
+      } else {
+        await fetchEvaMonthData(true);
+      }
+    }
+
+    // ฟังก์ชันช่วยแยกข้อมูลพนักงาน/ผู้จัดการแต่ละคน
+    function parseEvaEmployeeDailyItem(item) {
+      const empName = String(item.employeeName || '').trim();
+      const val = item.value || [];
+      const hasClinics = Array.isArray(val) && val.length > 0 && val[0].clinic !== undefined;
+
+      if (hasClinics) {
+        const clinics = val.map(c => {
+          const cName = String(c.clinic || '').trim();
+          const cScore = Number(c.scores) || 0;
+          const subVals = Array.isArray(c.value) ? c.value : [];
+          const stepStatuses = subVals.map(sv => normalizeEvaStepScore(sv.scoresSub));
+          return {
+            name: cName,
+            score: cScore,
+            maxScore: 5,
+            steps: stepStatuses
+          };
+        });
+
+        const totalScore = clinics.reduce((sum, c) => sum + c.score, 0);
+        const maxScore = clinics.length * 5;
+        const avgScore = clinics.length > 0 ? (totalScore / clinics.length) : 0;
+        const pct = maxScore > 0 ? Math.round((totalScore / maxScore) * 100) : 0;
+
+        const stepPassRates = [0, 0, 0, 0, 0];
+        clinics.forEach(c => {
+          c.steps.forEach((st, idx) => {
+            if (st === 'check') stepPassRates[idx]++;
+          });
+        });
+
+        return {
+          employeeName: empName,
+          hasClinics: true,
+          clinicsCount: clinics.length,
+          clinics: clinics,
+          totalScore: totalScore,
+          maxScore: maxScore,
+          avgScore: avgScore,
+          pct: pct,
+          stepPassRates: stepPassRates,
+          steps: stepPassRates.map(cnt => {
+            if (cnt === clinics.length && clinics.length > 0) return 'check';
+            if (cnt === 0) return 'unchecked';
+            return 'partial';
+          })
+        };
+      } else {
+        const steps = Array.isArray(val) ? val.map(v => normalizeEvaStepScore(v.score)) : [];
+        const topScore = Number(item.summary?.topScore) || 5;
+        const totalScore = Number(item.summary?.totalScore) || 0;
+        const pct = topScore > 0 ? Math.round((totalScore / topScore) * 100) : 0;
+
+        return {
+          employeeName: empName,
+          hasClinics: false,
+          clinicsCount: 1,
+          clinics: [],
+          totalScore: totalScore,
+          maxScore: topScore,
+          avgScore: totalScore,
+          pct: pct,
+          stepPassRates: steps.map(s => s === 'check' ? 1 : 0),
+          steps: steps
+        };
+      }
+    }
+
+    // ⚡ 1. ดึงข้อมูลแบบประเมินรายวัน
+    async function fetchEvaDailyData(forceRefresh = false) {
+      const container = document.getElementById('evaTableContainer');
+      const icon = document.getElementById('evaRefreshIcon');
+      if (icon) icon.classList.add('animate-spin');
+
+      if (container && (!evaState.dailyData || forceRefresh)) {
+        container.innerHTML = `
+          <div class="p-12 text-center space-y-3">
+            <div class="w-8 h-8 mx-auto border-2 border-sky-500 border-t-transparent rounded-full animate-spin"></div>
+            <p class="text-xs text-slate-500">กำลังดึงข้อมูลแบบประเมิน Process ประจำวันที่ ${evaState.selectedDate}...</p>
+          </div>
+        `;
+      }
+
+      try {
+        const customUrl = getEvaConfiguredUrl();
+        const targetDate = evaState.selectedDate || '2026-11-23';
+        const baseGas = dashboardState.apiUrl || DEFAULT_LIVE_API_URL;
+        const proxyUrl = `${baseGas}?action=getEvaData&date=${targetDate}${customUrl ? '&url=' + encodeURIComponent(customUrl) : ''}${forceRefresh ? '&nocache=1' : ''}`;
+
+        let json = null;
+        try {
+          const resp = await fetch(proxyUrl);
+          if (resp.ok) {
+            json = await resp.json();
+          }
+        } catch (gasErr) {
+          console.warn('Backend proxy fetch error, attempting direct fallback if customUrl exists:', gasErr);
+        }
+
+        // Direct fetch fallback หาก backend ยังไม่ได้ redeploy แต่เครื่องมี customUrl
+        if ((!json || json.code === 'CONFIG_MISSING' || !json.status) && customUrl) {
+          try {
+            const directResp = await fetch(`${customUrl}/${targetDate}`, { mode: 'cors' });
+            if (directResp.ok) {
+              json = await directResp.json();
+            }
+          } catch (dErr) {
+            console.warn('Direct fetch error:', dErr);
+          }
+        }
+
+        if (json && json.status && Array.isArray(json.data)) {
+          evaState.dailyData = json;
+          renderEvaDailyTable();
+        } else {
+          renderEvaErrorState(json?.message || `ไม่พบข้อมูลแบบประเมินประจำวันที่ ${targetDate}`);
+        }
+      } catch (err) {
+        console.error('fetchEvaDailyData error:', err);
+        renderEvaErrorState(err.message);
+      } finally {
+        if (icon) icon.classList.remove('animate-spin');
+        lucide.createIcons();
+      }
+    }
+
+    // ⚡ 2. ดึงข้อมูลแบบประเมินรายเดือน
+    async function fetchEvaMonthData(forceRefresh = false) {
+      const container = document.getElementById('evaTableContainer');
+      const icon = document.getElementById('evaRefreshIcon');
+      if (icon) icon.classList.add('animate-spin');
+
+      if (container && (!evaState.monthData || forceRefresh)) {
+        container.innerHTML = `
+          <div class="p-12 text-center space-y-3">
+            <div class="w-8 h-8 mx-auto border-2 border-sky-500 border-t-transparent rounded-full animate-spin"></div>
+            <p class="text-xs text-slate-500">กำลังประมวลผลข้อมูลแบบประเมินทั้งเดือน ${evaState.selectedMonth}...</p>
+          </div>
+        `;
+      }
+
+      try {
+        const customUrl = getEvaConfiguredUrl();
+        const parts = (evaState.selectedMonth || '2026-11').split('-');
+        const y = parts[0] || '2026';
+        const m = parts[1] || '11';
+        const baseGas = dashboardState.apiUrl || DEFAULT_LIVE_API_URL;
+        const proxyUrl = `${baseGas}?action=getEvaMonth&year=${y}&month=${m}${customUrl ? '&url=' + encodeURIComponent(customUrl) : ''}${forceRefresh ? '&nocache=1' : ''}`;
+
+        const resp = await fetch(proxyUrl);
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const json = await resp.json();
+
+        if (json && json.status) {
+          evaState.monthData = json;
+          renderEvaMonthlyMatrix();
+        } else {
+          renderEvaErrorState(json?.message || `ไม่สามารถดึงข้อมูลสรุปประจำเดือน ${evaState.selectedMonth} ได้`);
+        }
+      } catch (err) {
+        console.error('fetchEvaMonthData error:', err);
+        renderEvaErrorState(err.message);
+      } finally {
+        if (icon) icon.classList.remove('animate-spin');
+        lucide.createIcons();
+      }
+    }
+
+    function renderEvaErrorState(msg) {
+      const container = document.getElementById('evaTableContainer');
+      if (!container) return;
+      container.innerHTML = `
+        <div class="p-8 sm:p-12 text-center space-y-3 max-w-md mx-auto">
+          <div class="w-12 h-12 mx-auto rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center">
+            <i data-lucide="alert-circle" class="w-6 h-6"></i>
+          </div>
+          <h3 class="text-base font-bold text-slate-800">ยังไม่สามารถโหลดข้อมูลแบบประเมินได้</h3>
+          <p class="text-xs text-slate-500 leading-relaxed">${msg}</p>
+          <div class="pt-2 flex items-center justify-center space-x-2">
+            <button type="button" onclick="refreshEvaData()" class="px-3 py-1.5 bg-sky-600 text-white rounded-xl text-xs font-semibold hover:bg-sky-700 transition shadow-sm">ลองใหม่อีกครั้ง</button>
+            <button type="button" onclick="openSettingsModal()" class="px-3 py-1.5 bg-slate-100 text-slate-700 rounded-xl text-xs font-semibold hover:bg-slate-200 transition">ตั้งค่า API</button>
+          </div>
+        </div>
+      `;
+      lucide.createIcons();
+    }
+
+    // 📋 เรนเดอร์ตารางรายวัน (Daily Table View)
+    function renderEvaDailyTable() {
+      const container = document.getElementById('evaTableContainer');
+      if (!container || !evaState.dailyData) return;
+
+      const rawItems = Array.isArray(evaState.dailyData.data) ? evaState.dailyData.data : [];
+      let parsedList = rawItems.map(it => parseEvaEmployeeDailyItem(it));
+
+      // ฟิลเตอร์การค้นหา
+      if (evaState.searchQuery) {
+        const q = evaState.searchQuery;
+        parsedList = parsedList.filter(p => {
+          if (p.employeeName.toLowerCase().includes(q)) return true;
+          return p.clinics.some(c => c.name.toLowerCase().includes(q));
+        });
+      }
+
+      // อัปเดต Summary Cards
+      updateEvaKpiCards(parsedList);
+
+      if (parsedList.length === 0) {
+        container.innerHTML = `
+          <div class="p-12 text-center space-y-2 text-slate-400">
+            <i data-lucide="inbox" class="w-8 h-8 mx-auto text-slate-300"></i>
+            <p class="text-xs">ไม่พบรายการแบบประเมินตามเงื่อนไขที่ค้นหา</p>
+          </div>
+        `;
+        lucide.createIcons();
+        return;
+      }
+
+      let rowsHtml = '';
+      parsedList.forEach((emp, idx) => {
+        const isExpanded = evaState.expandedEmployees.has(emp.employeeName);
+        const scoreColorClass = emp.pct >= 80 ? 'text-emerald-700 bg-emerald-50 border-emerald-200' :
+                                emp.pct >= 50 ? 'text-blue-700 bg-blue-50 border-blue-200' :
+                                emp.pct > 0   ? 'text-amber-700 bg-amber-50 border-amber-200' :
+                                                'text-slate-600 bg-slate-100 border-slate-200';
+
+        // 5 Step Badges
+        const stepBadges = emp.steps.map((st, sIdx) => {
+          if (st === 'check') {
+            return `<div class="flex flex-col items-center"><span class="w-6 h-6 rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center font-bold text-xxs" title="ข้อ ${sIdx+1}: ผ่าน 100%"><i data-lucide="check" class="w-3.5 h-3.5 stroke-[2.5]"></i></span></div>`;
+          } else if (st === 'unchecked') {
+            return `<div class="flex flex-col items-center"><span class="w-6 h-6 rounded-lg bg-rose-50 text-rose-600 border border-rose-200 flex items-center justify-center font-bold text-xxs" title="ข้อ ${sIdx+1}: ไม่ผ่าน / ยังไม่ทำ"><i data-lucide="x" class="w-3.5 h-3.5 stroke-[2.5]"></i></span></div>`;
+          } else {
+            // Partial
+            const passCnt = emp.stepPassRates[sIdx];
+            return `<div class="flex flex-col items-center"><span class="px-1.5 h-6 rounded-lg bg-amber-50 text-amber-700 border border-amber-200 flex items-center justify-center font-bold text-xxs" title="ข้อ ${sIdx+1}: ผ่าน ${passCnt}/${emp.clinicsCount} คลินิก">${passCnt}/${emp.clinicsCount}</span></div>`;
+          }
+        }).join('');
+
+        // แถวหลัก (Main Employee Row)
+        rowsHtml += `
+          <tr class="hover:bg-slate-50/80 transition-colors border-b border-slate-100 last:border-b-0 ${isExpanded ? 'bg-sky-50/30' : ''}">
+            <td class="px-4 py-3 text-center text-xs font-semibold text-slate-400 w-12">${idx + 1}</td>
+            <td class="px-4 py-3">
+              <div class="flex items-center space-x-2.5">
+                <div class="w-8 h-8 rounded-xl bg-slate-100 text-slate-700 font-bold flex items-center justify-center text-xs shrink-0">
+                  ${emp.employeeName.charAt(0) || 'ผ'}
+                </div>
+                <div>
+                  <div class="font-bold text-slate-800 text-xs sm:text-sm flex items-center space-x-1.5">
+                    <span>${emp.employeeName}</span>
+                    ${emp.hasClinics ? `<span class="text-xxs px-1.5 py-0.5 rounded font-semibold bg-sky-50 text-sky-700 border border-sky-200">${emp.clinicsCount} คลินิก</span>` : `<span class="text-xxs px-1.5 py-0.5 rounded font-semibold bg-slate-100 text-slate-600">ภาพรวมเขต</span>`}
+                  </div>
+                  <p class="text-xxs text-slate-400 mt-0.5">${emp.hasClinics ? emp.clinics.map(c => c.name).join(' • ') : 'แบบประเมิน Process ทั่วไป'}</p>
+                </div>
+              </div>
+            </td>
+            <td class="px-4 py-3 text-center">
+              <span class="inline-flex items-center px-2.5 py-1 rounded-xl text-xs font-bold border ${scoreColorClass}">
+                ${emp.avgScore.toFixed(1)} / 5.0 (${emp.pct}%)
+              </span>
+            </td>
+            <td class="px-4 py-3 text-center">
+              <div class="flex items-center justify-center space-x-1.5">
+                ${stepBadges}
+              </div>
+            </td>
+            <td class="px-4 py-3 text-right">
+              ${emp.hasClinics ? `
+                <button type="button" onclick="toggleEvaEmployeeAccordion('${emp.employeeName}')" class="px-2.5 py-1 text-xs font-semibold rounded-lg border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition inline-flex items-center space-x-1">
+                  <span>${isExpanded ? 'ซ่อนคลินิก' : 'ดูรายคลินิก'}</span>
+                  <i data-lucide="${isExpanded ? 'chevron-up' : 'chevron-down'}" class="w-3.5 h-3.5"></i>
+                </button>
+              ` : `
+                <span class="text-xxs text-slate-400 font-medium">ไม่มีคลินิกย่อย</span>
+              `}
+            </td>
+          </tr>
+        `;
+
+        // แถวย่อยรายคลินิก (Accordion Sub-rows)
+        if (isExpanded && emp.hasClinics) {
+          emp.clinics.forEach((cl, cIdx) => {
+            const clBadges = cl.steps.map((st, csIdx) => {
+              return `<div class="flex flex-col items-center">${renderEvaScoreIcon(st, `ข้อ ${csIdx+1}`)}</div>`;
+            }).join('');
+
+            const clScoreClass = cl.score === 5 ? 'text-emerald-700 bg-emerald-50 border-emerald-200' :
+                                 cl.score >= 3 ? 'text-blue-700 bg-blue-50 border-blue-200' :
+                                 cl.score > 0  ? 'text-amber-700 bg-amber-50 border-amber-200' :
+                                                 'text-rose-700 bg-rose-50 border-rose-200';
+
+            rowsHtml += `
+              <tr class="bg-slate-50/50 border-b border-slate-100 last:border-b-0 text-xs">
+                <td class="px-4 py-2 text-center text-slate-300 font-mono text-xxs">${idx + 1}.${cIdx + 1}</td>
+                <td class="px-4 py-2 pl-12">
+                  <div class="flex items-center space-x-2">
+                    <i data-lucide="corner-down-right" class="w-3.5 h-3.5 text-slate-400"></i>
+                    <span class="font-semibold text-slate-700">${cl.name}</span>
+                  </div>
+                </td>
+                <td class="px-4 py-2 text-center">
+                  <span class="inline-flex items-center px-2 py-0.5 rounded-lg text-xxs font-bold border ${clScoreClass}">
+                    ${cl.score} / 5
+                  </span>
+                </td>
+                <td class="px-4 py-2 text-center">
+                  <div class="flex items-center justify-center space-x-1.5">
+                    ${clBadges}
+                  </div>
+                </td>
+                <td class="px-4 py-2 text-right">
+                  <span class="text-xxs font-medium ${cl.score === 5 ? 'text-emerald-600' : 'text-slate-400'}">
+                    ${cl.score === 5 ? 'ครบถ้วนสมบูรณ์' : `ขาด ${5 - cl.score} ข้อ`}
+                  </span>
+                </td>
+              </tr>
+            `;
+          });
+        }
+      });
+
+      container.innerHTML = `
+        <div class="p-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-slate-50/50">
+          <div class="flex items-center space-x-2">
+            <span class="text-xs font-bold text-slate-700">รายการประเมินประจำวันที่:</span>
+            <span class="text-xs font-semibold px-2 py-0.5 bg-white border border-slate-200 rounded-lg text-slate-800">${evaState.selectedDate}</span>
+            <span class="text-xxs text-slate-400">(${parsedList.length} ผู้จัดการ)</span>
+          </div>
+          <div class="text-xxs text-slate-500">
+            คลิกปุ่ม "ดูรายคลินิก" เพื่อตรวจเช็คความคืบหน้ารายสาขา
+          </div>
+        </div>
+        <div class="overflow-x-auto custom-scrollbar">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-slate-50/80 border-b border-slate-200/80 text-xxs font-bold text-slate-500 uppercase tracking-wider">
+                <th class="px-4 py-3 text-center w-12">#</th>
+                <th class="px-4 py-3">ผู้จัดการ / พนักงาน</th>
+                <th class="px-4 py-3 text-center w-40">คะแนนเฉลี่ย (% สำเร็จ)</th>
+                <th class="px-4 py-3 text-center w-52">5 ขั้นตอน Process</th>
+                <th class="px-4 py-3 text-right w-32">รายละเอียด</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rowsHtml}
+            </tbody>
+          </table>
+        </div>
+      `;
+
+      lucide.createIcons();
+    }
+
+    // 📊 เรนเดอร์ตารางสรุปภาพรวมทั้งเดือน (Monthly Matrix Table View)
+    function renderEvaMonthlyMatrix() {
+      const container = document.getElementById('evaTableContainer');
+      if (!container || !evaState.monthData) return;
+
+      const dates = Array.isArray(evaState.monthData.dates) ? evaState.monthData.dates : [];
+      let employees = Array.isArray(evaState.monthData.employees) ? evaState.monthData.employees : [];
+
+      if (evaState.searchQuery) {
+        const q = evaState.searchQuery;
+        employees = employees.filter(e => e.name.toLowerCase().includes(q));
+      }
+
+      if (employees.length === 0) {
+        container.innerHTML = `
+          <div class="p-12 text-center space-y-2 text-slate-400">
+            <i data-lucide="inbox" class="w-8 h-8 mx-auto text-slate-300"></i>
+            <p class="text-xs">ไม่พบข้อมูลการประเมินในเดือน ${evaState.selectedMonth}</p>
+          </div>
+        `;
+        lucide.createIcons();
+        return;
+      }
+
+      // หัวตารางวันที่ (ดึงเฉพาะเลขวัน เช่น 01, 02, ... 24)
+      const dateHeadersHtml = dates.map(d => {
+        const dayNum = d.split('-')[2] || d;
+        const isCurrent = (d === evaState.selectedDate);
+        return `
+          <th class="px-2 py-2 text-center text-xxs font-bold cursor-pointer hover:bg-sky-100 transition border-l border-slate-200/80 ${isCurrent ? 'bg-sky-50 text-sky-800' : 'text-slate-500'}" onclick="jumpToEvaDailyView('${d}')" title="คลิกเพื่อดูรายละเอียดวันที่ ${d}">
+            ${dayNum}
+          </th>
+        `;
+      }).join('');
+
+      let matrixRowsHtml = '';
+      employees.forEach((emp, idx) => {
+        const avgScore = emp.maxPossibleScore > 0 ? (emp.totalScore / (emp.maxPossibleScore / 5)) : 0;
+        const overallPct = emp.maxPossibleScore > 0 ? Math.round((emp.totalScore / emp.maxPossibleScore) * 100) : 0;
+        const badgeClass = overallPct >= 80 ? 'text-emerald-700 bg-emerald-50 border-emerald-200' :
+                           overallPct >= 50 ? 'text-blue-700 bg-blue-50 border-blue-200' :
+                           overallPct > 0   ? 'text-amber-700 bg-amber-50 border-amber-200' :
+                                              'text-slate-600 bg-slate-100 border-slate-200';
+
+        const dateCellsHtml = dates.map(d => {
+          const dayItem = emp.days ? emp.days[d] : null;
+          if (!dayItem) {
+            return `<td class="px-1.5 py-2 text-center border-l border-slate-100 text-slate-300 text-xxs">-</td>`;
+          }
+
+          let s = 0, top = 5;
+          if (dayItem.summary && dayItem.summary.totalScore !== '' && dayItem.summary.totalScore !== undefined) {
+            s = Number(dayItem.summary.totalScore) || 0;
+            top = Number(dayItem.summary.topScore) || 5;
+          } else if (Array.isArray(dayItem.value) && dayItem.value.length > 0 && dayItem.value[0].clinic) {
+            s = dayItem.value.reduce((sum, c) => sum + (Number(c.scores) || 0), 0);
+            top = dayItem.value.length * 5;
+          }
+
+          const cellPct = top > 0 ? Math.round((s / top) * 100) : 0;
+          const bg = cellPct >= 80 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                     cellPct >= 50 ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                     cellPct > 0   ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                                     'bg-rose-50 text-rose-700 border-rose-200';
+
+          return `
+            <td class="px-1 py-1.5 text-center border-l border-slate-100">
+              <button type="button" onclick="jumpToEvaDailyView('${d}')" class="w-full py-1 rounded text-xxs font-bold border ${bg} hover:ring-2 hover:ring-sky-400 transition" title="วันที่ ${d}: ${s}/${top} (${cellPct}%)">
+                ${s}/${top}
+              </button>
+            </td>
+          `;
+        }).join('');
+
+        matrixRowsHtml += `
+          <tr class="hover:bg-slate-50/80 transition-colors border-b border-slate-100 last:border-b-0">
+            <td class="px-3 py-3 text-center text-xs font-semibold text-slate-400 w-10 sticky left-0 bg-white">${idx + 1}</td>
+            <td class="px-3 py-3 sticky left-10 bg-white shadow-xs z-10">
+              <div class="font-bold text-slate-800 text-xs sm:text-sm truncate w-40 sm:w-48">${emp.name}</div>
+              <p class="text-xxs text-slate-400">ส่งประเมิน ${emp.daysCount} วัน</p>
+            </td>
+            <td class="px-3 py-3 text-center">
+              <span class="inline-flex items-center px-2 py-0.5 rounded-lg text-xxs font-bold border ${badgeClass}">
+                ${avgScore.toFixed(1)} / 5.0 (${overallPct}%)
+              </span>
+            </td>
+            ${dateCellsHtml}
+          </tr>
+        `;
+      });
+
+      container.innerHTML = `
+        <div class="p-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-slate-50/50">
+          <div class="flex items-center space-x-2">
+            <span class="text-xs font-bold text-slate-700">ภาพรวมรายเดือน:</span>
+            <span class="text-xs font-semibold px-2 py-0.5 bg-white border border-slate-200 rounded-lg text-slate-800">${evaState.selectedMonth}</span>
+            <span class="text-xxs text-slate-400">(${employees.length} ผู้จัดการ)</span>
+          </div>
+          <div class="text-xxs text-slate-500">
+            คลิกที่ช่องคะแนนของแต่ละวัน เพื่อดูรายละเอียด 5 ขั้นตอนของวันนั้น
+          </div>
+        </div>
+        <div class="overflow-x-auto custom-scrollbar">
+          <table class="w-full text-left border-collapse min-w-[700px]">
+            <thead>
+              <tr class="bg-slate-50/80 border-b border-slate-200/80">
+                <th class="px-3 py-2.5 text-center w-10 sticky left-0 bg-slate-50/90 text-xxs font-bold text-slate-500">#</th>
+                <th class="px-3 py-2.5 w-40 sm:w-48 sticky left-10 bg-slate-50/90 shadow-xs z-10 text-xxs font-bold text-slate-500">ผู้จัดการ / พนักงาน</th>
+                <th class="px-3 py-2.5 text-center w-28 text-xxs font-bold text-slate-500">คะแนนเฉลี่ยเดือน</th>
+                ${dateHeadersHtml}
+              </tr>
+            </thead>
+            <tbody>
+              ${matrixRowsHtml}
+            </tbody>
+          </table>
+        </div>
+      `;
+
+      lucide.createIcons();
+    }
+
+    function jumpToEvaDailyView(dateStr) {
+      evaState.selectedDate = dateStr;
+      const dp = document.getElementById('evaDatePicker');
+      if (dp) dp.value = dateStr;
+      changeEvaViewMode('daily');
+    }
+
+    // 📈 อัปเดต Summary KPI Cards
+    function updateEvaKpiCards(parsedList) {
+      if (!Array.isArray(parsedList) || parsedList.length === 0) {
+        document.getElementById('evaKpiEvaluatedCount').textContent = '0';
+        document.getElementById('evaKpiEvaluatedSub').textContent = 'ไม่มีการประเมิน';
+        document.getElementById('evaKpiAvgScore').textContent = '-';
+        document.getElementById('evaKpiFullPassCount').textContent = '0';
+        document.getElementById('evaKpiFocusArea').textContent = '-';
+        return;
+      }
+
+      const totalEmps = parsedList.length;
+      let sumPct = 0;
+      let totalClinics = 0;
+      let fullPassClinics = 0;
+      const stepFails = [0, 0, 0, 0, 0];
+
+      parsedList.forEach(p => {
+        sumPct += p.pct;
+        if (p.hasClinics) {
+          totalClinics += p.clinicsCount;
+          p.clinics.forEach(c => {
+            if (c.score === 5) fullPassClinics++;
+            c.steps.forEach((st, sIdx) => {
+              if (st !== 'check') stepFails[sIdx]++;
+            });
+          });
+        } else {
+          totalClinics += 1;
+          if (p.totalScore === 5) fullPassClinics++;
+          p.steps.forEach((st, sIdx) => {
+            if (st !== 'check') stepFails[sIdx]++;
+          });
+        }
+      });
+
+      const avgPct = Math.round(sumPct / totalEmps);
+      const avgScoreOutOf5 = (avgPct / 100) * 5;
+
+      // ค้นหาข้อที่ตกหล่นมากที่สุด
+      let maxFailIdx = 0;
+      for (let i = 1; i < 5; i++) {
+        if (stepFails[i] > stepFails[maxFailIdx]) maxFailIdx = i;
+      }
+      const focusStepName = EVA_PROCESS_STEPS[maxFailIdx]?.short || '-';
+
+      document.getElementById('evaKpiEvaluatedCount').textContent = `${totalEmps} ท่าน`;
+      document.getElementById('evaKpiEvaluatedSub').textContent = `จาก ${totalClinics} สาขา/คลินิก`;
+      document.getElementById('evaKpiAvgScore').textContent = `${avgScoreOutOf5.toFixed(1)} / 5.0`;
+      document.getElementById('evaKpiAvgScoreSub').textContent = `คิดเป็น ${avgPct}% ของเกณฑ์`;
+      document.getElementById('evaKpiFullPassCount').textContent = `${fullPassClinics} คลินิก`;
+      document.getElementById('evaKpiFullPassSub').textContent = `จากทั้งหมด ${totalClinics} คลินิก`;
+      document.getElementById('evaKpiFocusArea').textContent = focusStepName;
+      document.getElementById('evaKpiFocusAreaSub').textContent = `ตกหล่น ${stepFails[maxFailIdx]} ครั้ง`;
+    }
+
+    // 📥 ส่งออกข้อมูลเป็น CSV
+    function exportEvaDataCsv() {
+      if (!evaState.dailyData && !evaState.monthData) {
+        showToast('⚠️ ยังไม่มีข้อมูลสำหรับส่งออก');
+        return;
+      }
+
+      let csv = "\uFEFF"; // UTF-8 BOM
+      if (evaState.viewMode === 'daily' && evaState.dailyData) {
+        csv += `รายงานแบบประเมิน Process ผู้จัดการเขต ประจำวันที่ ${evaState.selectedDate}\n`;
+        csv += "ลำดับ,ผู้จัดการ/พนักงาน,คลินิก,คะแนน (เต็ม 5),การจัดการก่อนเข้างาน,วางแผนประชุมเช้า,วางแผน follow up แผนก,คุยกับ PT ก่อนเลิกงาน,ผจก. ตรวจงานนอกเวลา\n";
+
+        const items = Array.isArray(evaState.dailyData.data) ? evaState.dailyData.data : [];
+        let count = 1;
+        items.forEach(it => {
+          const emp = String(it.employeeName || '').trim();
+          const val = it.value || [];
+          if (Array.isArray(val) && val.length > 0 && val[0].clinic) {
+            val.forEach(c => {
+              const cName = c.clinic || '';
+              const cScore = c.scores || 0;
+              const sub = Array.isArray(c.value) ? c.value : [];
+              const s1 = sub[0]?.scoresSub || '-';
+              const s2 = sub[1]?.scoresSub || '-';
+              const s3 = sub[2]?.scoresSub || '-';
+              const s4 = sub[3]?.scoresSub || '-';
+              const s5 = sub[4]?.scoresSub || '-';
+              csv += `"${count++}","${emp}","${cName}","${cScore}","${s1}","${s2}","${s3}","${s4}","${s5}"\n`;
+            });
+          } else {
+            const top = it.summary?.topScore || 5;
+            const score = it.summary?.totalScore || 0;
+            const s1 = val[0]?.score || '-';
+            const s2 = val[1]?.score || '-';
+            const s3 = val[2]?.score || '-';
+            const s4 = val[3]?.score || '-';
+            const s5 = val[4]?.score || '-';
+            csv += `"${count++}","${emp}","ภาพรวมเขต","${score}/${top}","${s1}","${s2}","${s3}","${s4}","${s5}"\n`;
+          }
+        });
+
+        const encoded = encodeURI("data:text/csv;charset=utf-8," + csv);
+        const link = document.createElement("a");
+        link.setAttribute("href", encoded);
+        link.setAttribute("download", `Manager_Process_Evaluation_${evaState.selectedDate}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        showToast('✅ ส่งออกรายงาน CSV เรียบร้อยแล้ว');
+      } else if (evaState.monthData) {
+        csv += `สรุปแบบประเมิน Process ผู้จัดการเขต ประจำเดือน ${evaState.selectedMonth}\n`;
+        const dates = evaState.monthData.dates || [];
+        csv += `ลำดับ,ผู้จัดการ/พนักงาน,ส่งประเมิน (วัน),คะแนนเฉลี่ย,${dates.map(d => d.split('-')[2]).join(',')}\n`;
+
+        const emps = evaState.monthData.employees || [];
+        emps.forEach((e, idx) => {
+          const avg = e.maxPossibleScore > 0 ? (e.totalScore / (e.maxPossibleScore / 5)).toFixed(1) : '0.0';
+          const rowDates = dates.map(d => {
+            const dayItem = e.days ? e.days[d] : null;
+            if (!dayItem) return '-';
+            let s = 0;
+            if (dayItem.summary?.totalScore !== '' && dayItem.summary?.totalScore !== undefined) {
+              s = dayItem.summary.totalScore;
+            } else if (Array.isArray(dayItem.value)) {
+              s = dayItem.value.reduce((sum, c) => sum + (Number(c.scores) || 0), 0);
+            }
+            return s;
+          }).join(',');
+          csv += `"${idx + 1}","${e.name}","${e.daysCount}","${avg}",${rowDates}\n`;
+        });
+
+        const encoded = encodeURI("data:text/csv;charset=utf-8," + csv);
+        const link = document.createElement("a");
+        link.setAttribute("href", encoded);
+        link.setAttribute("download", `Manager_Process_Evaluation_Summary_${evaState.selectedMonth}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        showToast('✅ ส่งออกรายงานสรุปประจำเดือน CSV เรียบร้อยแล้ว');
       }
     }
 

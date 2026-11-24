@@ -63,6 +63,26 @@ function doGet(e) {
     return ContentService.createTextOutput(JSON.stringify(res)).setMimeType(ContentService.MimeType.JSON);
   }
 
+  // 1.0.3 จัดการข้อมูลแบบประเมิน Process ผู้จัดการ (EVA Manager API Proxy - ปลอดภัย 100% ไม่หลุด Git)
+  if (action === 'getEvaData' || action === 'getEvaManagerData') {
+    const targetDate = params.date || Utilities.formatDate(new Date(), "Asia/Bangkok", "yyyy-MM-dd");
+    const result = fetchEvaManagerDaily(targetDate, params.url || '');
+    return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
+  }
+
+  if (action === 'getEvaMonth' || action === 'getEvaManagerMonth') {
+    const now = new Date();
+    const y = params.year || now.getFullYear();
+    const m = params.month || (now.getMonth() + 1);
+    const result = fetchEvaManagerMonth(y, m, params.url || '');
+    return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
+  }
+
+  if (action === 'setEvaApiUrl') {
+    const result = setEvaApiBaseUrl(params.url || '');
+    return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
+  }
+
   // 1.1 ขอข้อมูลเป็น JSON API (สำหรับเว็บเบราว์เซอร์ / Frontend)
   if (action === 'api' || action === 'getData' || params.format === 'json') {
     try {
@@ -3014,4 +3034,194 @@ function sendProblemSummary(groupId, replyToken) {
 
 function sendAccountingReportReply(replyToken) {
   replyMessage(replyToken, 'กำลังดึงรายงานการเบิกจ่าย...');
+}
+
+// ==============================================================================
+// 8. EVA MANAGER PROCESS EVALUATION PROXY & ENGINE
+// จัดการดึงข้อมูลแบบประเมิน Process ผู้จัดการเขต (เก็บ URL ใน Script Properties ปลอดภัย 100%)
+// ==============================================================================
+
+function getEvaApiBaseUrl() {
+  try {
+    return PropertiesService.getScriptProperties().getProperty('EVA_MANAGER_API_BASE_URL') ||
+           PropertiesService.getScriptProperties().getProperty('EVA_API_URL') || '';
+  } catch (e) {
+    return '';
+  }
+}
+
+function setEvaApiBaseUrl(url) {
+  try {
+    if (!url) return { status: false, message: 'กรุณาระบุ URL' };
+    let cleanUrl = String(url).trim().replace(/\/+$/, '');
+    cleanUrl = cleanUrl.replace(/\/\d{4}-\d{2}-\d{2}$/, '');
+    PropertiesService.getScriptProperties().setProperty('EVA_MANAGER_API_BASE_URL', cleanUrl);
+    return { status: true, message: 'บันทึก EVA API URL สำเร็จแล้ว' };
+  } catch (e) {
+    return { status: false, message: e.message };
+  }
+}
+
+function fetchEvaManagerDaily(targetDate, customBaseUrl) {
+  try {
+    const baseUrl = customBaseUrl || getEvaApiBaseUrl();
+    if (!baseUrl) {
+      return { status: false, code: 'CONFIG_MISSING', message: 'กรุณากำหนด EVA API URL ใน Script Properties หรือหน้าตั้งค่า' };
+    }
+    let cleanBase = String(baseUrl).trim().replace(/\/+$/, '');
+    cleanBase = cleanBase.replace(/\/\d{4}-\d{2}-\d{2}$/, '');
+    const fullUrl = `${cleanBase}/${targetDate}`;
+    
+    // Fast Script Cache (5 minutes)
+    const cacheKey = 'eva_day_' + targetDate;
+    const cache = CacheService.getScriptCache();
+    const cached = cache.get(cacheKey);
+    if (cached) {
+      try { return JSON.parse(cached); } catch (e) {}
+    }
+
+    const response = UrlFetchApp.fetch(fullUrl, {
+      method: 'get',
+      headers: {
+        'User-Agent': 'GM-Dashboard-Proxy/1.0',
+        'Accept': 'application/json'
+      },
+      muteHttpExceptions: true
+    });
+
+    const code = response.getResponseCode();
+    if (code !== 200) {
+      return { status: false, code: code, message: `API ตอบกลับด้วยรหัส ${code}`, date: targetDate, data: [] };
+    }
+
+    const text = response.getContentText();
+    const json = JSON.parse(text);
+    try {
+      if (text.length < 100000) {
+        cache.put(cacheKey, text, 300);
+      }
+    } catch (ce) {}
+
+    return json;
+  } catch (err) {
+    return { status: false, message: err.message, date: targetDate, data: [] };
+  }
+}
+
+function fetchEvaManagerMonth(year, month, customBaseUrl) {
+  try {
+    const baseUrl = customBaseUrl || getEvaApiBaseUrl();
+    if (!baseUrl) {
+      return { status: false, code: 'CONFIG_MISSING', message: 'กรุณากำหนด EVA API URL ใน Script Properties หรือหน้าตั้งค่า' };
+    }
+    let cleanBase = String(baseUrl).trim().replace(/\/+$/, '');
+    cleanBase = cleanBase.replace(/\/\d{4}-\d{2}-\d{2}$/, '');
+    
+    const yNum = parseInt(year, 10);
+    const mNum = parseInt(month, 10);
+    const mStr = String(mNum).padStart(2, '0');
+    
+    // Fast Script Cache (10 minutes)
+    const monthKey = `eva_mo_${yNum}_${mStr}`;
+    const cache = CacheService.getScriptCache();
+    const cached = cache.get(monthKey);
+    if (cached) {
+      try { return JSON.parse(cached); } catch (e) {}
+    }
+
+    const now = new Date();
+    const currentY = now.getFullYear();
+    const currentM = now.getMonth() + 1;
+    const isCurrentMonth = (yNum === currentY && mNum === currentM);
+    const lastDayOfMonth = new Date(yNum, mNum, 0).getDate();
+    const maxDay = isCurrentMonth ? Math.min(now.getDate(), lastDayOfMonth) : lastDayOfMonth;
+
+    // เตรียมรายการวันที่สำหรับดึงข้อมูล
+    const dates = [];
+    for (let d = 1; d <= maxDay; d++) {
+      dates.push(`${yNum}-${mStr}-${String(d).padStart(2, '0')}`);
+    }
+
+    // ดึงข้อมูลพร้อมกันในระดับ Parallel ด้วย UrlFetchApp.fetchAll
+    const requests = dates.map(d => ({
+      url: `${cleanBase}/${d}`,
+      method: 'get',
+      headers: {
+        'User-Agent': 'GM-Dashboard-Proxy/1.0',
+        'Accept': 'application/json'
+      },
+      muteHttpExceptions: true
+    }));
+
+    const responses = UrlFetchApp.fetchAll(requests);
+    const daysData = {};
+    const employeesMap = {};
+
+    dates.forEach((d, idx) => {
+      try {
+        const resp = responses[idx];
+        if (resp && resp.getResponseCode() === 200) {
+          const parsed = JSON.parse(resp.getContentText());
+          if (parsed && Array.isArray(parsed.data)) {
+            daysData[d] = parsed.data;
+            parsed.data.forEach(item => {
+              const emp = String(item.employeeName || '').trim();
+              if (emp) {
+                if (!employeesMap[emp]) {
+                  employeesMap[emp] = {
+                    name: emp,
+                    daysCount: 0,
+                    totalScore: 0,
+                    maxPossibleScore: 0,
+                    clinicsCount: 0,
+                    days: {}
+                  };
+                }
+                employeesMap[emp].days[d] = item;
+                employeesMap[emp].daysCount++;
+                
+                if (item.summary && item.summary.totalScore !== '' && item.summary.totalScore !== undefined) {
+                  const s = Number(item.summary.totalScore) || 0;
+                  const top = Number(item.summary.topScore) || 5;
+                  employeesMap[emp].totalScore += s;
+                  employeesMap[emp].maxPossibleScore += top;
+                } else if (Array.isArray(item.value) && item.value.length > 0 && item.value[0].clinic) {
+                  let cScore = 0;
+                  let cTop = item.value.length * 5;
+                  item.value.forEach(cv => {
+                    cScore += (Number(cv.scores) || 0);
+                  });
+                  employeesMap[emp].totalScore += cScore;
+                  employeesMap[emp].maxPossibleScore += cTop;
+                  employeesMap[emp].clinicsCount = Math.max(employeesMap[emp].clinicsCount, item.value.length);
+                }
+              }
+            });
+          }
+        }
+      } catch (pe) {
+        console.warn('Process day error:', d, pe);
+      }
+    });
+
+    const result = {
+      status: true,
+      year: yNum,
+      month: mNum,
+      dates: dates,
+      daysData: daysData,
+      employees: Object.values(employeesMap)
+    };
+
+    try {
+      const outStr = JSON.stringify(result);
+      if (outStr.length < 100000) {
+        cache.put(monthKey, outStr, 600);
+      }
+    } catch (ce) {}
+
+    return result;
+  } catch (err) {
+    return { status: false, message: err.message };
+  }
 }
