@@ -11794,11 +11794,11 @@
         return;
       }
 
-      // หัวตารางวันที่ (ดึงเฉพาะเลขวัน เช่น 01, 02, ... 31)
+      // หัวตารางวันที่ (ดึงเฉพาะเลขวัน เช่น 01, 02, ... 31 - ตรึงแถวบน sticky top-0)
       const dateHeadersHtml = dates.map(d => {
         const dayNum = d.split('-')[2] || d;
         return `
-          <th class="px-1.5 py-2.5 text-center text-xxs font-bold text-slate-500 border-l border-slate-200/80 min-w-[46px]" title="วันที่ ${d}">
+          <th class="px-1.5 py-2.5 text-center text-xxs font-bold text-slate-600 border-l border-b-2 border-slate-200/80 min-w-[46px] sticky top-0 z-30 bg-slate-100" title="วันที่ ${d}">
             ${dayNum}
           </th>
         `;
@@ -11839,7 +11839,7 @@
             if (!dayItem) {
               return `
                 <td class="px-1 py-1.5 text-center border-l border-slate-100 ${rowBottomBorder}">
-                  <button type="button" onclick="openEvaDayDetailModal('${emp.name}', '${d}', '${branchName}')" class="w-full py-1.5 px-0.5 rounded text-center text-slate-300 hover:text-sky-600 hover:bg-sky-50 transition text-xxs cursor-pointer" title="${emp.name} (${d}): ไม่พบการส่งผลประเมิน">
+                  <button type="button" onclick="openEvaDayDetailModal('${emp.name}', '${d}', '${branchName}')" class="w-full py-1.5 px-0.5 rounded text-center text-slate-300 hover:text-sky-600 hover:bg-sky-50 transition text-xxs cursor-pointer font-medium" title="${emp.name} (${d}): ไม่มีข้อมูลประเมิน (วันหยุด หรือยังไม่ได้ส่ง - ไม่นำมาคิดคะแนนเป็น 0)">
                     -
                   </button>
                 </td>
@@ -11863,7 +11863,7 @@
             if (cScore === null) {
               return `
                 <td class="px-1 py-1.5 text-center border-l border-slate-100 ${rowBottomBorder}">
-                  <button type="button" onclick="openEvaDayDetailModal('${emp.name}', '${d}', '${branchName}')" class="w-full py-1.5 px-0.5 rounded text-center text-slate-300 hover:text-sky-600 hover:bg-sky-50 transition text-xxs cursor-pointer" title="${emp.name} (${d}): คลิกเพื่อดูรายละเอียดการประเมินประจำวัน">
+                  <button type="button" onclick="openEvaDayDetailModal('${emp.name}', '${d}', '${branchName}')" class="w-full py-1.5 px-0.5 rounded text-center text-slate-300 hover:text-sky-600 hover:bg-sky-50 transition text-xxs cursor-pointer font-medium" title="${emp.name} - ${branchName} (${d}): ไม่มีข้อมูลประเมินของสาขานี้ (ไม่นำมาคิดคะแนนเป็น 0)">
                     -
                   </button>
                 </td>
@@ -11876,12 +11876,21 @@
             const cBg = cScore === 5 ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100' :
                         cScore >= 3 ? 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100' :
                         cScore > 0  ? 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100' :
-                                      'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100';
+                                      'bg-rose-100 text-rose-800 border-rose-300 hover:bg-rose-200 ring-1 ring-rose-200';
+
+            const scoreDesc = cScore === 5 ? 'ผ่านครบ 5 ข้อสมบูรณ์' :
+                              cScore >= 3 ? `ผ่าน ${cScore}/5 ข้อ` :
+                              cScore > 0  ? `ผ่านเพียง ${cScore}/5 ข้อ` :
+                                            'ประเมินแล้ว: 0/5 ข้อ (ไม่ผ่านทั้ง 5 ข้อ - คิดเป็นคะแนน 0)';
+
+            const badgeContent = (cScore === 0)
+              ? `<span class="inline-flex items-center space-x-0.5"><span class="w-1.5 h-1.5 rounded-full bg-rose-600 inline-block animate-pulse"></span><span>0/5</span></span>`
+              : `${cScore}/5`;
 
             return `
               <td class="px-1 py-1.5 text-center border-l border-slate-100 ${rowBottomBorder}">
-                <button type="button" onclick="openEvaDayDetailModal('${emp.name}', '${d}', '${branchName}')" class="w-full py-1.5 px-0.5 rounded-lg text-center border font-bold text-xxs ${cBg} transition hover:ring-2 hover:ring-sky-400 hover:shadow-xs cursor-pointer" title="${emp.name} - ${branchName} (${d}): ${cScore}/5 คะแนน (คลิกดู 5 ขั้นตอน)">
-                  ${cScore}/5
+                <button type="button" onclick="openEvaDayDetailModal('${emp.name}', '${d}', '${branchName}')" class="w-full py-1.5 px-0.5 rounded-lg text-center border font-bold text-xxs ${cBg} transition hover:ring-2 hover:ring-sky-400 hover:shadow-xs cursor-pointer" title="${emp.name} - ${branchName} (${d}): ${cScore}/5 คะแนน • ${scoreDesc} (คลิกดู 5 ขั้นตอน)">
+                  ${badgeContent}
                 </button>
               </td>
             `;
@@ -11905,7 +11914,7 @@
                 </td>
               ` : ''}
 
-              <td class="px-3.5 py-2.5 border-r sticky left-[130px] z-20 shadow-xs ${empBg} ${rowBottomBorder} w-[150px] min-w-[150px] max-w-[150px]">
+              <td class="px-3.5 py-2.5 border-r border-slate-200 sticky left-[130px] z-20 shadow-xs ${empBg} ${rowBottomBorder} w-[150px] min-w-[150px] max-w-[150px]">
                 <div class="font-bold text-slate-800 text-xs truncate" title="${branchName}">
                   ${branchName}
                 </div>
@@ -11921,23 +11930,45 @@
       });
 
       container.innerHTML = `
-        <div class="p-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-slate-50/50">
-          <div class="flex items-center space-x-2">
+        <div class="p-4 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-3 bg-slate-50/70">
+          <div class="flex flex-wrap items-center gap-2">
             <span class="text-xs font-bold text-slate-700">ภาพรวมรายเดือน:</span>
             <span class="text-xs font-semibold px-2 py-0.5 bg-white border border-slate-200 rounded-lg text-slate-800">${evaState.selectedMonth}</span>
             <span class="text-xxs text-slate-500 font-medium">(${employees.length} ผู้จัดการ • ครอบคลุม ${allUniqueClinics.size} สาขา)</span>
           </div>
-          <div class="text-xxs text-slate-500 flex items-center space-x-1.5">
-            <i data-lucide="mouse-pointer-click" class="w-3.5 h-3.5 text-sky-500"></i>
-            <span>คลิกที่ช่องคะแนนของแต่ละวันเพื่อดู 5 ขั้นตอนของสาขานั้น</span>
+
+          <!-- แถบอธิบายสัญลักษณ์ (Legend): แยกความแตกต่างระหว่าง 0/5 กับ เว้นว่าง (-) -->
+          <div class="flex flex-wrap items-center gap-2.5 text-xxxs text-slate-600 font-medium">
+            <span class="flex items-center space-x-1" title="ผ่านครบทั้ง 5 ข้อ">
+              <span class="w-2.5 h-2.5 rounded bg-emerald-500 inline-block"></span>
+              <span>5/5 (เต็ม)</span>
+            </span>
+            <span class="flex items-center space-x-1" title="ผ่าน 3-4 ข้อ">
+              <span class="w-2.5 h-2.5 rounded bg-blue-500 inline-block"></span>
+              <span>3-4/5</span>
+            </span>
+            <span class="flex items-center space-x-1" title="ผ่าน 1-2 ข้อ">
+              <span class="w-2.5 h-2.5 rounded bg-amber-500 inline-block"></span>
+              <span>1-2/5</span>
+            </span>
+            <span class="flex items-center space-x-1 bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200" title="ส่งประเมินแล้ว แต่ไม่ผ่านทั้ง 5 ข้อ (นำมาคิดคะแนนเป็น 0)">
+              <span class="w-2 h-2 rounded-full bg-rose-600 inline-block animate-pulse"></span>
+              <strong class="text-rose-700">0/5 (ประเมินแล้วตกทุกข้อ)</strong>
+            </span>
+            <span class="flex items-center space-x-1 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200" title="วันหยุด หรือยังไม่มีการประเมินในวันนี้ (ไม่นำมาคิดเป็นคะแนน 0)">
+              <span class="font-bold text-slate-400">-</span>
+              <span class="text-slate-600">เว้นว่าง (ไม่มีประเมิน/วันหยุด)</span>
+            </span>
           </div>
         </div>
-        <div class="overflow-x-auto custom-scrollbar">
-          <table class="w-full text-left border-collapse min-w-[750px]">
+
+        <!-- ตาราง Freeze: ฟิกแกนชื่อ ผจก., สาขา (ซ้าย) และแกนวันที่ (บน) เลื่อนเฉพาะเนื้อหา -->
+        <div class="overflow-auto max-h-[70vh] custom-scrollbar border-t border-slate-200/80">
+          <table class="w-full text-left border-separate border-spacing-0 min-w-[750px]">
             <thead>
-              <tr class="bg-slate-100 border-b border-slate-200/80">
-                <th class="px-3.5 py-2.5 sticky left-0 z-40 bg-slate-100 text-xxs font-bold text-slate-700 border-r border-slate-200 w-[130px] min-w-[130px] max-w-[130px]">ชื่อ ผจก.</th>
-                <th class="px-3.5 py-2.5 sticky left-[130px] z-40 bg-slate-100 shadow-xs text-xxs font-bold text-slate-700 border-r border-slate-200 w-[150px] min-w-[150px] max-w-[150px]">สาขา</th>
+              <tr class="bg-slate-100">
+                <th class="px-3.5 py-2.5 sticky top-0 left-0 z-50 bg-slate-100 text-xxs font-bold text-slate-700 border-r border-b-2 border-slate-200 w-[130px] min-w-[130px] max-w-[130px]">ชื่อ ผจก.</th>
+                <th class="px-3.5 py-2.5 sticky top-0 left-[130px] z-50 bg-slate-100 shadow-xs text-xxs font-bold text-slate-700 border-r border-b-2 border-slate-200 w-[150px] min-w-[150px] max-w-[150px]">สาขา</th>
                 ${dateHeadersHtml}
               </tr>
             </thead>
@@ -11979,13 +12010,13 @@
       if (!dayItem) {
         if (scoreBadgeEl) {
           scoreBadgeEl.className = 'text-xs px-2.5 py-0.5 rounded-full font-bold bg-slate-100 text-slate-500 border border-slate-200';
-          scoreBadgeEl.textContent = 'ไม่มีข้อมูล';
+          scoreBadgeEl.textContent = 'ไม่มีข้อมูล (ไม่ได้ประเมิน / วันหยุด)';
         }
         if (summaryStripEl) {
           summaryStripEl.innerHTML = `
             <div class="text-xs text-slate-500 flex items-center space-x-2">
               <i data-lucide="info" class="w-4 h-4 text-slate-400"></i>
-              <span>ไม่พบการบันทึกแบบประเมินประจำวันที่ ${dateStr} (อาจเป็นวันหยุด หรือยังไม่ได้ส่งข้อมูล)</span>
+              <span>ไม่พบการบันทึกแบบประเมินประจำวันที่ ${dateStr} (อาจเป็นวันหยุด หรือยังไม่ได้ส่งข้อมูล • ไม่ถูกนำไปคิดเป็นคะแนน 0)</span>
             </div>
           `;
         }
@@ -11993,7 +12024,8 @@
           contentEl.innerHTML = `
             <div class="p-10 text-center space-y-2 text-slate-400">
               <i data-lucide="calendar-x-2" class="w-10 h-10 mx-auto text-slate-300"></i>
-              <p class="text-xs">ไม่มีรายการตรวจประเมิน 5 ขั้นตอนในวันนี้</p>
+              <p class="text-xs font-medium">ไม่มีรายการตรวจประเมิน 5 ขั้นตอนในวันนี้</p>
+              <p class="text-xxs text-slate-400">ช่องตารางจะแสดงสถานะเป็นเว้นว่าง (-) เพื่อไม่ให้ดึงคะแนนเฉลี่ยรวม</p>
             </div>
           `;
         }
@@ -12007,11 +12039,13 @@
       const scoreBadgeColor = pct >= 80 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
                               pct >= 50 ? 'bg-blue-50 text-blue-700 border-blue-200' :
                               pct > 0   ? 'bg-amber-50 text-amber-700 border-amber-200' :
-                                          'bg-rose-50 text-rose-700 border-rose-200';
+                                          'bg-rose-100 text-rose-800 border-rose-300 ring-1 ring-rose-200';
 
       if (scoreBadgeEl) {
         scoreBadgeEl.className = `text-xs px-2.5 py-0.5 rounded-full font-bold border ${scoreBadgeColor}`;
-        scoreBadgeEl.textContent = `${parsed.totalScore} / ${parsed.maxScore} คะแนน (${pct}%)`;
+        scoreBadgeEl.textContent = parsed.totalScore === 0
+          ? `0 / ${parsed.maxScore} คะแนน (ประเมินแล้วตกทุกข้อ)`
+          : `${parsed.totalScore} / ${parsed.maxScore} คะแนน (${pct}%)`;
       }
 
       const fullPassClinics = parsed.clinics.filter(c => c.score === 5).length;
@@ -12023,8 +12057,8 @@
             <span class="text-slate-300">|</span>
             <span class="text-xs font-semibold text-slate-600">ผ่านครบ 5 ข้อ: <strong class="text-emerald-600">${fullPassClinics}</strong>/${parsed.clinicsCount} สาขา</span>
           </div>
-          <div class="text-xxs font-semibold px-2.5 py-0.5 rounded-lg ${pct === 100 ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-700'}">
-            ${pct === 100 ? '⭐ ผ่านเกณฑ์สมบูรณ์ 100%' : `ขาด ${parsed.maxScore - parsed.totalScore} คะแนน`}
+          <div class="text-xxs font-semibold px-2.5 py-0.5 rounded-lg ${pct === 100 ? 'bg-emerald-100 text-emerald-800' : (parsed.totalScore === 0 ? 'bg-rose-100 text-rose-800 border border-rose-200' : 'bg-slate-200 text-slate-700')}">
+            ${pct === 100 ? '⭐ ผ่านเกณฑ์สมบูรณ์ 100%' : (parsed.totalScore === 0 ? '⚠️ ส่งผลประเมินแล้ว แต่ไม่ผ่านทั้ง 5 ข้อ (ได้ 0 คะแนน)' : `ขาด ${parsed.maxScore - parsed.totalScore} คะแนน`)}
           </div>
         `;
       }
