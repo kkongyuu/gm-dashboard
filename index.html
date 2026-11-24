@@ -2384,15 +2384,10 @@
             </select>
           </div>
 
-          <!-- Expand / Collapse All Branches Toggle -->
-          <button type="button" id="evaExpandAllBtn" onclick="toggleEvaExpandAll()" class="px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 transition shadow-sm flex items-center space-x-1.5" title="ขยายดูรายละเอียดแยกรายสาขาของ ผจก. ทุกคน">
-            <i data-lucide="chevrons-up-down" class="w-3.5 h-3.5 text-sky-600"></i>
-            <span id="evaExpandAllText">ขยายดูรายสาขา</span>
-          </button>
-
           <!-- Branch Filter Dropdown -->
           <div class="flex items-center space-x-1.5 bg-slate-50 px-2.5 py-1.5 rounded-xl border border-slate-200 text-xs">
             <i data-lucide="building-2" class="w-3.5 h-3.5 text-slate-400"></i>
+            <span class="text-slate-500 font-medium">สาขา:</span>
             <select id="evaBranchFilterSelect" onchange="filterEvaBranch(this.value)" class="bg-transparent font-semibold text-slate-800 outline-none cursor-pointer max-w-[130px] sm:max-w-[160px] truncate">
               <option value="">🏥 ทุกสาขา</option>
               <!-- Options populated dynamically -->
@@ -11457,16 +11452,55 @@
       await fetchEvaMonthData(true);
     }
 
-    // ฟังก์ชันช่วยแยกข้อมูลพนักงาน/ผู้จัดการแต่ละวัน
+    function isExcludedEvaEmployee(empName) {
+      if (!empName) return true;
+      const s = String(empName).trim().toLowerCase();
+      return s.includes('ธิติ') || s.includes('ทรัพย์ธนาธร') || s.includes('thiti') || s.includes('test') || s.includes('ทดสอบ');
+    }
+
+    function getManagerBranches(mgrName, empClinicsList) {
+      const branches = new Set();
+      // 1. จากรายการสาขาในแบบประเมิน EVA
+      if (Array.isArray(empClinicsList)) {
+        empClinicsList.forEach(c => {
+          const trimmed = String(c || '').trim();
+          if (trimmed && !trimmed.includes('แบบประเมิน') && !trimmed.includes('ภาพรวมเขต')) {
+            branches.add(trimmed);
+          }
+        });
+      }
+      // 2. จากฐานข้อมูล ReportGM ของ ผจก. ท่านนี้ในระบบ
+      if (dashboardState.data && dashboardState.data.gmReport && Array.isArray(dashboardState.data.gmReport.managers)) {
+        const mgrObj = dashboardState.data.gmReport.managers.find(m => m.manager === mgrName || mgrName.includes(m.manager));
+        if (mgrObj && Array.isArray(mgrObj.branches)) {
+          mgrObj.branches.forEach(b => {
+            if (b.name && !isInvalidBranchName(b.name)) {
+              branches.add(b.name);
+            }
+          });
+        }
+      }
+      // 3. Fallback หากไม่มีระบุเลย ให้ใช้ชื่อ ผจก. (ไม่แสดงคำว่า แบบประเมินเขต)
+      if (branches.size === 0) {
+        branches.add(`สาขา ${mgrName}`);
+      }
+      return Array.from(branches);
+    }
+
     function parseEvaEmployeeDailyItem(item) {
       if (!item) return null;
       const empName = String(item.employeeName || '').trim();
+      if (isExcludedEvaEmployee(empName)) return null;
+
       const val = item.value || [];
       const hasClinics = Array.isArray(val) && val.length > 0 && val[0].clinic !== undefined;
 
       if (hasClinics) {
         const clinics = val.map(c => {
-          const cName = String(c.clinic || '').trim();
+          let cName = String(c.clinic || '').trim();
+          if (!cName || cName.includes('แบบประเมิน') || cName.includes('ภาพรวมเขต')) {
+            cName = `สาขา ${empName}`;
+          }
           const cScore = Number(c.scores) || 0;
           const subVals = Array.isArray(c.value) ? c.value : [];
           const stepStatuses = subVals.map(sv => normalizeEvaStepScore(sv.scoresSub || sv.score));
@@ -11498,7 +11532,10 @@
         const topScore = Number(item.summary?.topScore) || 5;
         const totalScore = Number(item.summary?.totalScore) || 0;
         const pct = topScore > 0 ? Math.round((totalScore / topScore) * 100) : 0;
-        const clinicName = item.summary?.clinic || 'ภาพรวมเขต';
+        let clinicName = item.summary?.clinic || '';
+        if (!clinicName || clinicName.includes('แบบประเมิน') || clinicName.includes('ภาพรวมเขต')) {
+          clinicName = `สาขา ${empName}`;
+        }
 
         return {
           employeeName: empName,
@@ -11552,6 +11589,10 @@
         }
 
         if (json && json.status) {
+          // กรองผู้ทดสอบ "ธิติ ทรัพย์ธนาธร" ออกจากข้อมูล
+          if (Array.isArray(json.employees)) {
+            json.employees = json.employees.filter(e => !isExcludedEvaEmployee(e.name));
+          }
           evaState.monthData = json;
           const alertEl = document.getElementById('evaConfigAlert');
           if (alertEl) alertEl.classList.add('hidden');
@@ -11591,7 +11632,7 @@
       lucide.createIcons();
     }
 
-    // 📊 เรนเดอร์ตารางสรุปภาพรวมทั้งเดือน (Monthly Matrix Table View: Main View)
+    // 📊 เรนเดอร์ตารางสรุปภาพรวมทั้งเดือน (โครงสร้าง: คอลัมน์ 1 ชื่อ ผจก. merge ตามสาขา • คอลัมน์ 2 สาขา • คอลัมน์ถัดไปเป็นวัน)
     function renderEvaMonthlyMatrix() {
       const container = document.getElementById('evaTableContainer');
       if (!container || !evaState.monthData) return;
@@ -11599,27 +11640,18 @@
       const dates = Array.isArray(evaState.monthData.dates) ? evaState.monthData.dates : [];
       let employees = Array.isArray(evaState.monthData.employees) ? evaState.monthData.employees : [];
 
-      // สกัดรายชื่อสาขาทั้งหมดของ ผจก. แต่ละท่านเพื่อรองรับ ผจก. ที่ดูแลจำนวนสาขาไม่เท่ากัน
+      // 1. กรองคนทดสอบ "ธิติ ทรัพย์ธนาธร" ออก
+      employees = employees.filter(e => !isExcludedEvaEmployee(e.name));
+
+      // 2. สกัดและผสานสาขาจริงของ ผจก. แต่ละท่าน (ไม่แสดงคำว่า แบบประเมินเขต)
       const allUniqueClinics = new Set();
       employees.forEach(emp => {
-        if (!emp.clinicsList || !Array.isArray(emp.clinicsList) || emp.clinicsList.length === 0) {
-          const cSet = new Set();
-          Object.values(emp.days || {}).forEach(dItem => {
-            if (Array.isArray(dItem?.value)) {
-              dItem.value.forEach(cv => {
-                if (cv?.clinic) cSet.add(String(cv.clinic).trim());
-              });
-            } else if (dItem?.summary?.clinic) {
-              cSet.add(String(dItem.summary.clinic).trim());
-            }
-          });
-          emp.clinicsList = Array.from(cSet);
-        }
-        emp.clinicsCount = emp.clinicsList.length || 1;
+        emp.clinicsList = getManagerBranches(emp.name, emp.clinicsList);
+        emp.clinicsCount = emp.clinicsList.length;
         emp.clinicsList.forEach(c => allUniqueClinics.add(c));
       });
 
-      // อัปเดต Dropdown เลือกสาขา
+      // 3. อัปเดต Dropdown เลือกสาขา
       const branchSelect = document.getElementById('evaBranchFilterSelect');
       if (branchSelect) {
         const curSelected = evaState.filterBranch || '';
@@ -11629,7 +11661,7 @@
         `).join('');
       }
 
-      // กรองตามการค้นหา (ค้นหาชื่อ ผจก. หรือสาขา)
+      // 4. กรองตามการค้นหา (ค้นหาชื่อ ผจก. หรือสาขา)
       if (evaState.searchQuery) {
         const q = evaState.searchQuery.toLowerCase();
         employees = employees.filter(e => {
@@ -11638,10 +11670,11 @@
         });
       }
 
-      // กรองตามสาขาที่เลือก
+      // 5. กรองตามสาขาที่เลือก
       if (evaState.filterBranch) {
+        const targetB = evaState.filterBranch;
         employees = employees.filter(e => {
-          return e.clinicsList && e.clinicsList.includes(evaState.filterBranch);
+          return e.clinicsList && e.clinicsList.includes(targetB);
         });
       }
 
@@ -11663,157 +11696,115 @@
       const dateHeadersHtml = dates.map(d => {
         const dayNum = d.split('-')[2] || d;
         return `
-          <th class="px-1.5 py-2.5 text-center text-xxs font-bold text-slate-500 border-l border-slate-200/80 min-w-[50px]" title="วันที่ ${d}">
+          <th class="px-1.5 py-2.5 text-center text-xxs font-bold text-slate-500 border-l border-slate-200/80 min-w-[46px]" title="วันที่ ${d}">
             ${dayNum}
           </th>
         `;
       }).join('');
 
       let matrixRowsHtml = '';
-      employees.forEach((emp, idx) => {
-        const isExpanded = evaState.expandAllBranches || evaState.expandedEmployees.has(emp.name);
+      employees.forEach((emp, empIdx) => {
+        let empBranches = emp.clinicsList || [];
+        // หากมีการกรองสาขา ให้แสดงเฉพาะสาขาที่ตรงเงื่อนไข
+        if (evaState.filterBranch) {
+          empBranches = empBranches.filter(b => b === evaState.filterBranch);
+        }
+        if (evaState.searchQuery) {
+          const q = evaState.searchQuery.toLowerCase();
+          if (!emp.name.toLowerCase().includes(q)) {
+            empBranches = empBranches.filter(b => b.toLowerCase().includes(q));
+          }
+        }
+        if (empBranches.length === 0) return;
+
+        const rowCount = empBranches.length;
         const avgScore = emp.maxPossibleScore > 0 ? (emp.totalScore / (emp.maxPossibleScore / 5)) : 0;
         const overallPct = emp.maxPossibleScore > 0 ? Math.round((emp.totalScore / emp.maxPossibleScore) * 100) : 0;
-        const badgeClass = overallPct >= 80 ? 'text-emerald-700 bg-emerald-50 border-emerald-200' :
-                           overallPct >= 50 ? 'text-blue-700 bg-blue-50 border-blue-200' :
-                           overallPct > 0   ? 'text-amber-700 bg-amber-50 border-amber-200' :
-                                              'text-slate-600 bg-slate-100 border-slate-200';
+        const empBg = (empIdx % 2 === 0) ? 'bg-white' : 'bg-slate-50/40';
 
-        // 1. ช่องคะแนนแต่ละวันของ ผจก. (Normalized % + Raw Score)
-        const dateCellsHtml = dates.map(d => {
-          const dayItem = emp.days ? emp.days[d] : null;
-          if (!dayItem) {
-            return `<td class="px-1 py-2 text-center border-l border-slate-100 text-slate-300 text-xxs">-</td>`;
-          }
+        empBranches.forEach((branchName, bIdx) => {
+          const isFirstBranch = (bIdx === 0);
+          const isLastBranch = (bIdx === rowCount - 1);
+          const rowBottomBorder = isLastBranch ? 'border-b-2 border-slate-200' : 'border-b border-slate-100';
 
-          let s = 0, top = 5;
-          if (dayItem.summary && dayItem.summary.totalScore !== '' && dayItem.summary.totalScore !== undefined) {
-            s = Number(dayItem.summary.totalScore) || 0;
-            top = Number(dayItem.summary.topScore) || 5;
-          } else if (Array.isArray(dayItem.value) && dayItem.value.length > 0 && dayItem.value[0].clinic) {
-            s = dayItem.value.reduce((sum, c) => sum + (Number(c.scores) || 0), 0);
-            top = dayItem.value.length * 5;
-          }
+          // คำนวณคะแนนเฉลี่ยเดือนเฉพาะสาขานี้
+          let bTotalScore = 0;
+          let bEvaluatedDays = 0;
 
-          const cellPct = top > 0 ? Math.round((s / top) * 100) : 0;
-          const bg = cellPct >= 80 ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100' :
-                     cellPct >= 50 ? 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100' :
-                     cellPct > 0   ? 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100' :
-                                     'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100';
+          // สร้างช่องวันที่สำหรับสาขานี้
+          const dateCellsHtml = dates.map(d => {
+            const dayItem = emp.days ? emp.days[d] : null;
+            if (!dayItem) {
+              return `<td class="px-1 py-1.5 text-center border-l border-slate-100 text-slate-300 text-xxs ${rowBottomBorder}">-</td>`;
+            }
 
-          return `
-            <td class="px-1 py-1.5 text-center border-l border-slate-100">
-              <button type="button" onclick="openEvaDayDetailModal('${emp.name}', '${d}')" class="w-full py-1.5 px-0.5 rounded-lg text-center border ${bg} transition hover:ring-2 hover:ring-sky-400 hover:shadow-sm" title="คลิกดูรายละเอียดวันที่ ${d} (${emp.name})">
-                <div class="text-xxs font-black leading-tight">${cellPct}%</div>
-                <div class="text-xxxs opacity-80 mt-0.5 leading-none font-mono font-semibold">${s}/${top}</div>
-              </button>
-            </td>
-          `;
-        }).join('');
-
-        // แถวหลักของ ผจก. (Level 1: Manager Row)
-        const clinicsSummaryText = emp.clinicsList.length > 0 ? emp.clinicsList.join(' • ') : 'แบบประเมินเขต';
-        matrixRowsHtml += `
-          <tr class="hover:bg-slate-50/80 transition-colors border-b border-slate-100 ${isExpanded ? 'bg-sky-50/20' : ''}">
-            <td class="px-3 py-3 text-center text-xs font-semibold text-slate-400 w-10 sticky left-0 bg-white z-10">${idx + 1}</td>
-            <td class="px-3 py-3 sticky left-10 bg-white shadow-xs z-20 min-w-[200px] max-w-[260px]">
-              <div class="flex items-center space-x-1.5">
-                ${emp.clinicsList.length > 0 ? `
-                  <button type="button" onclick="toggleEvaEmployeeSubRows('${emp.name}')" class="p-1 rounded-lg hover:bg-slate-100 text-slate-500 hover:text-slate-800 transition shrink-0" title="${isExpanded ? 'ซ่อนรายชื่อสาขา' : 'คลิกเพื่อดูแยกรายสาขา'}">
-                    <i data-lucide="${isExpanded ? 'chevron-down' : 'chevron-right'}" class="w-4 h-4 text-sky-600"></i>
-                  </button>
-                ` : '<div class="w-6 shrink-0"></div>'}
-                <div class="truncate">
-                  <div class="font-bold text-slate-800 text-xs sm:text-sm flex items-center space-x-1.5 truncate">
-                    <span class="truncate">${emp.name}</span>
-                    <span class="text-xxs px-2 py-0.5 rounded-full font-bold bg-sky-50 text-sky-700 border border-sky-200 shrink-0">
-                      ${emp.clinicsCount} สาขา
-                    </span>
-                  </div>
-                  <p class="text-xxxs text-slate-400 mt-0.5 truncate" title="${clinicsSummaryText}">
-                    ${clinicsSummaryText}
-                  </p>
-                </div>
-              </div>
-            </td>
-            <td class="px-3 py-3 text-center min-w-[130px]">
-              <span class="inline-flex items-center px-2.5 py-1 rounded-xl text-xxs font-bold border ${badgeClass}">
-                ${avgScore.toFixed(1)} / 5.0 (${overallPct}%)
-              </span>
-              <span class="block text-xxxs text-slate-400 mt-0.5">ส่ง ${emp.daysCount} วัน</span>
-            </td>
-            ${dateCellsHtml}
-          </tr>
-        `;
-
-        // 2. แถวย่อยเจาะลึกรายคลินิก (Level 2: Sub-rows per Clinic when expanded)
-        if (isExpanded && emp.clinicsList.length > 0) {
-          emp.clinicsList.forEach((cName, cIdx) => {
-            // คำนวณคะแนนเฉลี่ยเดือนเฉพาะสาขานี้
-            let cTotalScore = 0;
-            let cTotalDays = 0;
-
-            const clinicDateCells = dates.map(d => {
-              const dayItem = emp.days ? emp.days[d] : null;
-              if (!dayItem) {
-                return `<td class="px-1 py-1.5 text-center border-l border-slate-100 text-slate-300 text-xxxs">-</td>`;
+            let cScore = null;
+            if (Array.isArray(dayItem.value) && dayItem.value.length > 0) {
+              const found = dayItem.value.find(v => {
+                const cvName = String(v.clinic || '').trim();
+                return cvName === branchName || (rowCount === 1 && dayItem.value.length === 1);
+              });
+              if (found && found.scores !== undefined) {
+                cScore = Number(found.scores) || 0;
+              } else if (dayItem.value[bIdx] && dayItem.value[bIdx].scores !== undefined) {
+                cScore = Number(dayItem.value[bIdx].scores) || 0;
               }
+            } else if (dayItem.summary && dayItem.summary.totalScore !== undefined) {
+              cScore = Number(dayItem.summary.totalScore) || 0;
+            }
 
-              let cScore = null;
-              if (Array.isArray(dayItem.value)) {
-                const found = dayItem.value.find(v => String(v.clinic || '').trim() === cName);
-                if (found && found.scores !== undefined) {
-                  cScore = Number(found.scores) || 0;
-                }
-              }
+            if (cScore === null) {
+              return `<td class="px-1 py-1.5 text-center border-l border-slate-100 text-slate-300 text-xxs ${rowBottomBorder}">-</td>`;
+            }
 
-              if (cScore === null) {
-                return `<td class="px-1 py-1.5 text-center border-l border-slate-100 text-slate-300 text-xxxs">-</td>`;
-              }
+            bTotalScore += cScore;
+            bEvaluatedDays++;
 
-              cTotalScore += cScore;
-              cTotalDays++;
+            const cBg = cScore === 5 ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100' :
+                        cScore >= 3 ? 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100' :
+                        cScore > 0  ? 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100' :
+                                      'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100';
 
-              const cBg = cScore === 5 ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100' :
-                          cScore >= 3 ? 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100' :
-                          cScore > 0  ? 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100' :
-                                        'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100';
-
-              return `
-                <td class="px-1 py-1 text-center border-l border-slate-100">
-                  <button type="button" onclick="openEvaDayDetailModal('${emp.name}', '${d}', '${cName}')" class="w-full py-1 rounded text-xxs font-bold border ${cBg} hover:ring-2 hover:ring-sky-400 transition" title="${cName} (${d}): ${cScore}/5 คะแนน">
-                    ${cScore}/5
-                  </button>
-                </td>
-              `;
-            }).join('');
-
-            const cAvgScore = cTotalDays > 0 ? (cTotalScore / cTotalDays) : 0;
-            const cPct = Math.round((cAvgScore / 5) * 100);
-            const cScoreClass = cPct >= 80 ? 'text-emerald-700 bg-emerald-50 border-emerald-200' :
-                                cPct >= 50 ? 'text-blue-700 bg-blue-50 border-blue-200' :
-                                cPct > 0   ? 'text-amber-700 bg-amber-50 border-amber-200' :
-                                             'text-slate-600 bg-slate-100 border-slate-200';
-
-            matrixRowsHtml += `
-              <tr class="bg-slate-50/60 border-b border-slate-100 text-xs hover:bg-sky-50/40 transition-colors">
-                <td class="px-3 py-2 text-center text-slate-300 font-mono text-xxxs sticky left-0 bg-slate-50/90 z-10">${idx + 1}.${cIdx + 1}</td>
-                <td class="px-3 py-2 sticky left-10 bg-slate-50/90 shadow-xs z-20 pl-8">
-                  <div class="flex items-center space-x-2">
-                    <i data-lucide="corner-down-right" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
-                    <span class="font-semibold text-slate-700 text-xs truncate max-w-[170px]" title="${cName}">${cName}</span>
-                  </div>
-                </td>
-                <td class="px-3 py-2 text-center">
-                  <span class="inline-flex items-center px-2 py-0.5 rounded-lg text-xxxs font-bold border ${cScoreClass}">
-                    ${cAvgScore.toFixed(1)} / 5.0 (${cPct}%)
-                  </span>
-                </td>
-                ${clinicDateCells}
-              </tr>
+            return `
+              <td class="px-1 py-1.5 text-center border-l border-slate-100 ${rowBottomBorder}">
+                <button type="button" onclick="openEvaDayDetailModal('${emp.name}', '${d}', '${branchName}')" class="w-full py-1.5 px-0.5 rounded-lg text-center border font-bold text-xxs ${cBg} transition hover:ring-2 hover:ring-sky-400 hover:shadow-xs" title="${emp.name} - ${branchName} (${d}): ${cScore}/5 คะแนน">
+                  ${cScore}/5
+                </button>
+              </td>
             `;
-          });
-        }
+          }).join('');
+
+          const bAvgScore = bEvaluatedDays > 0 ? (bTotalScore / bEvaluatedDays) : 0;
+          const bPct = Math.round((bAvgScore / 5) * 100);
+
+          matrixRowsHtml += `
+            <tr class="hover:bg-sky-50/30 transition-colors">
+              ${isFirstBranch ? `
+                <td rowspan="${rowCount}" class="px-3.5 py-3 align-top border-r border-b-2 border-slate-200 sticky left-0 z-20 ${empBg} w-[130px] min-w-[130px] max-w-[130px]">
+                  <div class="font-black text-slate-800 text-xs sm:text-sm truncate" title="${emp.name}">${emp.name}</div>
+                  <span class="inline-block mt-1 text-xxxs px-2 py-0.5 rounded-full font-bold bg-sky-50 text-sky-700 border border-sky-200">
+                    ${emp.clinicsCount} สาขา
+                  </span>
+                  <div class="mt-2 text-xxxs text-slate-500 font-semibold leading-tight">
+                    เฉลี่ย: <strong class="text-slate-800 font-bold">${avgScore.toFixed(1)}/5</strong>
+                    <span class="block text-slate-400">(${overallPct}%) • ${emp.daysCount} วัน</span>
+                  </div>
+                </td>
+              ` : ''}
+
+              <td class="px-3.5 py-2.5 border-r sticky left-[130px] z-20 shadow-xs ${empBg} ${rowBottomBorder} w-[150px] min-w-[150px] max-w-[150px]">
+                <div class="font-bold text-slate-800 text-xs truncate" title="${branchName}">
+                  ${branchName}
+                </div>
+                <div class="text-xxxs text-slate-400 font-medium mt-0.5">
+                  ${bEvaluatedDays > 0 ? `เฉลี่ย ${bAvgScore.toFixed(1)}/5 (${bPct}%)` : 'ยังไม่มีผล'}
+                </div>
+              </td>
+
+              ${dateCellsHtml}
+            </tr>
+          `;
+        });
       });
 
       container.innerHTML = `
@@ -11825,16 +11816,15 @@
           </div>
           <div class="text-xxs text-slate-500 flex items-center space-x-1.5">
             <i data-lucide="mouse-pointer-click" class="w-3.5 h-3.5 text-sky-500"></i>
-            <span>คลิกที่ช่องคะแนนของแต่ละวันเพื่อดู 5 ขั้นตอนของทุกสาขาที่ดูแล</span>
+            <span>คลิกที่ช่องคะแนนของแต่ละวันเพื่อดู 5 ขั้นตอนของสาขานั้น</span>
           </div>
         </div>
         <div class="overflow-x-auto custom-scrollbar">
           <table class="w-full text-left border-collapse min-w-[750px]">
             <thead>
-              <tr class="bg-slate-50/90 border-b border-slate-200/80">
-                <th class="px-3 py-2.5 text-center w-10 sticky left-0 bg-slate-50 text-xxs font-bold text-slate-500 z-30">#</th>
-                <th class="px-3 py-2.5 min-w-[200px] max-w-[260px] sticky left-10 bg-slate-50 shadow-xs text-xxs font-bold text-slate-500 z-30">ผู้จัดการ & สาขาที่ดูแล</th>
-                <th class="px-3 py-2.5 text-center min-w-[130px] text-xxs font-bold text-slate-500">เฉลี่ยรวมทั้งเดือน</th>
+              <tr class="bg-slate-100 border-b border-slate-200/80">
+                <th class="px-3.5 py-2.5 sticky left-0 z-40 bg-slate-100 text-xxs font-bold text-slate-700 border-r border-slate-200 w-[130px] min-w-[130px] max-w-[130px]">ชื่อ ผจก.</th>
+                <th class="px-3.5 py-2.5 sticky left-[130px] z-40 bg-slate-100 shadow-xs text-xxs font-bold text-slate-700 border-r border-slate-200 w-[150px] min-w-[150px] max-w-[150px]">สาขา</th>
                 ${dateHeadersHtml}
               </tr>
             </thead>
@@ -12075,28 +12065,41 @@
       let csv = "\uFEFF"; // UTF-8 BOM
       csv += `รายงานแบบประเมิน Process ผู้จัดการเขต ประจำเดือน ${evaState.selectedMonth}\n`;
       const dates = evaState.monthData.dates || [];
-      csv += `ลำดับ,ผู้จัดการ,จำนวนสาขาที่ดูแล,รายชื่อสาขา,ส่งประเมิน (วัน),คะแนนเฉลี่ย (เต็ม 5),คิดเป็น %,${dates.map(d => d.split('-')[2]).join(',')}\n`;
+      csv += `ลำดับ,ชื่อ ผจก.,สาขา,คะแนนเฉลี่ยสาขา (เต็ม 5),คิดเป็น %,${dates.map(d => d.split('-')[2]).join(',')}\n`;
 
-      const emps = evaState.monthData.employees || [];
-      emps.forEach((e, idx) => {
-        const clinicsListStr = (e.clinicsList || []).join('; ');
-        const avg = e.maxPossibleScore > 0 ? (e.totalScore / (e.maxPossibleScore / 5)).toFixed(1) : '0.0';
-        const pct = e.maxPossibleScore > 0 ? Math.round((e.totalScore / e.maxPossibleScore) * 100) : 0;
-        const rowDates = dates.map(d => {
-          const dayItem = e.days ? e.days[d] : null;
-          if (!dayItem) return '-';
-          let s = 0, top = 5;
-          if (dayItem.summary?.totalScore !== '' && dayItem.summary?.totalScore !== undefined) {
-            s = Number(dayItem.summary.totalScore) || 0;
-            top = Number(dayItem.summary.topScore) || 5;
-          } else if (Array.isArray(dayItem.value)) {
-            s = dayItem.value.reduce((sum, c) => sum + (Number(c.scores) || 0), 0);
-            top = dayItem.value.length * 5;
-          }
-          const cPct = top > 0 ? Math.round((s / top) * 100) : 0;
-          return `${cPct}% (${s}/${top})`;
-        }).join(',');
-        csv += `"${idx + 1}","${e.name}","${e.clinicsCount || 1}","${clinicsListStr}","${e.daysCount}","${avg}","${pct}%",${rowDates}\n`;
+      let emps = evaState.monthData.employees || [];
+      emps = emps.filter(e => !isExcludedEvaEmployee(e.name));
+
+      let count = 1;
+      emps.forEach(e => {
+        const branches = getManagerBranches(e.name, e.clinicsList);
+        branches.forEach((bName, bIdx) => {
+          let bTotal = 0;
+          let bDays = 0;
+          const rowDates = dates.map(d => {
+            const dayItem = e.days ? e.days[d] : null;
+            if (!dayItem) return '-';
+            let cScore = null;
+            if (Array.isArray(dayItem.value) && dayItem.value.length > 0) {
+              const found = dayItem.value.find(v => String(v.clinic || '').trim() === bName);
+              if (found && found.scores !== undefined) {
+                cScore = Number(found.scores) || 0;
+              } else if (dayItem.value[bIdx] && dayItem.value[bIdx].scores !== undefined) {
+                cScore = Number(dayItem.value[bIdx].scores) || 0;
+              }
+            } else if (dayItem.summary && dayItem.summary.totalScore !== undefined) {
+              cScore = Number(dayItem.summary.totalScore) || 0;
+            }
+            if (cScore === null) return '-';
+            bTotal += cScore;
+            bDays++;
+            return `${cScore}/5`;
+          }).join(',');
+
+          const bAvg = bDays > 0 ? (bTotal / bDays).toFixed(1) : '0.0';
+          const bPct = bDays > 0 ? Math.round(((bTotal / bDays) / 5) * 100) : 0;
+          csv += `"${count++}","${e.name}","${bName}","${bAvg}","${bPct}%",${rowDates}\n`;
+        });
       });
 
       const encoded = encodeURI("data:text/csv;charset=utf-8," + csv);

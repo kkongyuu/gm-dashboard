@@ -3062,6 +3062,12 @@ function setEvaApiBaseUrl(url) {
   }
 }
 
+function isExcludedEvaEmployee(empName) {
+  if (!empName) return true;
+  const s = String(empName).trim().toLowerCase();
+  return s.includes('ธิติ') || s.includes('ทรัพย์ธนาธร') || s.includes('thiti') || s.includes('test') || s.includes('ทดสอบ');
+}
+
 function fetchEvaManagerDaily(targetDate, customBaseUrl) {
   try {
     const baseUrl = customBaseUrl || getEvaApiBaseUrl();
@@ -3096,9 +3102,12 @@ function fetchEvaManagerDaily(targetDate, customBaseUrl) {
 
     const text = response.getContentText();
     const json = JSON.parse(text);
+    if (json && Array.isArray(json.data)) {
+      json.data = json.data.filter(item => !isExcludedEvaEmployee(item.employeeName));
+    }
     try {
       if (text.length < 100000) {
-        cache.put(cacheKey, text, 300);
+        cache.put(cacheKey, JSON.stringify(json), 300);
       }
     } catch (ce) {}
 
@@ -3163,10 +3172,11 @@ function fetchEvaManagerMonth(year, month, customBaseUrl) {
         if (resp && resp.getResponseCode() === 200) {
           const parsed = JSON.parse(resp.getContentText());
           if (parsed && Array.isArray(parsed.data)) {
-            daysData[d] = parsed.data;
-            parsed.data.forEach(item => {
+            const filteredData = parsed.data.filter(it => !isExcludedEvaEmployee(it.employeeName));
+            daysData[d] = filteredData;
+            filteredData.forEach(item => {
               const emp = String(item.employeeName || '').trim();
-              if (emp) {
+              if (emp && !isExcludedEvaEmployee(emp)) {
                 if (!employeesMap[emp]) {
                   employeesMap[emp] = {
                     name: emp,
