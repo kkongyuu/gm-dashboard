@@ -3174,6 +3174,7 @@ function fetchEvaManagerMonth(year, month, customBaseUrl) {
                     totalScore: 0,
                     maxPossibleScore: 0,
                     clinicsCount: 0,
+                    clinicsList: [],
                     days: {}
                   };
                 }
@@ -3185,15 +3186,26 @@ function fetchEvaManagerMonth(year, month, customBaseUrl) {
                   const top = Number(item.summary.topScore) || 5;
                   employeesMap[emp].totalScore += s;
                   employeesMap[emp].maxPossibleScore += top;
+                  if (item.summary.clinic) {
+                    const scName = String(item.summary.clinic).trim();
+                    if (scName && !employeesMap[emp].clinicsList.includes(scName)) {
+                      employeesMap[emp].clinicsList.push(scName);
+                    }
+                  }
+                  employeesMap[emp].clinicsCount = Math.max(employeesMap[emp].clinicsCount, employeesMap[emp].clinicsList.length || 1);
                 } else if (Array.isArray(item.value) && item.value.length > 0 && item.value[0].clinic) {
                   let cScore = 0;
                   let cTop = item.value.length * 5;
                   item.value.forEach(cv => {
                     cScore += (Number(cv.scores) || 0);
+                    const cvName = String(cv.clinic || '').trim();
+                    if (cvName && !employeesMap[emp].clinicsList.includes(cvName)) {
+                      employeesMap[emp].clinicsList.push(cvName);
+                    }
                   });
                   employeesMap[emp].totalScore += cScore;
                   employeesMap[emp].maxPossibleScore += cTop;
-                  employeesMap[emp].clinicsCount = Math.max(employeesMap[emp].clinicsCount, item.value.length);
+                  employeesMap[emp].clinicsCount = Math.max(employeesMap[emp].clinicsCount, employeesMap[emp].clinicsList.length);
                 }
               }
             });
