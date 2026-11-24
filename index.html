@@ -6593,6 +6593,7 @@
           const pKey = getAccountingPeriodForDay(g.dayNum);
           const pBadge = pKey === 'P1' ? 'รอบ 1–10' : (pKey === 'P2' ? 'รอบ 11–20' : 'รอบ 21–31');
 
+
           const rowsHtml = g.items.map(it => `
             <div class="flex items-center justify-between gap-3 py-2.5 px-3.5 hover:bg-slate-50 rounded-xl transition border-b border-slate-100 last:border-b-0">
               <div class="flex items-center space-x-3 min-w-0">
@@ -9445,7 +9446,8 @@
 
       closeSettingsModal();
       fetchDashboardData(true);
-      if (!document.getElementById('tab-evaluation').classList.contains('hidden')) {
+      const evaTab = document.getElementById('tab-evaluation');
+      if (evaTab && !evaTab.classList.contains('hidden') && typeof refreshEvaData === 'function') {
         refreshEvaData();
       }
     }
@@ -11329,16 +11331,9 @@
         datePicker.value = evaState.selectedDate;
       }
 
-      // ตรวจสอบว่าเคยตั้งค่า API URL ไว้หรือไม่
-      const configuredUrl = getEvaConfiguredUrl();
+      // ซ่อน Alert ไว้ก่อน แล้วรอผลลัพธ์จาก API หากขาดค่อยเปิด
       const alertEl = document.getElementById('evaConfigAlert');
-      if (alertEl) {
-        if (!configuredUrl) {
-          alertEl.classList.remove('hidden');
-        } else {
-          alertEl.classList.add('hidden');
-        }
-      }
+      if (alertEl) alertEl.classList.add('hidden');
 
       if (!evaState.isInitialized) {
         evaState.isInitialized = true;
@@ -11532,7 +11527,13 @@
 
         if (json && json.status && Array.isArray(json.data)) {
           evaState.dailyData = json;
+          const alertEl = document.getElementById('evaConfigAlert');
+          if (alertEl) alertEl.classList.add('hidden');
           renderEvaDailyTable();
+        } else if (json && json.code === 'CONFIG_MISSING' && !customUrl) {
+          const alertEl = document.getElementById('evaConfigAlert');
+          if (alertEl) alertEl.classList.remove('hidden');
+          renderEvaErrorState('ยังไม่ได้กำหนด EVA API URL ในระบบ กรุณากดปุ่ม "ตั้งค่า API ทันที"');
         } else {
           renderEvaErrorState(json?.message || `ไม่พบข้อมูลแบบประเมินประจำวันที่ ${targetDate}`);
         }
