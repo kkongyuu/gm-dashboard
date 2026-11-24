@@ -11452,44 +11452,144 @@
       await fetchEvaMonthData(true);
     }
 
+    function cleanThaiText(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/[\u200B-\u200D\uFEFF]/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
+    function formatBranchDisplayName(str) {
+      if (!str) return '';
+      const s = cleanThaiText(str);
+      if (s.includes('สุราษ')) return 'สาขาสุราษ';
+      if (s.includes('หาดใหญ่')) return 'สาขาหาดใหญ่';
+      if (s.includes('ดอนเมือง')) return 'สาขาดอนเมือง';
+      if (s.includes('พระราม')) return 'สาขาพระรามเก้า';
+      if (s.includes('เพชรเกษม')) return 'สาขาเพชรเกษม';
+      if (s.includes('อุบล')) return 'สาขาอุบล';
+      if (s.includes('บางนา')) return 'สาขาบางนา';
+      if (s.includes('ยะลา')) return 'สาขายะลา';
+      if (s.includes('ชลบุรี')) return 'สาขาชลบุรี';
+      if (s.includes('ระยอง')) return 'สาขาระยอง';
+      if (s.includes('พิษณุโลก')) return 'สาขาพิษณุโลก';
+      if (s.includes('เชียงใหม่')) return 'สาขาเชียงใหม่';
+      if (s.includes('เชียงราย')) return 'สาขาเชียงราย';
+      if (s.includes('ขอนแก่น')) return 'สาขาขอนแก่น';
+      if (s.includes('หนองจอก')) return 'สาขาหนองจอก';
+      if (s.includes('มิสทีน')) return 'สาขามิสทีน';
+      if (s.includes('รัตนาธิเบศร์')) return 'สาขารัตนาธิเบศร์';
+      if (s.includes('นครปฐม')) return 'สาขานครปฐม';
+      if (s.includes('ท่าพระ')) return 'สาขาท่าพระ';
+      return s.startsWith('สาขา') ? s : `สาขา${s}`;
+    }
+
+    function isBranchMatch(b1, b2) {
+      if (!b1 || !b2) return false;
+      const f1 = formatBranchDisplayName(b1);
+      const f2 = formatBranchDisplayName(b2);
+      return f1 === f2 || f1.includes(f2) || f2.includes(f1);
+    }
+
+    const MANAGER_NICKNAME_MAP = {
+      'กษิดิส กำลังเก่ง': 'กาญจน์',
+      'ซอฟรีน่า สนเส็ม': 'ซอฟ',
+      'กุลวดี สุนทรนนท์': 'ลูกกุ้ง',
+      'อัจฉรา เอียดหวัง': 'อัจ',
+      'มณีรัตน์ เกิดเชื้อ': 'รัตน์',
+      'จันทร์จิรา ทับทิม': 'จาเน่',
+      'รุจิรา สุขสถิตย์': 'จาเน่',
+      'โชติวัฒน์ นาคแก้ว': 'โชว์',
+      'แสงระวี วิจันทมุข': 'เปีย',
+      'วรศมน ศรีจันทะ': 'ส้มโอ',
+      'พิชามญชุ์ สิงห์ปัน': 'พิชามญชุ์'
+    };
+
+    const MANAGER_DEFAULT_BRANCHES = {
+      'กาญจน์': ['สาขารัตนาธิเบศร์', 'สาขาชลบุรี', 'สาขานครปฐม'],
+      'กษิดิส กำลังเก่ง': ['สาขารัตนาธิเบศร์', 'สาขาชลบุรี', 'สาขานครปฐม'],
+      'ซอฟ': ['สาขาบางนา', 'สาขาชลบุรี', 'สาขายะลา'],
+      'ซอฟรีน่า สนเส็ม': ['สาขาบางนา', 'สาขาชลบุรี', 'สาขายะลา'],
+      'ลูกกุ้ง': ['สาขาพระรามเก้า', 'สาขามิสทีน'],
+      'กุ้ง': ['สาขาพระรามเก้า', 'สาขามิสทีน'],
+      'กุลวดี สุนทรนนท์': ['สาขาพระรามเก้า', 'สาขามิสทีน'],
+      'อัจ': ['สาขาสุราษ', 'สาขาหาดใหญ่', 'สาขาดอนเมือง'],
+      'อัจฉรา เอียดหวัง': ['สาขาสุราษ', 'สาขาหาดใหญ่', 'สาขาดอนเมือง'],
+      'รัตน์': ['สาขานครปฐม', 'สาขาเชียงราย'],
+      'มณีรัตน์ เกิดเชื้อ': ['สาขานครปฐม', 'สาขาเชียงราย'],
+      'อี้': ['สาขาบางนา'],
+      'จาเน่': ['สาขาขอนแก่น', 'สาขาหนองจอก'],
+      'จันทร์จิรา ทับทิม': ['สาขาขอนแก่น', 'สาขาหนองจอก'],
+      'รุจิรา สุขสถิตย์': ['สาขาขอนแก่น', 'สาขาหนองจอก'],
+      'โชว์': ['สาขาท่าพระ', 'สาขาเพชรเกษม', 'สาขาเชียงใหม่'],
+      'โช': ['สาขาท่าพระ', 'สาขาเพชรเกษม', 'สาขาเชียงใหม่'],
+      'โชติวัฒน์ นาคแก้ว': ['สาขาท่าพระ', 'สาขาเพชรเกษม', 'สาขาเชียงใหม่'],
+      'เปีย': ['สาขาระยอง', 'สาขาพิษณุโลก'],
+      'แสงระวี วิจันทมุข': ['สาขาระยอง', 'สาขาพิษณุโลก'],
+      'ส้มโอ': ['สาขามิสทีน', 'สาขาอุบล'],
+      'วรศมน ศรีจันทะ': ['สาขามิสทีน', 'สาขาอุบล'],
+      'พิชามญชุ์': ['สาขาพระรามเก้า'],
+      'พิชามญชุ์ สิงห์ปัน': ['สาขาพระรามเก้า'],
+      'นัท': ['สาขานครปฐม', 'สาขาเพชรเกษม'],
+      'หมิว': ['สาขารัตนาธิเบศร์']
+    };
+
     function isExcludedEvaEmployee(empName) {
       if (!empName) return true;
-      const s = String(empName).trim().toLowerCase();
+      const s = cleanThaiText(empName).toLowerCase();
       return s.includes('ธิติ') || s.includes('ทรัพย์ธนาธร') || s.includes('thiti') || s.includes('test') || s.includes('ทดสอบ');
     }
 
     function getManagerBranches(mgrName, empClinicsList) {
       const branches = new Set();
-      // 1. จากรายการสาขาในแบบประเมิน EVA
-      if (Array.isArray(empClinicsList)) {
-        empClinicsList.forEach(c => {
-          const trimmed = String(c || '').trim();
-          if (trimmed && !trimmed.includes('แบบประเมิน') && !trimmed.includes('ภาพรวมเขต')) {
-            branches.add(trimmed);
-          }
-        });
+      const cleanedMgr = cleanThaiText(mgrName);
+
+      // 1. จากรายการสาขาเริ่มต้นตามสิทธิ์การดูแล (Authoritative Assigned Branches)
+      const defaultList = MANAGER_DEFAULT_BRANCHES[cleanedMgr] || [];
+      defaultList.forEach(b => branches.add(formatBranchDisplayName(b)));
+
+      const nick = MANAGER_NICKNAME_MAP[cleanedMgr];
+      if (nick && MANAGER_DEFAULT_BRANCHES[nick]) {
+        MANAGER_DEFAULT_BRANCHES[nick].forEach(b => branches.add(formatBranchDisplayName(b)));
       }
-      // 2. จากฐานข้อมูล ReportGM ของ ผจก. ท่านนี้ในระบบ
+
+      // 2. จากฐานข้อมูล ReportGM ของ ผจก. ในระบบ
       if (dashboardState.data && dashboardState.data.gmReport && Array.isArray(dashboardState.data.gmReport.managers)) {
-        const mgrObj = dashboardState.data.gmReport.managers.find(m => m.manager === mgrName || mgrName.includes(m.manager));
+        const mgrObj = dashboardState.data.gmReport.managers.find(m => {
+          const mName = cleanThaiText(m.manager);
+          return mName === cleanedMgr || cleanedMgr.includes(mName) || (nick && mName === nick);
+        });
         if (mgrObj && Array.isArray(mgrObj.branches)) {
           mgrObj.branches.forEach(b => {
             if (b.name && !isInvalidBranchName(b.name)) {
-              branches.add(b.name);
+              branches.add(formatBranchDisplayName(b.name));
             }
           });
         }
       }
-      // 3. Fallback หากไม่มีระบุเลย ให้ใช้ชื่อ ผจก. (ไม่แสดงคำว่า แบบประเมินเขต)
-      if (branches.size === 0) {
-        branches.add(`สาขา ${mgrName}`);
+
+      // 3. จากรายการสาขาในแบบประเมิน EVA ที่ตรงกับ ผจก. ท่านนี้
+      if (Array.isArray(empClinicsList)) {
+        empClinicsList.forEach(c => {
+          const trimmed = cleanThaiText(c);
+          if (trimmed && !trimmed.includes('แบบประเมิน') && !trimmed.includes('ภาพรวมเขต') && !trimmed.includes('undefined')) {
+            branches.add(formatBranchDisplayName(trimmed));
+          }
+        });
       }
+
+      // ไม่ใช้ชื่อ ผจก. เป็นชื่อสาขาเด็ดขาด
+      if (branches.size === 0) {
+        branches.add('สาขาหลัก');
+      }
+
       return Array.from(branches);
     }
 
     function parseEvaEmployeeDailyItem(item) {
       if (!item) return null;
-      const empName = String(item.employeeName || '').trim();
+      const empName = cleanThaiText(item.employeeName || '');
       if (isExcludedEvaEmployee(empName)) return null;
 
       const val = item.value || [];
@@ -11497,9 +11597,10 @@
 
       if (hasClinics) {
         const clinics = val.map(c => {
-          let cName = String(c.clinic || '').trim();
+          let cName = formatBranchDisplayName(c.clinic);
           if (!cName || cName.includes('แบบประเมิน') || cName.includes('ภาพรวมเขต')) {
-            cName = `สาขา ${empName}`;
+            const defBranches = getManagerBranches(empName);
+            cName = defBranches[0] || 'สาขาหลัก';
           }
           const cScore = Number(c.scores) || 0;
           const subVals = Array.isArray(c.value) ? c.value : [];
@@ -11532,9 +11633,10 @@
         const topScore = Number(item.summary?.topScore) || 5;
         const totalScore = Number(item.summary?.totalScore) || 0;
         const pct = topScore > 0 ? Math.round((totalScore / topScore) * 100) : 0;
-        let clinicName = item.summary?.clinic || '';
+        const defBranches = getManagerBranches(empName);
+        let clinicName = formatBranchDisplayName(item.summary?.clinic);
         if (!clinicName || clinicName.includes('แบบประเมิน') || clinicName.includes('ภาพรวมเขต')) {
-          clinicName = `สาขา ${empName}`;
+          clinicName = defBranches.length === 1 ? defBranches[0] : 'ภาพรวมเขต (ทั้ง 5 ขั้นตอน)';
         }
 
         return {
@@ -11735,26 +11837,37 @@
           const dateCellsHtml = dates.map(d => {
             const dayItem = emp.days ? emp.days[d] : null;
             if (!dayItem) {
-              return `<td class="px-1 py-1.5 text-center border-l border-slate-100 text-slate-300 text-xxs ${rowBottomBorder}">-</td>`;
+              return `
+                <td class="px-1 py-1.5 text-center border-l border-slate-100 ${rowBottomBorder}">
+                  <button type="button" onclick="openEvaDayDetailModal('${emp.name}', '${d}', '${branchName}')" class="w-full py-1.5 px-0.5 rounded text-center text-slate-300 hover:text-sky-600 hover:bg-sky-50 transition text-xxs cursor-pointer" title="${emp.name} (${d}): ไม่พบการส่งผลประเมิน">
+                    -
+                  </button>
+                </td>
+              `;
             }
 
             let cScore = null;
-            if (Array.isArray(dayItem.value) && dayItem.value.length > 0) {
-              const found = dayItem.value.find(v => {
-                const cvName = String(v.clinic || '').trim();
-                return cvName === branchName || (rowCount === 1 && dayItem.value.length === 1);
-              });
-              if (found && found.scores !== undefined) {
+            if (Array.isArray(dayItem.value) && dayItem.value.length > 0 && dayItem.value[0].clinic !== undefined) {
+              const found = dayItem.value.find(v => isBranchMatch(v.clinic, branchName));
+              if (found && found.scores !== undefined && found.scores !== '') {
                 cScore = Number(found.scores) || 0;
-              } else if (dayItem.value[bIdx] && dayItem.value[bIdx].scores !== undefined) {
-                cScore = Number(dayItem.value[bIdx].scores) || 0;
               }
-            } else if (dayItem.summary && dayItem.summary.totalScore !== undefined) {
-              cScore = Number(dayItem.summary.totalScore) || 0;
+            } else if (rowCount === 1) {
+              if (dayItem.summary && dayItem.summary.totalScore !== undefined && dayItem.summary.totalScore !== '') {
+                cScore = Number(dayItem.summary.totalScore) || 0;
+              } else if (dayItem.scores !== undefined && dayItem.scores !== '') {
+                cScore = Number(dayItem.scores) || 0;
+              }
             }
 
             if (cScore === null) {
-              return `<td class="px-1 py-1.5 text-center border-l border-slate-100 text-slate-300 text-xxs ${rowBottomBorder}">-</td>`;
+              return `
+                <td class="px-1 py-1.5 text-center border-l border-slate-100 ${rowBottomBorder}">
+                  <button type="button" onclick="openEvaDayDetailModal('${emp.name}', '${d}', '${branchName}')" class="w-full py-1.5 px-0.5 rounded text-center text-slate-300 hover:text-sky-600 hover:bg-sky-50 transition text-xxs cursor-pointer" title="${emp.name} (${d}): คลิกเพื่อดูรายละเอียดการประเมินประจำวัน">
+                    -
+                  </button>
+                </td>
+              `;
             }
 
             bTotalScore += cScore;
@@ -11767,7 +11880,7 @@
 
             return `
               <td class="px-1 py-1.5 text-center border-l border-slate-100 ${rowBottomBorder}">
-                <button type="button" onclick="openEvaDayDetailModal('${emp.name}', '${d}', '${branchName}')" class="w-full py-1.5 px-0.5 rounded-lg text-center border font-bold text-xxs ${cBg} transition hover:ring-2 hover:ring-sky-400 hover:shadow-xs" title="${emp.name} - ${branchName} (${d}): ${cScore}/5 คะแนน">
+                <button type="button" onclick="openEvaDayDetailModal('${emp.name}', '${d}', '${branchName}')" class="w-full py-1.5 px-0.5 rounded-lg text-center border font-bold text-xxs ${cBg} transition hover:ring-2 hover:ring-sky-400 hover:shadow-xs cursor-pointer" title="${emp.name} - ${branchName} (${d}): ${cScore}/5 คะแนน (คลิกดู 5 ขั้นตอน)">
                   ${cScore}/5
                 </button>
               </td>
@@ -11918,7 +12031,7 @@
 
       let clinicsHtml = '';
       parsed.clinics.forEach((cl, cIdx) => {
-        const isTarget = highlightClinic && (cl.name.toLowerCase() === highlightClinic.toLowerCase());
+        const isTarget = highlightClinic && isBranchMatch(cl.name, highlightClinic);
         const clScoreColor = cl.score === 5 ? 'text-emerald-700 bg-emerald-50 border-emerald-200' :
                              cl.score >= 3 ? 'text-blue-700 bg-blue-50 border-blue-200' :
                              cl.score > 0  ? 'text-amber-700 bg-amber-50 border-amber-200' :
@@ -12080,15 +12193,17 @@
             const dayItem = e.days ? e.days[d] : null;
             if (!dayItem) return '-';
             let cScore = null;
-            if (Array.isArray(dayItem.value) && dayItem.value.length > 0) {
-              const found = dayItem.value.find(v => String(v.clinic || '').trim() === bName);
-              if (found && found.scores !== undefined) {
+            if (Array.isArray(dayItem.value) && dayItem.value.length > 0 && dayItem.value[0].clinic !== undefined) {
+              const found = dayItem.value.find(v => isBranchMatch(v.clinic, bName));
+              if (found && found.scores !== undefined && found.scores !== '') {
                 cScore = Number(found.scores) || 0;
-              } else if (dayItem.value[bIdx] && dayItem.value[bIdx].scores !== undefined) {
-                cScore = Number(dayItem.value[bIdx].scores) || 0;
               }
-            } else if (dayItem.summary && dayItem.summary.totalScore !== undefined) {
-              cScore = Number(dayItem.summary.totalScore) || 0;
+            } else if (branches.length === 1) {
+              if (dayItem.summary && dayItem.summary.totalScore !== undefined && dayItem.summary.totalScore !== '') {
+                cScore = Number(dayItem.summary.totalScore) || 0;
+              } else if (dayItem.scores !== undefined && dayItem.scores !== '') {
+                cScore = Number(dayItem.scores) || 0;
+              }
             }
             if (cScore === null) return '-';
             bTotal += cScore;
