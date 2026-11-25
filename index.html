@@ -11831,24 +11831,22 @@
           let bTotalScore = 0;
           let bEvaluatedDays = 0;
 
-          // สร้างช่องวันที่สำหรับสาขานี้
+          // สร้างช่องวันที่สำหรับสาขานี้ (วันไหนไม่ส่งคิดเป็น 0/5 คะแนน ไม่แสดงขีด -)
           const dateCellsHtml = dates.map(d => {
             const dayItem = emp.days ? emp.days[d] : null;
-            if (!dayItem) {
-              return `
-                <td class="px-1 py-1.5 text-center border-l border-slate-100 ${bIdx === rowCount - 1 ? 'border-b-2 border-slate-200' : 'border-b border-slate-100'}">
-                  <button type="button" onclick="openEvaDayDetailModal('${emp.name}', '${d}', '${branchName}')" class="w-full py-1.5 px-0.5 rounded text-center text-slate-300 hover:text-sky-600 hover:bg-sky-50 transition text-xxs cursor-pointer font-medium" title="${emp.name} (${d}): ไม่พบการส่งผลประเมิน (คิดเป็น 0 คะแนน)">
-                    -
-                  </button>
-                </td>
-              `;
-            }
-
             let cScore = null;
-            if (Array.isArray(dayItem.value) && dayItem.value.length > 0 && dayItem.value[0].clinic !== undefined) {
+            let isUnsubmitted = false;
+
+            if (!dayItem) {
+              cScore = 0;
+              isUnsubmitted = true;
+            } else if (Array.isArray(dayItem.value) && dayItem.value.length > 0 && dayItem.value[0].clinic !== undefined) {
               const found = dayItem.value.find(v => isBranchMatch(v.clinic, branchName));
               if (found && found.scores !== undefined && found.scores !== '') {
                 cScore = Number(found.scores) || 0;
+              } else {
+                cScore = 0;
+                isUnsubmitted = true;
               }
             } else {
               // กรณีประเมินภาพรวมเขตประจำวัน (ไม่มีระบุรายสาขา) ผลคะแนน 5 ขั้นตอนของ ผจก. ย่อมครอบคลุมทุกสาขาที่ดูแล
@@ -11856,39 +11854,36 @@
                 cScore = Number(dayItem.summary.totalScore) || 0;
               } else if (dayItem.scores !== undefined && dayItem.scores !== '') {
                 cScore = Number(dayItem.scores) || 0;
+              } else {
+                cScore = 0;
+                isUnsubmitted = true;
               }
             }
 
-            if (cScore === null) {
-              return `
-                <td class="px-1 py-1.5 text-center border-l border-slate-100 ${bIdx === rowCount - 1 ? 'border-b-2 border-slate-200' : 'border-b border-slate-100'}">
-                  <button type="button" onclick="openEvaDayDetailModal('${emp.name}', '${d}', '${branchName}')" class="w-full py-1.5 px-0.5 rounded text-center text-slate-300 hover:text-sky-600 hover:bg-sky-50 transition text-xxs cursor-pointer font-medium" title="${emp.name} - ${branchName} (${d}): ไม่ได้ส่งแบบประเมินของสาขานี้ (คิดเป็น 0 คะแนน)">
-                    -
-                  </button>
-                </td>
-              `;
-            }
-
             bTotalScore += cScore;
-            bEvaluatedDays++;
+            if (!isUnsubmitted) {
+              bEvaluatedDays++;
+            }
 
             const cBg = cScore === 5 ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100' :
                         cScore >= 3 ? 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100' :
                         cScore > 0  ? 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100' :
+                        isUnsubmitted ? 'bg-rose-50/80 text-rose-600 border-rose-200 hover:bg-rose-100' :
                                       'bg-rose-100 text-rose-800 border-rose-300 hover:bg-rose-200 ring-1 ring-rose-200';
 
             const scoreDesc = cScore === 5 ? 'ผ่านครบ 5 ข้อสมบูรณ์' :
                               cScore >= 3 ? `ผ่าน ${cScore}/5 ข้อ` :
                               cScore > 0  ? `ผ่านเพียง ${cScore}/5 ข้อ` :
-                                            'ประเมินแล้ว: 0/5 ข้อ (ไม่ผ่านทั้ง 5 ข้อ - คิดเป็น 0 คะแนน)';
+                              isUnsubmitted ? 'ไม่ได้ส่งแบบประเมิน (คิดเป็น 0/5 คะแนน)' :
+                                            'ส่งประเมินแล้ว: 0/5 ข้อ (ไม่ผ่านทั้ง 5 ข้อ)';
 
             const badgeContent = (cScore === 0)
-              ? `<span class="inline-flex items-center space-x-0.5"><span class="w-1.5 h-1.5 rounded-full bg-rose-600 inline-block animate-pulse"></span><span>0/5</span></span>`
+              ? `<span class="inline-flex items-center space-x-0.5">${!isUnsubmitted ? '<span class="w-1.5 h-1.5 rounded-full bg-rose-600 inline-block animate-pulse"></span>' : ''}<span>0/5</span></span>`
               : `${cScore}/5`;
 
             return `
               <td class="px-1 py-1.5 text-center border-l border-slate-100 ${bIdx === rowCount - 1 ? 'border-b-2 border-slate-200' : 'border-b border-slate-100'}">
-                <button type="button" onclick="openEvaDayDetailModal('${emp.name}', '${d}', '${branchName}')" class="w-full py-1.5 px-0.5 rounded-lg text-center border font-bold text-xxs ${cBg} transition hover:ring-2 hover:ring-sky-400 hover:shadow-xs cursor-pointer" title="${emp.name} - ${branchName} (${d}): ${cScore}/5 คะแนน • ${scoreDesc} (คลิกดู 5 ขั้นตอน)">
+                <button type="button" onclick="openEvaDayDetailModal('${emp.name}', '${d}', '${branchName}')" class="w-full py-1.5 px-0.5 rounded-lg text-center border font-bold text-xxs ${cBg} transition hover:ring-2 hover:ring-sky-400 hover:shadow-xs cursor-pointer" title="${emp.name} - ${branchName} (${d}): ${cScore}/5 คะแนน • ${scoreDesc} (คลิกดูรายละเอียด)">
                   ${badgeContent}
                 </button>
               </td>
@@ -11977,13 +11972,9 @@
               <span class="w-2.5 h-2.5 rounded bg-amber-500 inline-block"></span>
               <span>1-2/5</span>
             </span>
-            <span class="flex items-center space-x-1 bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200" title="ส่งประเมินแล้ว แต่ไม่ผ่านทั้ง 5 ข้อ (ได้ 0 คะแนน)">
-              <span class="w-2 h-2 rounded-full bg-rose-600 inline-block animate-pulse"></span>
-              <strong class="text-rose-700">0/5 (ส่งแล้วตกทุกข้อ = 0 คะแนน)</strong>
-            </span>
-            <span class="flex items-center space-x-1 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200" title="ไม่ได้ส่งแบบประเมิน (คิดเป็น 0 คะแนนในการคำนวณเฉลี่ยของเดือน)">
-              <span class="font-bold text-slate-400">-</span>
-              <span class="text-slate-600">เว้นว่าง (ไม่ส่ง = 0 คะแนน)</span>
+            <span class="flex items-center space-x-1 bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200" title="ได้ 0 คะแนน (ไม่ส่งแบบประเมิน หรือส่งแล้วไม่ผ่านทั้ง 5 ข้อ)">
+              <span class="w-2 h-2 rounded-full bg-rose-600 inline-block"></span>
+              <strong class="text-rose-700">0/5 (ไม่ส่ง / ไม่ผ่าน = 0 คะแนน)</strong>
             </span>
           </div>
         </div>
@@ -12035,23 +12026,23 @@
 
       if (!dayItem) {
         if (scoreBadgeEl) {
-          scoreBadgeEl.className = 'text-xs px-2.5 py-0.5 rounded-full font-bold bg-slate-100 text-slate-500 border border-slate-200';
-          scoreBadgeEl.textContent = 'ไม่มีข้อมูล (ไม่ได้ประเมิน / วันหยุด)';
+          scoreBadgeEl.className = 'text-xs px-2.5 py-0.5 rounded-full font-bold bg-rose-50 text-rose-700 border border-rose-200';
+          scoreBadgeEl.textContent = '0/5 คะแนน (ไม่ได้ส่งผลประเมิน)';
         }
         if (summaryStripEl) {
           summaryStripEl.innerHTML = `
-            <div class="text-xs text-slate-500 flex items-center space-x-2">
-              <i data-lucide="info" class="w-4 h-4 text-slate-400"></i>
-              <span>ไม่พบการบันทึกแบบประเมินประจำวันที่ ${dateStr} (คิดเป็น 0 คะแนน เนื่องจากไม่มีการส่งผลประเมิน)</span>
+            <div class="text-xs text-rose-700 flex items-center space-x-2">
+              <i data-lucide="alert-circle" class="w-4 h-4 text-rose-500"></i>
+              <span>ไม่พบการบันทึกแบบประเมินประจำวันที่ ${formatEvaThaiDate(dateStr)} (คิดเป็น 0/5 คะแนน)</span>
             </div>
           `;
         }
         if (contentEl) {
           contentEl.innerHTML = `
             <div class="p-10 text-center space-y-2 text-slate-400">
-              <i data-lucide="calendar-x-2" class="w-10 h-10 mx-auto text-slate-300"></i>
-              <p class="text-xs font-medium">ไม่มีรายการตรวจประเมิน 5 ขั้นตอนในวันนี้</p>
-              <p class="text-xxs text-slate-400">ช่องตารางจะแสดงสถานะเป็นเว้นว่าง (-) และคิดคะแนนเป็น 0 ในการเฉลี่ยรวมของเดือน</p>
+              <i data-lucide="calendar-x-2" class="w-10 h-10 mx-auto text-rose-300"></i>
+              <p class="text-xs font-semibold text-rose-600">ไม่มีการส่งแบบประเมิน 5 ขั้นตอนในวันนี้</p>
+              <p class="text-xxs text-slate-400">ช่องตารางแสดงผลเป็น 0/5 คะแนน และคิดเป็น 0 คะแนนในการเฉลี่ยรวมของเดือน</p>
             </div>
           `;
         }
@@ -12275,7 +12266,7 @@
           let bDays = 0;
           const rowDates = dates.map(d => {
             const dayItem = e.days ? e.days[d] : null;
-            if (!dayItem) return '-';
+            if (!dayItem) return '0/5';
             let cScore = null;
             if (Array.isArray(dayItem.value) && dayItem.value.length > 0 && dayItem.value[0].clinic !== undefined) {
               const found = dayItem.value.find(v => isBranchMatch(v.clinic, bName));
@@ -12289,7 +12280,7 @@
                 cScore = Number(dayItem.scores) || 0;
               }
             }
-            if (cScore === null) return '-';
+            if (cScore === null) return '0/5';
             bTotal += cScore;
             bDays++;
             return `${cScore}/5`;
