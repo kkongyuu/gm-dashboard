@@ -11850,7 +11850,8 @@
               if (found && found.scores !== undefined && found.scores !== '') {
                 cScore = Number(found.scores) || 0;
               }
-            } else if (rowCount === 1) {
+            } else {
+              // กรณีประเมินภาพรวมเขตประจำวัน (ไม่มีระบุรายสาขา) ผลคะแนน 5 ขั้นตอนของ ผจก. ย่อมครอบคลุมทุกสาขาที่ดูแล
               if (dayItem.summary && dayItem.summary.totalScore !== undefined && dayItem.summary.totalScore !== '') {
                 cScore = Number(dayItem.summary.totalScore) || 0;
               } else if (dayItem.scores !== undefined && dayItem.scores !== '') {
@@ -12041,7 +12042,7 @@
           summaryStripEl.innerHTML = `
             <div class="text-xs text-slate-500 flex items-center space-x-2">
               <i data-lucide="info" class="w-4 h-4 text-slate-400"></i>
-              <span>ไม่พบการบันทึกแบบประเมินประจำวันที่ ${dateStr} (อาจเป็นวันหยุด หรือยังไม่ได้ส่งข้อมูล • ไม่ถูกนำไปคิดเป็นคะแนน 0)</span>
+              <span>ไม่พบการบันทึกแบบประเมินประจำวันที่ ${dateStr} (คิดเป็น 0 คะแนน เนื่องจากไม่มีการส่งผลประเมิน)</span>
             </div>
           `;
         }
@@ -12050,7 +12051,7 @@
             <div class="p-10 text-center space-y-2 text-slate-400">
               <i data-lucide="calendar-x-2" class="w-10 h-10 mx-auto text-slate-300"></i>
               <p class="text-xs font-medium">ไม่มีรายการตรวจประเมิน 5 ขั้นตอนในวันนี้</p>
-              <p class="text-xxs text-slate-400">ช่องตารางจะแสดงสถานะเป็นเว้นว่าง (-) เพื่อไม่ให้ดึงคะแนนเฉลี่ยรวม</p>
+              <p class="text-xxs text-slate-400">ช่องตารางจะแสดงสถานะเป็นเว้นว่าง (-) และคิดคะแนนเป็น 0 ในการเฉลี่ยรวมของเดือน</p>
             </div>
           `;
         }
@@ -12211,7 +12212,7 @@
                     });
                   }
                 }
-              } else if (bCount === 1) {
+              } else {
                 cScore = Number(dayItem.summary?.totalScore ?? dayItem.scores) || 0;
                 const val = dayItem.value || [];
                 val.forEach((sv, sIdx) => {
@@ -12281,7 +12282,7 @@
               if (found && found.scores !== undefined && found.scores !== '') {
                 cScore = Number(found.scores) || 0;
               }
-            } else if (branches.length === 1) {
+            } else {
               if (dayItem.summary && dayItem.summary.totalScore !== undefined && dayItem.summary.totalScore !== '') {
                 cScore = Number(dayItem.summary.totalScore) || 0;
               } else if (dayItem.scores !== undefined && dayItem.scores !== '') {
