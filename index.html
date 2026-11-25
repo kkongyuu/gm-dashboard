@@ -11821,7 +11821,9 @@
 
         const totalMonthDays = dates.length;
         const rowCount = empBranches.length;
-        const empBg = (empIdx % 2 === 0) ? 'bg-white' : 'bg-slate-50/40';
+        // สีพื้นหลังทึบ 100% (Solid, No Alpha) สำหรับ Fixed Columns เพื่อป้องกันตัวอักษรจากการเลื่อนวันที่มาทับซ้อน
+        const mgrBg = (empIdx % 2 === 0) ? 'bg-slate-50' : 'bg-slate-100';
+        const branchBg = (empIdx % 2 === 0) ? 'bg-white' : 'bg-slate-50';
 
         let empTotalScoreAllBranches = 0;
         const empSubmittedDaysCount = Object.keys(emp.days || {}).length;
@@ -11919,9 +11921,9 @@
           const rowBottomBorder = isLastBranch ? 'border-b-2 border-slate-200' : 'border-b border-slate-100';
 
           matrixRowsHtml += `
-            <tr class="hover:bg-sky-50/30 transition-colors">
+            <tr class="transition-colors">
               ${isFirstBranch ? `
-                <td rowspan="${rowCount}" class="px-3.5 py-3 align-top border-r border-b-2 border-slate-200 sticky left-0 z-20 ${empBg} w-[130px] min-w-[130px] max-w-[130px]">
+                <td rowspan="${rowCount}" class="px-3.5 py-3 align-top border-r border-b-2 border-slate-200 sticky left-0 z-20 ${mgrBg} w-[130px] min-w-[130px] max-w-[130px]">
                   <div class="font-black text-slate-800 text-xs sm:text-sm truncate" title="${emp.name}">${emp.name}</div>
                   <span class="inline-block mt-1 text-xxxs px-2 py-0.5 rounded-full font-bold bg-sky-50 text-sky-700 border border-sky-200">
                     ${rowCount} สาขา
@@ -11934,7 +11936,7 @@
                 </td>
               ` : ''}
 
-              <td class="px-3.5 py-2.5 border-r border-slate-200 sticky left-[130px] z-20 shadow-xs ${empBg} ${rowBottomBorder} w-[150px] min-w-[150px] max-w-[150px]">
+              <td class="px-3.5 py-2.5 border-r-2 border-slate-300 sticky left-[130px] z-20 shadow-[4px_0_8px_-2px_rgba(0,0,0,0.12)] ${branchBg} ${rowBottomBorder} w-[150px] min-w-[150px] max-w-[150px]">
                 <div class="font-bold text-slate-800 text-xs truncate" title="${st.branchName}">
                   ${st.branchName}
                 </div>
@@ -11984,8 +11986,8 @@
           <table class="w-full text-left border-separate border-spacing-0 min-w-[750px]">
             <thead>
               <tr class="bg-slate-100">
-                <th class="px-3.5 py-2.5 sticky top-0 left-0 z-50 bg-slate-100 text-xxs font-bold text-slate-700 border-r border-b-2 border-slate-200 w-[130px] min-w-[130px] max-w-[130px]">ชื่อ ผจก.</th>
-                <th class="px-3.5 py-2.5 sticky top-0 left-[130px] z-50 bg-slate-100 shadow-xs text-xxs font-bold text-slate-700 border-r border-b-2 border-slate-200 w-[150px] min-w-[150px] max-w-[150px]">สาขา</th>
+                <th class="px-3.5 py-2.5 sticky top-0 left-0 z-50 bg-slate-200 text-xxs font-bold text-slate-800 border-r border-b-2 border-slate-300 w-[130px] min-w-[130px] max-w-[130px]">ชื่อ ผจก.</th>
+                <th class="px-3.5 py-2.5 sticky top-0 left-[130px] z-50 bg-slate-200 shadow-[4px_0_8px_-2px_rgba(0,0,0,0.12)] text-xxs font-bold text-slate-800 border-r-2 border-b-2 border-slate-300 w-[150px] min-w-[150px] max-w-[150px]">สาขา</th>
                 ${dateHeadersHtml}
               </tr>
             </thead>
